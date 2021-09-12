@@ -3,9 +3,11 @@ import React, { useState } from 'react';
 import '@fontsource/roboto';
 
 const CodeInput = ({ action }: { action: React.FormEventHandler }) => (
-    <Fade in={true}>
-        <TextField variant="outlined" label="Game Code" fullWidth={true} margin="normal" onInput={action} />
-    </Fade>
+    <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', height: '100vh'}}>
+        <Fade in={true}>
+            <TextField variant="outlined" label="Game Code" size="small" margin="normal" onInput={action} />
+        </Fade>
+    </div>
 );
 
 const WelcomeScreen = () => {
@@ -31,12 +33,12 @@ const WelcomeScreen = () => {
     };
 
     return (
-        <>
+        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', height: '100vh'}}>
             <Fade in={true}>
-                <TextField variant="outlined" label="Username" fullWidth={true} margin="normal" onInput={updateUsername} />
+                <TextField variant="outlined" label="Username" size="small" margin="normal" onInput={updateUsername} />
             </Fade>
             {codeVisible ? <CodeInput action={updateGameCode} /> : null}
-        </>
+        </div>
     );
 };
 

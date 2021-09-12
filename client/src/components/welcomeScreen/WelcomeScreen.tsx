@@ -1,4 +1,4 @@
-import { Input, Typography, Fade, Grow, Container } from '@material-ui/core';
+import { Input, Typography, Fade, Grow, Container, TextField } from '@material-ui/core';
 import React from 'react';
 import '@fontsource/roboto';
 
@@ -7,14 +7,7 @@ const WelcomeScreen = () => {
         <Fade in={true}>
             <Grow in={true}>
                 <Container>
-                    <Typography align="center" variant="h4">
-                        Enter Username:
-                    </Typography>
-                    <Input autoFocus={true} />
-                    <Typography align="center" variant="h4">
-                        Enter Game Code:
-                    </Typography>
-                    <Input />
+                    <TextField variant="outlined" label="Enter Game Code" autoFocus={true} />
                 </Container>
             </Grow>
         </Fade>

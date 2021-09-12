@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { Typography, Button, Paper, Divider, Input } from '@material-ui/core';
 import ChatBox from './components/chat/ChatBox';
-import WelcomeScreen from './components/welcomeScreen/WelcomeScreen';
+import WelcomeScreen from './components/welcomeScreen';
 import RoleCard from './components/roleCard/index';
 
 const socket: Socket = io('ntgc.ddns.net:3001');

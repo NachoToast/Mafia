@@ -4,6 +4,7 @@ import { Typography, Button, Paper, Divider, Input } from '@material-ui/core';
 import ChatBox from './components/chat/ChatBox';
 // import WelcomeScreen from './components/welcomeScreen';
 import moment from 'moment';
+import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 
 export const socket: Socket = io('ntgc.ddns.net:3001');
 
@@ -24,7 +25,7 @@ function App() {
         });
 
         socket.on('newMessage', (data: { timestamp: string; author: string; content: string }) => {
-            const newMessage = `${moment(data.timestamp).fromNow()} [${data.author}] ${data.content}`;
+            const newMessage = ` [${data.author}] ${data.content} ${moment(data.timestamp).fromNow()}`;
             setAllMessages([...allMessages.slice(-99), newMessage]);
             setMessagesRecorded(messagesRecorded + 1);
         });

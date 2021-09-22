@@ -25,11 +25,11 @@ io.on('connection', (socket: Socket) => {
     console.log(`Connection from ${socket.id}`);
     io.emit('clientNumberUpdate', io.engine.clientsCount);
 
-    socket.on('sendMessage', (message: string) => {
-        console.log(`New message: ${message}`);
+    socket.on('sendMessage', (message: string, username: string) => {
+        console.log(`New message [${username}]: ${message}`);
         io.emit('newMessage', {
             content: message,
-            author: socket.id,
+            author: username,
             timestamp: new Date().toISOString(),
         });
     });

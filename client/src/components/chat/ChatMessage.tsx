@@ -13,7 +13,7 @@ const ChatMessage = ({ message, socketId }: { message: Message; socketId: string
     return (
         <Fade in={true}>
             <Typography variant="body1">
-                {timestamp} [{author === socketId ? 'You' : 'Someone Else'}]: {content}
+                {timestamp} [{author}]: {content}
             </Typography>
         </Fade>
     );

@@ -3,7 +3,6 @@ import io, { Socket } from 'socket.io-client';
 import { Typography, Button, Paper, Divider, Input } from '@material-ui/core';
 import ChatBox from './components/chat/ChatBox';
 import WelcomeScreen from './components/welcomeScreen';
-import RoleCard from './components/roleCard/index';
 
 const socket: Socket = io('ntgc.ddns.net:3001');
 
@@ -25,7 +24,9 @@ function App() {
 
     const [clientsConnected, setClientsConnected] = useState(0);
 
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(true);
+
+    const [username, setUsername] = useState('');
 
     useEffect(() => {
         socket.on('connect', () => {
@@ -66,8 +67,19 @@ function App() {
 
     const sendMessage = (e: React.FormEvent<HTMLButtonElement | HTMLFormElement>) => {
         e.preventDefault();
+        let usernameToSendMessageBy = username;
+        if (!username.length) {
+            const newUsername = prompt('Please enter your name:') ?? '';
+            if (!newUsername.length) {
+                alert('Invalid username.');
+                return;
+            } else {
+                setUsername(newUsername);
+                usernameToSendMessageBy = newUsername;
+            }
+        }
         if (messageToSend.length > 0) {
-            socket.emit('sendMessage', messageToSend.slice(0, 128));
+            socket.emit('sendMessage', messageToSend.slice(0, 128), usernameToSendMessageBy);
             setMessageToSend('');
         }
     };

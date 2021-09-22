@@ -1,10 +1,25 @@
-import { Input, Typography, Fade, Grow, Container, Grid, TextField, InputLabel } from '@material-ui/core';
+import {
+    Input,
+    Typography,
+    Fade,
+    Grow,
+    Container,
+    Grid,
+    TextField,
+    InputLabel,
+} from '@material-ui/core';
 import React, { useState } from 'react';
 import '@fontsource/roboto';
 
 const CodeInput = ({ action }: { action: React.FormEventHandler }) => (
     <Fade in={true}>
-        <TextField variant="outlined" label="Game Code" fullWidth={true} margin="normal" onInput={action} />
+        <TextField
+            variant="outlined"
+            label="Game Code"
+            fullWidth={true}
+            margin="normal"
+            onInput={action}
+        />
     </Fade>
 );
 
@@ -33,7 +48,13 @@ const WelcomeScreen = () => {
     return (
         <>
             <Fade in={true}>
-                <TextField variant="outlined" label="Username" fullWidth={true} margin="normal" onInput={updateUsername} />
+                <TextField
+                    variant="outlined"
+                    label="Username"
+                    fullWidth={true}
+                    margin="normal"
+                    onInput={updateUsername}
+                />
             </Fade>
             {codeVisible ? <CodeInput action={updateGameCode} /> : null}
         </>

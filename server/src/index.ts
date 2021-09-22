@@ -28,6 +28,7 @@ io.on('connection', (socket: Socket) => {
 
     socket.on('sendPlayerMessage', (message: string, username: string) => {
         console.log(`New message [${username}]: ${message}`);
+        console.log(game.usernamesList);
 
         if (username === 'NachoToast' && message === '/start') {
             if (!game.running) {
@@ -42,6 +43,7 @@ io.on('connection', (socket: Socket) => {
     });
 
     socket.on('userJoined', (username: string) => {
+        game.usernamesList.push(username);
         io.emit('systemMessage', `${username} joined the lobby.`);
     });
 

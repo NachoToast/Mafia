@@ -3,54 +3,51 @@ import io, { Socket } from 'socket.io-client';
 import { Typography, Button, Paper, Divider, Input } from '@material-ui/core';
 import ChatBox from './components/chat/ChatBox';
 import WelcomeScreen from './components/welcomeScreen';
+import { PlayerChatMessage, Message } from './components/chat/ChatMessage';
 
-const socket: Socket = io('ntgc.ddns.net:3001');
-
-interface Message {
-    content: string;
-    author: string;
-    timestamp: string;
-    key?: number;
-}
+export const socket: Socket = io('ntgc.ddns.net:3001');
 
 function App() {
     const [isConnected, setIsConnected] = useState(socket.connected);
-
     const [allMessages, setAllMessages]: [Message[], any] = useState([]);
-
     const [messageToSend, setMessageToSend] = useState('');
-
     const [messagesRecorded, setMessagesRecorded] = useState(allMessages.length);
-
-    const [clientsConnected, setClientsConnected] = useState(0);
-
-    const [isAuthenticated, setIsAuthenticated] = useState(true);
-
     const [username, setUsername] = useState('');
 
     useEffect(() => {
         socket.on('connect', () => {
             setIsConnected(true);
         });
+
         socket.on('disconnect', () => {
             setIsConnected(false);
         });
-        socket.on('newMessage', (data: Message) => {
-            const newMessage: Message = {
+
+        socket.on('newMessage', (data: PlayerChatMessage) => {
+            const newMessage: PlayerChatMessage = {
                 content: data.content,
                 author: data.author,
                 timestamp: new Date(data.timestamp).toLocaleTimeString(),
-                key: messagesRecorded,
             };
             setAllMessages([...allMessages.slice(-99), newMessage]);
             setMessagesRecorded(messagesRecorded + 1);
         });
+
         socket.on('clientNumberUpdate', (numClients) => {
-            setClientsConnected(numClients);
+            // setClientsConnected(numClients);
         });
+
         socket.on('connect_error', (err) => {
             console.log(err.message);
         });
+
+        socket.on('newUser', (username: string) => {
+            const newMessage: Message = {
+                content: `${username} joined the game`,
+            };
+            setAllMessages([...allMessages.slice(-99), newMessage]);
+        });
+
         return () => {
             socket.off('connect');
             socket.off('disconnect');
@@ -74,6 +71,7 @@ function App() {
                 alert('Invalid username.');
                 return;
             } else {
+                socket.emit('registerUser', newUsername);
                 setUsername(newUsername);
                 usernameToSendMessageBy = newUsername;
             }
@@ -86,23 +84,19 @@ function App() {
     return (
         <div className="App">
             <header className="App-header">
-                {isAuthenticated ? (
-                    <Paper style={{ padding: '20px', borderRadius: '15px' }} elevation={6}>
-                        <Typography gutterBottom variant="h6">
-                            Connected: {'' + isConnected} ({clientsConnected})
-                        </Typography>
-                        <Divider style={{ margin: '20px 0' }} />
-                        <ChatBox messages={allMessages} socketId={socket.id} />
-                        <Divider style={{ margin: '20px 0' }} />
-                        <form onSubmit={sendMessage}>
-                            {/* <input type="text" onInput={updateMessage} value={messageToSend} /> */}
-                            <Input placeholder="Message" onInput={updateMessage} value={messageToSend} />
-                            <Button onClick={sendMessage}>Submit</Button>
-                        </form>
-                    </Paper>
-                ) : (
-                    <WelcomeScreen />
-                )}
+                <Paper style={{ padding: '20px', borderRadius: '15px' }} elevation={6}>
+                    <Typography gutterBottom variant="h6">
+                        Connected: {'' + isConnected}
+                    </Typography>
+                    <Divider style={{ margin: '20px 0' }} />
+                    <ChatBox messages={allMessages} socketId={socket.id} />
+                    <Divider style={{ margin: '20px 0' }} />
+                    <form onSubmit={sendMessage}>
+                        {/* <input type="text" onInput={updateMessage} value={messageToSend} /> */}
+                        <Input placeholder="Message" onInput={updateMessage} value={messageToSend} />
+                        <Button onClick={sendMessage}>Submit</Button>
+                    </form>
+                </Paper>
             </header>
         </div>
     );

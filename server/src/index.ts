@@ -1,5 +1,6 @@
 import { createServer, IncomingMessage } from 'http';
 import { Server, Socket } from 'socket.io';
+import { Player } from './models/player';
 
 const httpServer = createServer();
 const io = new Server(httpServer, {
@@ -12,6 +13,8 @@ const io = new Server(httpServer, {
 const isValid = (req: IncomingMessage) => {
     return true;
 };
+
+const playerList: Player[] = [];
 
 io.use((socket, next) => {
     if (isValid(socket.request)) {
@@ -36,6 +39,16 @@ io.on('connection', (socket: Socket) => {
 
     socket.on('disconnect', () => {
         io.emit('clientNumberUpdate', io.engine.clientsCount);
+    });
+
+    socket.on('registerUser', (username: string) => {
+        console.log(`Registering new user with username ${username}`);
+        if (playerList.map((e) => e.name).includes(username)) {
+            socket.emit('usernameTaken');
+        } else {
+            io.emit('newUser', username);
+            playerList.push(new Player(username));
+        }
     });
 });
 

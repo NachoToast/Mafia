@@ -1,6 +1,6 @@
 import { createServer, IncomingMessage } from 'http';
 import { Server, Socket } from 'socket.io';
-import { Player } from './models/player';
+import { Game } from './models/Game';
 
 const httpServer = createServer();
 const io = new Server(httpServer, {
@@ -9,13 +9,12 @@ const io = new Server(httpServer, {
         origin: true,
     },
 });
+const game = new Game();
 
+// middleware for future maybe
 const isValid = (req: IncomingMessage) => {
     return true;
 };
-
-const playerList: Player[] = [];
-
 io.use((socket, next) => {
     if (isValid(socket.request)) {
         next();
@@ -25,30 +24,29 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket: Socket) => {
-    console.log(`Connection from ${socket.id}`);
-    io.emit('clientNumberUpdate', io.engine.clientsCount);
+    console.log(`${socket.id} Connected`);
 
-    socket.on('sendMessage', (message: string, username: string) => {
+    socket.on('sendPlayerMessage', (message: string, username: string) => {
         console.log(`New message [${username}]: ${message}`);
-        io.emit('newMessage', {
-            content: message,
-            author: username,
-            timestamp: new Date().toISOString(),
-        });
+
+        if (username === 'NachoToast' && message === '/start') {
+            if (!game.running) {
+                console.log('starting game...');
+            } else {
+                socket.emit('');
+            }
+            return;
+        }
+
+        io.emit('playerMessage', message, username);
+    });
+
+    socket.on('userJoined', (username: string) => {
+        io.emit('systemMessage', `${username} joined the lobby.`);
     });
 
     socket.on('disconnect', () => {
         io.emit('clientNumberUpdate', io.engine.clientsCount);
-    });
-
-    socket.on('registerUser', (username: string) => {
-        console.log(`Registering new user with username ${username}`);
-        if (playerList.map((e) => e.name).includes(username)) {
-            socket.emit('usernameTaken');
-        } else {
-            io.emit('newUser', username);
-            playerList.push(new Player(username));
-        }
     });
 });
 

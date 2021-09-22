@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { Typography, Button, Paper, Divider, Input } from '@material-ui/core';
 import ChatBox from './components/chat/ChatBox';
-import WelcomeScreen from './components/welcomeScreen';
-import { PlayerChatMessage, Message } from './components/chat/ChatMessage';
+// import WelcomeScreen from './components/welcomeScreen';
+import moment from 'moment';
 
 export const socket: Socket = io('ntgc.ddns.net:3001');
 
 function App() {
     const [isConnected, setIsConnected] = useState(socket.connected);
-    const [allMessages, setAllMessages]: [Message[], any] = useState([]);
+    const [allMessages, setAllMessages]: [string[], any] = useState([]);
     const [messageToSend, setMessageToSend] = useState('');
     const [messagesRecorded, setMessagesRecorded] = useState(allMessages.length);
     const [username, setUsername] = useState('');
@@ -23,18 +23,10 @@ function App() {
             setIsConnected(false);
         });
 
-        socket.on('newMessage', (data: PlayerChatMessage) => {
-            const newMessage: PlayerChatMessage = {
-                content: data.content,
-                author: data.author,
-                timestamp: new Date(data.timestamp).toLocaleTimeString(),
-            };
+        socket.on('newMessage', (data: { timestamp: string; author: string; content: string }) => {
+            const newMessage = `${moment(data.timestamp).fromNow()} [${data.author}] ${data.content}`;
             setAllMessages([...allMessages.slice(-99), newMessage]);
             setMessagesRecorded(messagesRecorded + 1);
-        });
-
-        socket.on('clientNumberUpdate', (numClients) => {
-            // setClientsConnected(numClients);
         });
 
         socket.on('connect_error', (err) => {
@@ -42,9 +34,7 @@ function App() {
         });
 
         socket.on('newUser', (username: string) => {
-            const newMessage: Message = {
-                content: `${username} joined the game`,
-            };
+            const newMessage = `${username} joined the game`;
             setAllMessages([...allMessages.slice(-99), newMessage]);
         });
 
@@ -89,7 +79,7 @@ function App() {
                         Connected: {'' + isConnected}
                     </Typography>
                     <Divider style={{ margin: '20px 0' }} />
-                    <ChatBox messages={allMessages} socketId={socket.id} />
+                    <ChatBox messages={allMessages} />
                     <Divider style={{ margin: '20px 0' }} />
                     <form onSubmit={sendMessage}>
                         {/* <input type="text" onInput={updateMessage} value={messageToSend} /> */}

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import ChatMessage, { Message } from './ChatMessage';
+import ChatMessage from './ChatMessage';
 
-const ChatBox = ({ messages, socketId }: { messages: Message[]; socketId: string }) => {
+const ChatBox = ({ messages }: { messages: string[] }) => {
     const scrollToBottom = () => {
         if (messageEndRef.current !== null) {
             const current = messageEndRef.current as HTMLElement;
@@ -15,7 +15,7 @@ const ChatBox = ({ messages, socketId }: { messages: Message[]; socketId: string
     return (
         <div style={{ overflowY: 'auto', height: '30vh' }}>
             {messages.map((message) => (
-                <ChatMessage message={message} socketId={socketId} />
+                <ChatMessage message={message} />
             ))}
             <div ref={messageEndRef} />
         </div>

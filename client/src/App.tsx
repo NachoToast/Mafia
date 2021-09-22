@@ -53,7 +53,6 @@ function App() {
         return () => {
             socket.off('connect');
             socket.off('disconnect');
-            socket.off('newMessage');
             socket.off('clientNumberUpdate');
             socket.off('connect_error');
             socket.off('systemMessage');

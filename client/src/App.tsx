@@ -26,11 +26,13 @@ function App() {
 
         socket.on('systemMessage', (message: string) => {
             setAllMessages([...allMessages.slice(-99), message]);
+            console.log('system message');
         });
 
         socket.on('playerMessage', (message: string, author: string) => {
             const newMessage = `[${author}] ${message}`;
             setAllMessages([...allMessages.slice(-99), newMessage]);
+            console.log('player message');
         });
 
         // socket.on('newMessage', (data: { timestamp: string; author: string; content: string }) => {
@@ -54,6 +56,8 @@ function App() {
             socket.off('newMessage');
             socket.off('clientNumberUpdate');
             socket.off('connect_error');
+            socket.off('systemMessage');
+            socket.off('playerMessage');
         };
     });
 
@@ -71,13 +75,13 @@ function App() {
                 alert('Invalid username.');
                 return;
             } else {
-                socket.emit('registerUser', newUsername);
+                socket.emit('userJoined', newUsername);
                 setUsername(newUsername);
                 usernameToSendMessageBy = newUsername;
             }
         }
         if (messageToSend.length > 0) {
-            socket.emit('sendMessage', messageToSend.slice(0, 128), usernameToSendMessageBy);
+            socket.emit('sendPlayerMessage', messageToSend.slice(0, 128), usernameToSendMessageBy);
             setMessageToSend('');
         }
     };

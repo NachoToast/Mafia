@@ -24,11 +24,20 @@ function App() {
             setIsConnected(false);
         });
 
-        socket.on('newMessage', (data: { timestamp: string; author: string; content: string }) => {
-            const newMessage = `[${data.author}] ${data.content} ${moment().format()}`;
-            setAllMessages([...allMessages.slice(-99), newMessage]);
-            setMessagesRecorded(messagesRecorded + 1);
+        socket.on('systemMessage', (message: string) => {
+            setAllMessages([...allMessages.slice(-99), message]);
         });
+
+        socket.on('playerMessage', (message: string, author: string) => {
+            const newMessage = `[${author}] ${message}`;
+            setAllMessages([...allMessages.slice(-99), newMessage]);
+        });
+
+        // socket.on('newMessage', (data: { timestamp: string; author: string; content: string }) => {
+        //     const newMessage = `[${data.author}] ${data.content} ${moment().format()}`;
+        //     setAllMessages([...allMessages.slice(-99), newMessage]);
+        //     setMessagesRecorded(messagesRecorded + 1);
+        // });
 
         socket.on('connect_error', (err) => {
             console.log(err.message);

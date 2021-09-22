@@ -25,7 +25,7 @@ function App() {
         });
 
         socket.on('newMessage', (data: { timestamp: string; author: string; content: string }) => {
-            const newMessage = ` [${data.author}] ${data.content} ${moment(data.timestamp).fromNow()}`;
+            const newMessage = `[${data.author}] ${data.content} ${moment().format()}`;
             setAllMessages([...allMessages.slice(-99), newMessage]);
             setMessagesRecorded(messagesRecorded + 1);
         });

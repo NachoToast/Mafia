@@ -23,6 +23,8 @@ const CodeInput = ({ action }: { action: React.FormEventHandler }) => (
     </Fade>
 );
 
+const usernameValidator = new RegExp(/^[a-zA-Z0-9 ]{2,22}$/);
+
 const WelcomeScreen = () => {
     const [inputUsername, setInputUsername] = useState('');
     const [gameCode, setGameCode] = useState('');
@@ -31,6 +33,9 @@ const WelcomeScreen = () => {
 
     const updateUsername = (e: React.FormEvent<HTMLInputElement>) => {
         const { value } = e.target as HTMLInputElement;
+
+        // if
+
         setInputUsername(value);
 
         if ({ value }.value.length > 1 && !codeVisible) {

@@ -5,17 +5,22 @@ import ChatBox from './components/chat/ChatBox';
 // import WelcomeScreen from './components/welcomeScreen';
 
 export const socket: Socket = io('ntgc.ddns.net:3001');
+const usernameValidator = new RegExp(/^[a-zA-Z0-9 ]{2,22}$/);
 
 function App() {
     const [isConnected, setIsConnected] = useState(socket.connected);
     const [allMessages, setAllMessages]: [string[], any] = useState([]);
     const [messageToSend, setMessageToSend] = useState('');
     const [username, setUsername] = useState('');
+    const [connectedUsers, setConnectedUsers] = useState({});
 
     useEffect(() => {
         socket.on('connect', () => setIsConnected(true));
         socket.on('disconnect', () => setIsConnected(false));
-        socket.on('connect_error', (err) => console.log(err.message));
+        socket.on('connect_error', (err) => {
+            console.log(err.message);
+            window.alert(`An error occured, please try refreshing your page :P`);
+        });
 
         socket.on('systemMessage', (message: string) =>
             setAllMessages([...allMessages.slice(-99), message]),
@@ -26,9 +31,9 @@ function App() {
             setAllMessages([...allMessages.slice(-99), newMessage]);
         });
 
-        socket.on('newUser', (username: string) =>
-            setAllMessages([...allMessages.slice(-99), `${username} joined the game`]),
-        );
+        socket.on('newUser', (username: string, socketId: string) => {
+            setConnectedUsers({ ...connectedUsers, socketId: username });
+        });
 
         return () => {
             socket.off('connect');
@@ -47,20 +52,18 @@ function App() {
 
     function sendMessage(e: React.FormEvent<HTMLButtonElement | HTMLFormElement>) {
         e.preventDefault();
-        let usernameToSendMessageBy = username;
         if (!username.length) {
             const newUsername = prompt('Please enter your name:') ?? '';
             if (!newUsername.length) {
                 alert('Invalid username.');
                 return;
             } else {
-                socket.emit('userJoined', newUsername);
+                socket.emit('usernameSubmit', newUsername);
                 setUsername(newUsername);
-                usernameToSendMessageBy = newUsername;
             }
         }
         if (messageToSend.length > 0) {
-            socket.emit('sendPlayerMessage', messageToSend.slice(0, 128), usernameToSendMessageBy);
+            socket.emit('sendPlayerMessage', messageToSend.slice(0, 128));
             setMessageToSend('');
         }
     }

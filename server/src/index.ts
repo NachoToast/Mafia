@@ -1,44 +1,65 @@
+import express, { Request, Response } from 'express';
 import { createServer } from 'http';
-import { Server } from 'socket.io';
 import { Game } from './models/game';
+import { Server } from 'socket.io';
+import cors from 'cors';
+import gameRoutes from './routes/game';
 
-const httpServer = createServer();
+class ServerHub {
+    private games: { [key: string]: Game } = {};
+    private app = express();
+    private httpServer = createServer(this.app);
 
-const io = new Server(httpServer, {
-    cors: {
-        origin: true,
-    },
-});
+    public constructor(port: number) {
+        this.addRoutes();
+        this.httpServer.listen(port, () => console.log(`Server hub listening on port ${port}`));
+    }
 
-const game = new Game(io);
+    private addRoutes() {
+        this.app.use(cors());
+        this.app.use(express.json());
+        this.app.use('/mafia/', gameRoutes);
+    }
 
-// io.on('connection', (socket: Socket) => {
-//     console.log(`${socket.id} Connected`);
+    private static alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    private static makeRandomGameCode() {
+        const codeLength = 3 + Math.floor(Math.random() * 3); // 3 to 5 inclusive
+        let code = '';
+        for (let i = 0; i < codeLength; i++) {
+            const index = Math.floor(Math.random() * 52); // 0 to 52 exclusive
+            code += this.alphabet[index];
+        }
+        return code;
+    }
 
-//     socket.on('sendPlayerMessage', (message: string, username: string) => {
-//         console.log(`New message [${username}]: ${message}`);
-//         console.log(game.usernamesList);
+    public getNumberOfGames() {
+        return Object.keys(this.games).length;
+    }
 
-//         if (username === 'NachoToast' && message === '/start') {
-//             if (!game.running) {
-//                 console.log('starting game...');
-//             } else {
-//                 socket.emit('');
-//             }
-//             return;
-//         }
+    /** Gets a game instance by game code. */
+    public getGame(gameCode: string) {
+        try {
+            return this.games[gameCode];
+        } catch (error) {
+            console.log(error);
+            return;
+        }
+    }
 
-//         io.emit('playerMessage', message, username);
-//     });
+    public createGame(gameCode?: string) {
+        // do stuff
+        if (!gameCode) gameCode = ServerHub.makeRandomGameCode();
 
-//     socket.on('userJoined', (username: string) => {
-//         game.usernamesList.push(username);
-//         io.emit('systemMessage', `${username} joined the lobby.`);
-//     });
+        const io = new Server(this.httpServer, {
+            cors: { origin: true },
+            path: `/${gameCode}`,
+        });
 
-//     socket.on('disconnect', () => {
-//         io.emit('clientNumberUpdate', io.engine.clientsCount);
-//     });
-// });
+        this.games[gameCode] = new Game(io);
+        console.log(`Added a new game with code '${gameCode}'`);
+    }
+}
 
-httpServer.listen(3001, () => console.log(`Server listening on port *:3001`));
+export const serverHub = new ServerHub(3001);
+
+serverHub.createGame('worm');

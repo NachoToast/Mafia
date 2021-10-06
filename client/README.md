@@ -1,46 +1,52 @@
-# Getting Started with Create React App
+# Mafia Client
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the **client** portion of the mafia codebase. It's what the user sees, and acts as an intermediate between the user (the **client**) and the server (the **api**).
 
-## Available Scripts
+If you want to work on UI design, HTML, CSS, etc.. then this is the place for you.
 
-In the project directory, you can run:
+# Setting up the Client
 
-### `yarn start`
+To set up the client on your own device.
+Make sure you have the **current** version of [Node](https://nodejs.org/en/) installed (LTS version probably works too but hasn't been tested).
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+-   If you just installed `Node`, you'll need to restart your VS Code so it realised you have it installed, otherwise you'll have some issues with the `npm` and `yarn` commands later on.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### Cloning the Repository
 
-### `yarn test`
+1. Open a new VS Code window.
+2. Press `CTRL + SHIFT + P` and type `git clone` (it should be the second one that comes up).
+3. Press `enter` button (or hit the `git clone` button) and paste the [URL](https://github.com/NachoToast/Mafia) of this repository into the box.
+4. Press `enter` again (or hit the `Clone from URL` button) and choose where you want to put the folder, it will be put in a `Mafia` subfolder automatically.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Downloading Dependencies
 
-### `yarn build`
+1. In VS Code you can open a terminal with `` CTRL + ` `` or through the `Terminal` button on the top menu bar.
+2. The terminal should show you what folder you're currently in, navigate to the `Mafia\Client` folder using the `cd` command:
+    - `cd .\Client\` should be all that's required.
+    - Tab autocomplete is your best friend here.
+3. Install the dependencies using `npm install` (`npm i`) or `yarn`:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+-   `npm` is already downloaded with Node, but is slower than `yarn`.
+-   `yarn` is much faster, but you'll need to quickly download it first using `npm install yarn -g` (The `-g` is a global flag, meaning you'll never have to download it again).
+-   This _will_ take a while since the client uses lots of dependencies (~40k).
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Running the Client
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Now you can run the client by typing `yarn start` or `npm start`, it'll take up to a couple minutes to do the first-boot, but afterwards any changes you make to the files will be updated almost instantly on your browser.
 
-### `yarn eject`
+# About the Codebase
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+If you haven't picked it up from the excessively verbose README, the secondary goal of this project is to be a tutorial resource. As such, eventually every directory you can go into will have a `README.md` file that explains why that directory exists and what sort of things it contains.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+-   If you're browsing on GitHub, the README's will open automatically for every folder you go into.
+-   If you're browsing on VS Code, you'll need to manually open the README's, you can also preview them using `CTRL + SHIFT + V`.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+# Contributing
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Feel free to fork the repository and make pull requests. Automatic linting is done by the [Prettier](../.prettierrc.js) file, so if your code is randomly formatting itself on save, thats intentional.
 
 ## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Why are there like 40k dependencies for the client? [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).

@@ -18,4 +18,5 @@ export const INTERNAL_ERRORS = {
         }.`,
     NO_NAME_TO_REMOVE: (player: Player) =>
         `Couldn't find name '${player.name}' to remove from list.`,
+    BASIC: (error: unknown) => (error instanceof Error ? error.message : `Unknown Error Occured`),
 };

@@ -10,6 +10,7 @@ export function getIPFromSocket(socket: Socket) {
     return socket.handshake.address.split(':').slice(-1)[0];
 }
 
+/** Represents a game room, with a code, playerlist, etc... */
 export class Game {
     /** Players who haven't submitted a username yet. */
     private pendingPlayers: { [index: string]: PendingPlayer } = {};
@@ -66,7 +67,7 @@ export class Game {
     }
 
     /** Returns whether the IP (linked to the socket) is already in any player list. */
-    private isDuplicateIP(ip: string) {
+    public isDuplicateIP(ip: string) {
         const pendingIPMap = Object.keys(this.pendingPlayers);
         const nonPendingIPMap = Object.keys(this.playerList);
 
@@ -86,6 +87,10 @@ export class Game {
         }
 
         return false;
+    }
+
+    public isDuplicateUsername(username: string) {
+        return this.namesList.includes(username.toLowerCase());
     }
 
     /** Adds a new socket connection to the pending players list. */

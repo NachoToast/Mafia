@@ -23,7 +23,7 @@ export class PendingPlayer {
     }
 
     private attemptJoin(username: string) {
-        if (this.parentGame.namesList.includes(username.toLowerCase())) {
+        if (this.parentGame.isDuplicateUsername(username)) {
             this.socket.emit('usernameTaken');
             return;
         }

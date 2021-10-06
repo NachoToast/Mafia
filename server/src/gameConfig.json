@@ -1,4 +1,5 @@
 {
     "allowDuplicateIP": true,
-    "statsReportInterval": 0
+    "statsReportInterval": 0,
+    "tokenDuration": "1m"
 }

@@ -18,6 +18,9 @@ const API = axios.create({ baseURL: `http://ntgc.ddns.net:3001/mafia` });
 //     return req;
 // })
 
-export const findGame = async (
+export const findGameByCode = async (
     payload: FindGameRequestBody,
 ): Promise<{ data: string; status: Number }> => API.post('/gameFinder', payload);
+
+export const countGames = async (): Promise<{ data: number; status: Number }> =>
+    API.get('/gameCounter');

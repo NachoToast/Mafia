@@ -101,11 +101,11 @@ const CustomButtonRoot = styled(ButtonRoot)(
   }`,
 );
 
-const GoButton = React.forwardRef(function SvgButton(
+const JoinGameButton = React.forwardRef(function SvgButton(
     props: ButtonUnstyledProps,
     ref: React.ForwardedRef<any>,
 ) {
     return <ButtonUnstyled {...props} component={CustomButtonRoot} ref={ref} />;
 });
 
-export default GoButton;
+export default JoinGameButton;

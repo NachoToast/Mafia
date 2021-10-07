@@ -28,7 +28,7 @@ export async function findGame(req: Request, res: Response) {
             return res.status(200).json(`Username '${username}' Taken`);
         }
 
-        const token = jwt.sign({ username }, jwt_secret, { expiresIn: tokenDuration });
+        const token = jwt.sign({ username, gameCode }, jwt_secret, { expiresIn: tokenDuration });
 
         res.status(202).json(token);
     } catch (error) {

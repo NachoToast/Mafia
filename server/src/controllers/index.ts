@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import { allowDuplicateIP, tokenDuration } from '../gameConfig.json';
+import { INTERNAL_ERRORS } from '../constants/serverMessages';
 import { jwt_secret } from '../gameSecrets.json';
 import { serverHub } from '..';
-import jwt from 'jsonwebtoken';
-import { INTERNAL_ERRORS } from '../constants/serverMessages';
+import { globalLogger } from '../models/logger';
 
 export async function findGame(req: Request, res: Response) {
     try {
@@ -14,25 +15,27 @@ export async function findGame(req: Request, res: Response) {
             return res.status(200).json(`Game '${gameCode}' Not Found`);
         }
 
-        if (!allowDuplicateIP || true) {
-            const address = req.socket.remoteAddress;
-            if (!!address) {
-                const ip = address.split(':').slice(-1)[0];
-                if (foundGame.isDuplicateIP(ip)) {
-                    return res.status(200).json(`Duplicate IP`);
-                }
+        const address = req.socket.remoteAddress;
+        const ip = address?.split(':').slice(-1)[0] ?? 'Unknown';
+
+        if (!allowDuplicateIP) {
+            if (ip === 'Unknown') return res.status(200).json('Invalid IP');
+
+            if (foundGame.isDuplicateIP(ip)) {
+                return res.status(200).json(`Duplicate IP`);
             }
         }
 
         if (foundGame.isDuplicateUsername(username)) {
-            return res.status(200).json(`Username '${username}' Taken`);
+            return res.status(200).json('Username Taken');
         }
 
         const token = jwt.sign({ username, gameCode }, jwt_secret, { expiresIn: tokenDuration });
+        foundGame.prepareForPlayer(token, username, ip);
 
         res.status(202).json(token);
     } catch (error) {
-        console.log(error);
+        globalLogger.log(error);
         res.status(500).json(INTERNAL_ERRORS.BASIC(error));
     }
 }
@@ -45,4 +48,14 @@ export async function createGame(req: Request, res: Response) {
      * creator
      */
     // creategame middleware
+}
+
+export async function countGames(req: Request, res: Response) {
+    try {
+        const numGames = serverHub.getNumberOfGames();
+        res.status(200).json(numGames);
+    } catch (error) {
+        globalLogger.log(error);
+        res.status(500).json(INTERNAL_ERRORS.BASIC(error));
+    }
 }

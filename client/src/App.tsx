@@ -8,6 +8,8 @@ import Game from './components/Game/Game';
 
 class App extends Component {
     private token = this.getToken(localStorage.getItem(STORAGE.tokenKeyName));
+    private gameCode: string = '';
+    private username: string = '';
 
     public constructor(props: object) {
         super(props);
@@ -39,6 +41,8 @@ class App extends Component {
     public updateToken(newToken: string) {
         localStorage.setItem(STORAGE.tokenKeyName, newToken);
         this.token = newToken;
+        this.gameCode = localStorage.getItem(STORAGE.gameCodeKeyName) ?? '';
+        this.username = localStorage.getItem(STORAGE.usernameKeyName) ?? '';
         this.forceUpdate();
     }
 
@@ -46,7 +50,7 @@ class App extends Component {
         console.log('Main App Render');
         if (!this.token) return <JoinGame render={this.updateToken} />;
 
-        return <Game />;
+        return <Game token={this.token} gameCode={this.gameCode} username={this.username} />;
 
         // return (
         //     <div className="App">

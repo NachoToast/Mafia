@@ -1,5 +1,7 @@
 {
     "allowDuplicateIP": true,
     "statsReportInterval": 0,
-    "tokenDuration": "1h"
+    "tokenDuration": "1h",
+    "requestTimeoutSeconds": 10,
+    "joinValidation": ["token", "ip"]
 }

@@ -69,6 +69,13 @@ export class JoinGame extends Component<JoinGameProps> {
     public constructor(props: JoinGameProps) {
         super(props);
 
+        const queryParams = new URLSearchParams(window.location.search);
+        const gameCode = queryParams.get('game');
+        if (!!gameCode) {
+            localStorage.setItem(STORAGE.gameCodeKeyName, gameCode);
+            this.state.gameCode.value = gameCode;
+        }
+
         this.updateUsername = this.updateUsername.bind(this);
         this.validateUsername = this.validateUsername.bind(this);
 
@@ -90,8 +97,10 @@ export class JoinGame extends Component<JoinGameProps> {
         window.addEventListener('keydown', this.enterEvent);
 
         if (!!localStorage.getItem(STORAGE.hadExpiredTokenKeyName)) {
-            this.setState({ subtitle: 'Token Expired' });
-            this.setState({ subtitleColour: 'lightcoral' });
+            this.setState({
+                subtitle: 'Token Expired',
+                subtitleColour: 'lightcoral',
+            } as JoinGameState);
             localStorage.removeItem(STORAGE.hadExpiredTokenKeyName);
         }
 
@@ -157,7 +166,15 @@ export class JoinGame extends Component<JoinGameProps> {
     private async getGameCount() {
         const numGames = await countGames();
         if (numGames !== this.state.numGames) {
-            this.setState({ numGames } as JoinGameState);
+            const newState: { [key: string]: any } = { numGames };
+            if (numGames === -1) {
+                newState.subtitle = 'Failed to Connect to the Mafia Servers';
+                newState.subtitleColour = 'lightcoral';
+            } else if (this.state.numGames === -1) {
+                newState.subtitle = 'By NachoToast';
+                newState.subtitleColour = 'white';
+            }
+            this.setState(newState as JoinGameState);
         }
     }
 
@@ -222,7 +239,8 @@ export class JoinGame extends Component<JoinGameProps> {
                             <Stack direction="row" justifyContent="space-between">
                                 <JoinGameButton onClick={this.joinGame}>Join Game</JoinGameButton>
                                 <Typography alignSelf="center">
-                                    {this.state.numGames} Active Games
+                                    {this.state.numGames < 1 ? 'No' : this.state.numGames} Active
+                                    Game{this.state.numGames === 1 ? '' : 's'}
                                 </Typography>
                                 <CreateGameButton handleClick={this.createGame} />
                             </Stack>

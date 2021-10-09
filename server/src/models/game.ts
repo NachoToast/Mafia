@@ -1,21 +1,25 @@
 import { createServer, Server as HttpServer } from 'http';
 import { memoryUsage } from 'process';
 import { Socket, Server } from 'socket.io';
-import { LOG_MESSAGES } from '../constants/logging';
+import { GAME_LOG, LOG_MESSAGES } from '../constants/logging';
 import {
     EMITTED_PLAYER_EVENTS,
+    EMITTED_SERVER_EVENTS,
     RECEIVED_PLAYER_EVENTS,
     RECEIVED_SERVER_EVENTS,
+    ROOM_NAMES,
 } from '../constants/socketEvent';
 // import { DUPLICATE, INTERNAL_ERRORS } from '../constants/serverMessages';
 // import { PendingPlayer, Player } from './player';
 
-import { statsReportInterval, allowDuplicateIP, joinValidation } from '../gameConfig.json';
+import { statsReportInterval, joinValidation } from '../gameConfig.json';
 import Logger from './logger';
-import { IPfromSocket, PendingTokenIP, Player } from './players';
+import { IPfromSocket, PendingPlayer, Player, SocketTokenPayload } from './players';
 import { GameCreator } from './serverHub';
 import { JwtPayload, verify } from 'jsonwebtoken';
 import { jwt_secret } from '../gameSecrets.json';
+import { TimePeriods } from '../constants/mafia';
+import { ChatMessage } from './chatMessage';
 
 export function getIPFromSocket(socket: Socket) {
     return socket.handshake.address.split(':').slice(-1)[0];
@@ -26,7 +30,9 @@ export class Game {
     private io: Server;
     private gameCode: string;
     private createdBy: GameCreator;
-    public readonly inProgress: boolean = false;
+    private timePeriod: TimePeriods = 'pregame';
+    private dayNumber: number = 0;
+    public inProgress: boolean = false;
 
     /** Logging for game events, like day/night cycles, voting, etc.. */
     private logger: Logger;
@@ -34,8 +40,8 @@ export class Game {
     /** Logging for player joins, disconnects, and reconnects. */
     private playerLogger: Logger;
 
-    /** Players who have sent the POST request to `gameFinder` but haven't connected with a socket yet. */
-    private pendingTokenIPs: { [ip: string]: PendingTokenIP } = {};
+    /** Players who have sent the POST request to `gameFinder` endpoint but haven't connected with a socket yet. */
+    private pendingPlayers: { [ip: string]: PendingPlayer } = {};
 
     private players: { [username: string]: Player } = {};
 
@@ -63,8 +69,9 @@ export class Game {
     public isDuplicateIP(ip: string) {
         const ipIndex = this.ipList.indexOf(ip);
         if (ipIndex === -1) return false;
-        if (this.pendingTokenIPs[ip]) return true;
+        if (this.pendingPlayers[ip]) return true;
 
+        // see if there's a disconnected player with same IP
         const possiblePlayer: Player | undefined =
             this.players[
                 Object.keys(this.players).filter(
@@ -78,25 +85,24 @@ export class Game {
     }
 
     public isDuplicateUsername(username: string) {
-        const playerWithSameUsername = this.players[username];
-        if (this.pendingTokenIPs[username]) return true;
+        const playerWithSameUsername = this.players[username.toLowerCase()];
         if (playerWithSameUsername && playerWithSameUsername.connected) return true;
         return false;
     }
 
     /** On initially entering game code and username, if both are valid this function is called to 'reserve' a slot in the game. */
     public prepareForPlayer(token: string, username: string, ip: string) {
-        const pendingPlayer = new PendingTokenIP(this, token, username, ip);
+        const pendingPlayer = new PendingPlayer(this, token, username, ip);
 
         this.playerLogger.log(LOG_MESSAGES.SENT_INITIAL_POST(ip, username));
-        this.pendingTokenIPs[ip] = pendingPlayer;
+        this.pendingPlayers[ip] = pendingPlayer;
         this.ipList.push(ip);
     }
 
-    /** If a pending player (see `prepareForPlayer` method) doesn't join in the specified amount of time, the game will remove them from the list. */
-    public timeoutJoiningPlayer(player: PendingTokenIP, stage: 0 | 1 | 3) {
+    public removePendingPlayer(player: PendingPlayer, stage: 0 | 1 | 3) {
         if (stage !== 3) {
-            // stage 3 is a success, and has its own logging & cleanup
+            // stage 3 marks transition from pending to actual player
+            // which has its own logging and cleanup
             this.playerLogger.log(LOG_MESSAGES.TIMEOUT(player, stage));
 
             const ipIndex = this.ipList.indexOf(player.ip);
@@ -106,17 +112,23 @@ export class Game {
         }
 
         clearTimeout(player.timeOutFunction);
-        delete this.pendingTokenIPs[player.ip];
+        delete this.pendingPlayers[player.ip];
     }
 
-    public handleSocketConnection(socket: Socket) {
+    /**
+     * Handles initial (unverified) socket connections, ends up doing 1 of three things:
+     * 1. If there is a pendingPlayer with same IP, prepares credential verification.
+     * 2. If there is a disconnected player with same IP, prepares credential verification.
+     * 3. Otherwise tells socket it is unauthenticated, and disconnects it.
+     */
+    private handleSocketConnection(socket: Socket) {
         const ip = getIPFromSocket(socket);
 
-        const associatedPlayer: PendingTokenIP | undefined = this.pendingTokenIPs[ip];
+        const associatedPlayer: PendingPlayer | undefined = this.pendingPlayers[ip];
 
         if (!associatedPlayer) {
             if (this.ipList.includes(ip)) {
-                // ip is included, so check if player with same ip exists and they are disconnected
+                // ip is taken by an existing player, check if that player is connected
                 const possiblePlayer: Player | undefined =
                     this.players[
                         Object.keys(this.players).filter(
@@ -127,7 +139,13 @@ export class Game {
                     this.playerLogger.log(
                         LOG_MESSAGES.POSSIBLE_SOCKET_RECONNECTION(ip, possiblePlayer),
                     );
-                    possiblePlayer.addReconnectionListener(socket);
+                    socket.emit(EMITTED_PLAYER_EVENTS.GIVE_TOKEN);
+                    socket.on(
+                        RECEIVED_PLAYER_EVENTS.HERE_IS_TOKEN,
+                        (payload: SocketTokenPayload) => {
+                            this.handleReonnectTokenSend(possiblePlayer, socket, payload);
+                        },
+                    );
                     return;
                 }
             }
@@ -141,14 +159,16 @@ export class Game {
         associatedPlayer.addSocket(socket);
     }
 
-    public verifyCredentials(
+    /** Verifies that token, ip, username, and other credentials (configured in `gameConfig.json`) match the player. */
+    private verifyCredentials(
         token: string,
-        player: Player | PendingTokenIP,
+        player: Player | PendingPlayer,
         username: string,
         gameCode: string,
     ): { isValid: boolean; reasons: string[] } {
         let isValid = true;
         const reasons: string[] = [];
+
         if (joinValidation.includes('token')) {
             // token validates gameCode and username
             try {
@@ -190,8 +210,9 @@ export class Game {
         return { isValid, reasons };
     }
 
+    /** Verifies pending player socket connections. */
     public handleTokenSend(
-        player: PendingTokenIP,
+        player: PendingPlayer,
         token: string,
         gameCode: string,
         username: string,
@@ -207,31 +228,84 @@ export class Game {
 
         this.playerLogger.log(LOG_MESSAGES.SUCCESSFUL_CONNECTION(player));
 
-        // TODO: enforce lowercase on player.username keys in this.players
-        this.players[player.username] = new Player(
-            this,
-            player.socket as Socket,
-            player.username,
-            player.token,
+        const newPlayer = new Player(this, player.socket as Socket, player.username, player.token);
+        this.players[player.username.toLowerCase()] = newPlayer;
+        this.logger.log(GAME_LOG.JOINED_GAME(newPlayer));
+        this.io.emit(
+            EMITTED_SERVER_EVENTS.PLAYER_ADD,
+            username,
+            this.inProgress ? 'spectator' : 'lobby',
         );
-        this.timeoutJoiningPlayer(player, 3);
+        const message: ChatMessage = {
+            author: 'Server',
+            content: GAME_LOG.JOINED_GAME(newPlayer),
+            props: { hideAuthor: true },
+        };
+        if (this.inProgress) {
+            this.io.to(ROOM_NAMES.SPECTATORS).emit(EMITTED_SERVER_EVENTS.CHAT_MESSAGE, message);
+        } else {
+            this.io.emit(EMITTED_SERVER_EVENTS.CHAT_MESSAGE, message);
+        }
+        this.removePendingPlayer(player, 3);
     }
 
-    public handleTokenReconnectAttempt(
-        token: string,
-        gameCode: string,
-        username: string,
+    // private sendChatMessage
+
+    /** Verifies reconnecting player socket connections. */
+    private handleReonnectTokenSend(
         player: Player,
         newSocket: Socket,
+        credentials: SocketTokenPayload,
     ) {
+        const { token, username, gameCode } = credentials;
         const { isValid, reasons } = this.verifyCredentials(token, player, username, gameCode);
         if (isValid) {
             this.playerLogger.log(LOG_MESSAGES.RECONNECTION_SUCCESSFUL(player));
             player.reconnect(newSocket);
+            this.logger.log(GAME_LOG.RECONNECTED(player));
+            this.io.emit(EMITTED_SERVER_EVENTS.PLAYER_ADD, player.username, player.status);
+            const message: ChatMessage = {
+                author: 'Server',
+                content: GAME_LOG.RECONNECTED(player),
+                props: { hideAuthor: true },
+            };
+            if (this.inProgress && player.status !== 'alive') {
+                this.io.to(ROOM_NAMES.SPECTATORS).emit(EMITTED_SERVER_EVENTS.CHAT_MESSAGE, message);
+            } else {
+                this.io.emit(EMITTED_SERVER_EVENTS.CHAT_MESSAGE, message);
+            }
         } else {
             newSocket.emit(EMITTED_PLAYER_EVENTS.UNREGISTERED);
             this.playerLogger.log(LOG_MESSAGES.RECONNECTION_INVALID(player, reasons));
             newSocket.disconnect();
         }
+    }
+
+    /** Logs player disconnects. */
+    public handleDisconnect(player: Player, reason: string) {
+        this.playerLogger.log(LOG_MESSAGES.DISCONNECTED(player, reason));
+        player.disconnectedAt = Date.now();
+        this.logger.log(GAME_LOG.LEFT_GAME(player));
+        this.io.emit(EMITTED_SERVER_EVENTS.PLAYER_REMOVE, player.username, player.status);
+        const message: ChatMessage = {
+            author: 'Server',
+            content: GAME_LOG.LEFT_GAME(player),
+            props: { hideAuthor: true },
+        };
+        if (this.inProgress && player.status !== 'alive') {
+            this.io.to(ROOM_NAMES.SPECTATORS).emit(EMITTED_SERVER_EVENTS.CHAT_MESSAGE, message);
+        } else {
+            this.io.emit(EMITTED_SERVER_EVENTS.CHAT_MESSAGE, message);
+        }
+    }
+
+    public messageSender(player: Player, message: ChatMessage) {
+        const exportedMessage = {
+            author: message.author,
+            content: message.content,
+            props: message.props,
+        };
+        this.io.emit(EMITTED_SERVER_EVENTS.CHAT_MESSAGE, exportedMessage);
+        this.logger.log(`[${message.author}] ${message.content}`);
     }
 }

@@ -15,6 +15,11 @@ class App extends Component {
         super(props);
 
         this.updateToken = this.updateToken.bind(this);
+        this.reRender = this.reRender.bind(this);
+    }
+
+    private reRender() {
+        this.setState(this.state);
     }
 
     private getToken(storedToken: string | null) {
@@ -50,26 +55,14 @@ class App extends Component {
         console.log('Main App Render');
         if (!this.token) return <JoinGame render={this.updateToken} />;
 
-        return <Game token={this.token} gameCode={this.gameCode} username={this.username} />;
-
-        // return (
-        //     <div className="App">
-        //         <header className="App-header">
-        //             <img src={logo} className="App-logo" alt="logo" />
-        //             <p>
-        //                 Edit <code>src/App.tsx</code> and save to reload.
-        //             </p>
-        //             <a
-        //                 className="App-link"
-        //                 href="https://reactjs.org"
-        //                 target="_blank"
-        //                 rel="noopener noreferrer"
-        //             >
-        //                 Learn React
-        //             </a>
-        //         </header>
-        //     </div>
-        // );
+        return (
+            <Game
+                token={this.token}
+                render={this.reRender}
+                gameCode={this.gameCode}
+                username={this.username}
+            />
+        );
     }
 }
 

@@ -1,4 +1,4 @@
-import { Grid, Stack } from '@mui/material';
+import { Box, Card, Grid, Paper, Stack } from '@mui/material';
 import React, { Component } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { STORAGE } from '../../constants/localStorageVariables';
@@ -17,6 +17,7 @@ interface GameProps {
     gameCode: string;
     username: string;
     token: string;
+    render: Function;
 }
 
 class Game extends Component<GameProps> {
@@ -64,6 +65,8 @@ class Game extends Component<GameProps> {
             console.log('emitting deets');
         });
 
+        // this.socket.on('')
+
         this.socket.connect();
     }
 
@@ -80,10 +83,10 @@ class Game extends Component<GameProps> {
                     </Stack>
                 </Grid>
                 <Grid item xs={6} style={{ height: '100vh' }}>
-                    <ChatBox />
+                    <ChatBox socket={this.socket} />
                 </Grid>
                 <Grid item xs={3}>
-                    <PlayerList />
+                    <PlayerList socket={this.socket} />
                 </Grid>
             </Grid>
         );

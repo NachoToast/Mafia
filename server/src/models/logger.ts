@@ -1,11 +1,11 @@
 import { appendFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 
-import {
-    GLOBAL_LOG_DIRECTORY,
-    TIMESTAMP_OPTIONS,
-    DEFAULT_TIMESTAMP_OPTION,
-    DEFAULT_OVERWRITE_OPTION,
-} from '../constants/logging';
+// logger config
+const GLOBAL_LOG_DIRECTORY = 'logs';
+const DEFAULT_TIMESTAMP_OPTION = 'time';
+const DEFAULT_OVERWRITE_OPTION = true;
+
+type TIMESTAMP_OPTIONS = 'date' | 'time' | 'both' | 'none' | 'custom';
 
 interface ExtendedError extends Error {
     erro: number;

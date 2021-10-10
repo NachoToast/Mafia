@@ -20,7 +20,7 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
                 key: uuidv4(),
             };
 
-            setMessages([newMessage, ...messages.slice(-99)]);
+            setMessages([newMessage, ...messages.slice(0, 99)]);
         });
         return () => {
             socket.off('emittedChatMessage');
@@ -34,7 +34,7 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
 
     function sendMessage(e: FormEvent<HTMLButtonElement | HTMLFormElement>) {
         e.preventDefault();
-        if (messageToSend.length > 1) {
+        if (messageToSend.trim().length > 0) {
             socket.emit('chatMessage', messageToSend.slice(0, 128));
             setMessageToSend('');
         }

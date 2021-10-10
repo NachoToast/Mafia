@@ -30,13 +30,22 @@ export class Player {
     public joinedAt = Date.now();
     public disconnectedAt = Date.now();
 
+    /** Currently unused. */
+    public playerNumber: number;
     public role: MafiaRoles = 'None';
 
-    public constructor(game: Game, socket: Socket, username: string, token: string) {
+    public constructor(
+        game: Game,
+        socket: Socket,
+        username: string,
+        token: string,
+        number: number,
+    ) {
         this.parentGame = game;
         this.socket = socket;
         this.username = username;
         this.token = token;
+        this.playerNumber = number;
         this.ip = IPfromSocket(socket);
 
         if (game.inProgress) {
@@ -130,7 +139,7 @@ export class PendingPlayer {
                 gameCode: string;
                 username: string;
             }) => {
-                this.parentGame.handleTokenSend(this, token, gameCode, username);
+                this.parentGame.handleSocketCredentials(this, token, gameCode, username);
             },
         );
     }

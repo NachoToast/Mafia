@@ -1,79 +1,108 @@
-import { Stack, Box } from '@mui/material';
+import { Stack, Paper, Divider, Typography } from '@mui/material';
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Socket } from 'socket.io-client';
+import PlayerLine from './PlayerLine';
 
-interface ListedPlayer {
+export interface ListedPlayer {
     username: string;
+    status: PlayerStatuses;
+    extra?: string;
     connected: boolean;
-    isLobby: boolean;
 }
 
-type PlayerStatuses = 'spectator' | 'alive' | 'dead' | 'lobby';
+export type PlayerStatuses = 'spectator' | 'alive' | 'dead' | 'lobby' | 'loading' | 'removed';
 
 const PlayerList = ({ socket }: { socket: Socket }) => {
-    const [alivePlayers, setAlivePlayers]: [ListedPlayer[], Dispatch<SetStateAction<any>>] =
-        useState([]);
-    const [deadPlayers, setDeadPlayers]: [ListedPlayer[], Dispatch<SetStateAction<any>>] = useState(
-        [],
-    );
-    const [spectators, setSpectators]: [ListedPlayer[], Dispatch<SetStateAction<any>>] = useState(
+    const [playerList, setPlayerList]: [ListedPlayer[], Dispatch<SetStateAction<any>>] = useState(
         [],
     );
 
     useEffect(() => {
-        socket.on('playerJoined', (username: string, status: PlayerStatuses) => {
-            const newPlayer: ListedPlayer = {
-                username,
-                connected: true,
-                isLobby: status === 'lobby',
-            };
-            if (status === 'lobby' || status === 'alive') {
-                setAlivePlayers([...alivePlayers, newPlayer]);
-            } else if (status === 'dead') {
-                setDeadPlayers([...deadPlayers, newPlayer]);
+        socket.on('playerChange', (payload: ListedPlayer) => {
+            console.log(`playerChange`, payload);
+            let existingPlayer = playerList.find(({ username }) => username === payload.username);
+
+            if (!!existingPlayer) {
+                if (
+                    payload.status === 'removed' &&
+                    (existingPlayer.status === 'alive' ||
+                        existingPlayer.status === 'dead' ||
+                        existingPlayer.status === 'lobby')
+                ) {
+                    existingPlayer.connected = false;
+                } else {
+                    playerList.splice(playerList.indexOf(existingPlayer), 1);
+                }
+                setPlayerList([...playerList]);
             } else {
-                setSpectators([...spectators, newPlayer]);
+                setPlayerList([...playerList, payload]);
             }
         });
 
-        socket.on('playerLeft', (username: string, status: PlayerStatuses) => {
-            if (status === 'lobby' || status === 'alive') {
-                console.log(username, 'left');
-                const newPlayer = alivePlayers.find((e) => e.username === username);
-                if (!newPlayer) return;
-                newPlayer.connected = false;
-                setAlivePlayers([...alivePlayers, newPlayer]);
-            } else if (status === 'dead') {
-                const newPlayer = deadPlayers.find((e) => e.username === username);
-                if (!newPlayer) return;
-                newPlayer.connected = false;
-                setDeadPlayers([...deadPlayers, newPlayer]);
-            } else {
-                const newPlayer = spectators.find((e) => e.username === username);
-                if (!newPlayer) return;
-                const newSpectators = spectators;
-                newSpectators.splice(newSpectators.indexOf(newPlayer), 1);
-                setSpectators(newSpectators);
+        socket.on('playerList', (newPlayerList: ListedPlayer[]) => {
+            let newPlayers: ListedPlayer[] = [];
+            for (const player of newPlayerList) {
+                if (!playerList.includes(player)) {
+                    newPlayers.push(player);
+                }
+            }
+
+            if (!!newPlayers.length) {
+                setPlayerList([...playerList, ...newPlayers]);
             }
         });
         return () => {
-            socket.off('playerJoined');
+            socket.off('playerChange');
         };
     });
 
+    console.log('rendering player list!');
+
+    const alivePlayers = playerList.filter(
+        ({ status }) => status === 'lobby' || status === 'alive',
+    );
+    const deadPlayers = playerList.filter(({ status }) => status === 'dead');
+    const spectators = playerList.filter(({ status }) => status === 'spectator');
+
     return (
-        <Stack style={{ backgroundColor: 'maroon', height: '100vh' }} justifyContent="space-evenly">
-            <Box>
-                Alive People:{' '}
-                {alivePlayers.map((e) => `${e.username}${!!e.connected}${!!e.isLobby}`)}
-            </Box>
-            <Box>
-                Dead People {deadPlayers.map((e) => `${e.username}${!!e.connected}${!!e.isLobby}`)}
-            </Box>
-            <Box>
-                Spectators {spectators.map((e) => `${e.username}${!!e.connected}${!!e.isLobby}`)}
-            </Box>
-        </Stack>
+        <Paper elevation={24} square>
+            <Stack
+                style={{ height: '100vh', overflowY: 'auto', padding: '3px' }}
+                justifyContent="space-evenly"
+                spacing={0.75}
+            >
+                {/* alive */}
+                <Paper style={{ flexGrow: 1, padding: '10px' }} square>
+                    <Typography variant="h5">Alive ({alivePlayers.length})</Typography>
+                    <Divider flexItem style={{ margin: '10px 0 5px 0' }} />
+                    <Stack spacing={0.75} divider={<Divider flexItem />}>
+                        {alivePlayers.map((e) => (
+                            <PlayerLine key={e.username} player={e} />
+                        ))}
+                    </Stack>
+                </Paper>
+                {/* dead */}
+                <Paper style={{ flexGrow: 1, padding: '10px' }} square>
+                    <Typography variant="h5">Dead ({deadPlayers.length})</Typography>
+                    <Divider flexItem style={{ margin: '10px 0 5px 0' }} />
+                    <Stack spacing={0.75} divider={<Divider flexItem />}>
+                        {deadPlayers.map((e) => (
+                            <PlayerLine key={e.username} player={e} />
+                        ))}
+                    </Stack>
+                </Paper>
+                {/* spectators */}
+                <Paper style={{ flexGrow: 1, padding: '10px' }} square>
+                    <Typography variant="h5">Spectating ({spectators.length})</Typography>
+                    <Divider flexItem style={{ margin: '10px 0 5px 0' }} />
+                    <Stack spacing={0.75} divider={<Divider flexItem />}>
+                        {spectators.map((e) => (
+                            <PlayerLine key={e.username} player={e} />
+                        ))}
+                    </Stack>
+                </Paper>
+            </Stack>
+        </Paper>
     );
 };
 

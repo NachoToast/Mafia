@@ -31,7 +31,7 @@ export async function findGame(req: Request, res: Response) {
         }
 
         const token = jwt.sign({ username, gameCode }, jwt_secret, { expiresIn: tokenDuration });
-        foundGame.prepareForPlayer(token, username, ip);
+        foundGame.createPendingPlayer(token, username, ip);
 
         res.status(202).json(token);
     } catch (error) {

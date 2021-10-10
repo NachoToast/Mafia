@@ -28,10 +28,10 @@ export const LOG_MESSAGES = {
         `Socket reconnection for ${player.username} (${
             player.ip
         }) failed due to ${invalidCredentials.join(', ')}`,
-    SUCCESSFUL_CONNECTION: (player: PendingPlayer) =>
-        `${player.username} (${player.ip}) passed all checks and connected after ${
-            Date.now() - player.sentAt
-        } ms (3/3)`,
+    SUCCESSFUL_CONNECTION: (player: Player, sentAt: number) =>
+        `${player.username} (${player.ip}) [${
+            player.playerNumber
+        }] passed all checks and connected after ${Date.now() - sentAt} ms (3/3)`,
     RECONNECTION_SUCCESSFUL: (player: Player) => {
         let timeTaken = Date.now() - player.disconnectedAt;
         let timeStep = 'ms';

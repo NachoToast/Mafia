@@ -1,6 +1,6 @@
 export type MafiaRoles = 'None';
 
-export type PlayerStatuses = 'spectator' | 'alive' | 'dead' | 'lobby';
+export type PlayerStatuses = 'spectator' | 'alive' | 'dead' | 'lobby' | 'loading' | 'removed';
 
 export type TimePeriods =
     | 'discussion'

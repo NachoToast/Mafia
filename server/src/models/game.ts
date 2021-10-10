@@ -5,6 +5,7 @@ import { GAME_LOG, LOG_MESSAGES } from '../constants/logging';
 import {
     EMITTED_PLAYER_EVENTS,
     EMITTED_SERVER_EVENTS,
+    PlayerUpdate,
     RECEIVED_PLAYER_EVENTS,
     RECEIVED_SERVER_EVENTS,
     ROOM_NAMES,
@@ -91,26 +92,41 @@ export class Game {
     }
 
     /** On initially entering game code and username, if both are valid this function is called to 'reserve' a slot in the game. */
-    public prepareForPlayer(token: string, username: string, ip: string) {
+    public createPendingPlayer(token: string, username: string, ip: string) {
         const pendingPlayer = new PendingPlayer(this, token, username, ip);
 
         this.playerLogger.log(LOG_MESSAGES.SENT_INITIAL_POST(ip, username));
         this.pendingPlayers[ip] = pendingPlayer;
         this.ipList.push(ip);
+
+        EMITTED_SERVER_EVENTS.PLAYER_UPDATE(this.io, {
+            username,
+            status: 'lobby',
+            connected: false,
+        });
     }
 
+    /** Pending players are removed if (stage):
+     * 1. No socket connection in time (specified in `gameConfig.json`)
+     * 2. Socket doesn't sent credentials in time or they are invalid
+     * 3. They're becoming an actual player.
+     */
     public removePendingPlayer(player: PendingPlayer, stage: 0 | 1 | 3) {
         if (stage !== 3) {
             // stage 3 marks transition from pending to actual player
             // which has its own logging and cleanup
             this.playerLogger.log(LOG_MESSAGES.TIMEOUT(player, stage));
+            EMITTED_SERVER_EVENTS.PLAYER_UPDATE(this.io, {
+                username: player.username,
+                status: 'removed',
+                connected: false,
+            });
 
             const ipIndex = this.ipList.indexOf(player.ip);
             if (ipIndex === -1) {
                 this.playerLogger.log(LOG_MESSAGES.FAILED_IP_REMOVAL(player));
             } else this.ipList.splice(ipIndex, 1);
         }
-
         clearTimeout(player.timeOutFunction);
         delete this.pendingPlayers[player.ip];
     }
@@ -119,7 +135,7 @@ export class Game {
      * Handles initial (unverified) socket connections, ends up doing 1 of three things:
      * 1. If there is a pendingPlayer with same IP, prepares credential verification.
      * 2. If there is a disconnected player with same IP, prepares credential verification.
-     * 3. Otherwise tells socket it is unauthenticated, and disconnects it.
+     * 3. Otherwise tells socket it is unregistered, and disconnects it.
      */
     private handleSocketConnection(socket: Socket) {
         const ip = getIPFromSocket(socket);
@@ -211,7 +227,7 @@ export class Game {
     }
 
     /** Verifies pending player socket connections. */
-    public handleTokenSend(
+    public handleSocketCredentials(
         player: PendingPlayer,
         token: string,
         gameCode: string,
@@ -226,16 +242,23 @@ export class Game {
             return;
         }
 
-        this.playerLogger.log(LOG_MESSAGES.SUCCESSFUL_CONNECTION(player));
+        const newPlayer = new Player(
+            this,
+            player.socket as Socket,
+            player.username,
+            token,
+            this.inProgress ? 0 : this.getNumPlayers() + 1,
+        );
 
-        const newPlayer = new Player(this, player.socket as Socket, player.username, player.token);
+        this.playerLogger.log(LOG_MESSAGES.SUCCESSFUL_CONNECTION(newPlayer, player.sentAt));
         this.players[player.username.toLowerCase()] = newPlayer;
         this.logger.log(GAME_LOG.JOINED_GAME(newPlayer));
-        this.io.emit(
-            EMITTED_SERVER_EVENTS.PLAYER_ADD,
-            username,
-            this.inProgress ? 'spectator' : 'lobby',
-        );
+        EMITTED_SERVER_EVENTS.PLAYER_UPDATE(this.io, {
+            username: newPlayer.username,
+            status: newPlayer.status,
+            connected: true,
+        });
+        this.showCurrentPlayers(newPlayer.socket, newPlayer.username);
         const message: ChatMessage = {
             author: 'Server',
             content: GAME_LOG.JOINED_GAME(newPlayer),
@@ -249,7 +272,33 @@ export class Game {
         this.removePendingPlayer(player, 3);
     }
 
-    // private sendChatMessage
+    /** Sends a list of current players to a specified socket. */
+    private showCurrentPlayers(socket: Socket, playerName: string) {
+        playerName = playerName.toLowerCase();
+        const updates: PlayerUpdate[] = [];
+        for (const name of Object.keys(this.players)) {
+            if (name === playerName) continue;
+            const update: PlayerUpdate = {
+                username: this.players[name].username,
+                status: this.players[name].status,
+                connected: this.players[name].connected,
+            };
+            updates.push(update);
+        }
+
+        for (const ip of Object.keys(this.pendingPlayers)) {
+            const pendingPlayer = this.pendingPlayers[ip];
+            updates.push({
+                username: pendingPlayer.username,
+                status: 'loading',
+                connected: false,
+            });
+        }
+
+        for (const update of updates) {
+            EMITTED_SERVER_EVENTS.PLAYER_UPDATE(socket, update);
+        }
+    }
 
     /** Verifies reconnecting player socket connections. */
     private handleReonnectTokenSend(
@@ -263,7 +312,12 @@ export class Game {
             this.playerLogger.log(LOG_MESSAGES.RECONNECTION_SUCCESSFUL(player));
             player.reconnect(newSocket);
             this.logger.log(GAME_LOG.RECONNECTED(player));
-            this.io.emit(EMITTED_SERVER_EVENTS.PLAYER_ADD, player.username, player.status);
+            EMITTED_SERVER_EVENTS.PLAYER_UPDATE(this.io, {
+                username: username,
+                status: player.status,
+                connected: true,
+            });
+            this.showCurrentPlayers(newSocket, username);
             const message: ChatMessage = {
                 author: 'Server',
                 content: GAME_LOG.RECONNECTED(player),
@@ -281,12 +335,21 @@ export class Game {
         }
     }
 
+    /** Does not include pending players. */
+    private getNumPlayers() {
+        return Object.keys(this.players).length;
+    }
+
     /** Logs player disconnects. */
     public handleDisconnect(player: Player, reason: string) {
         this.playerLogger.log(LOG_MESSAGES.DISCONNECTED(player, reason));
         player.disconnectedAt = Date.now();
         this.logger.log(GAME_LOG.LEFT_GAME(player));
-        this.io.emit(EMITTED_SERVER_EVENTS.PLAYER_REMOVE, player.username, player.status);
+        EMITTED_SERVER_EVENTS.PLAYER_UPDATE(this.io, {
+            username: player.username,
+            status: player.status,
+            connected: false,
+        });
         const message: ChatMessage = {
             author: 'Server',
             content: GAME_LOG.LEFT_GAME(player),

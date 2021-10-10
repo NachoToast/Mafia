@@ -1,3 +1,5 @@
+import { Server, Socket } from 'socket.io';
+import { Player } from '../models/players';
 import { PlayerStatuses } from './mafia';
 
 /** Events captured by the game's global io instance, `io.on()`  */
@@ -17,8 +19,16 @@ export const RECEIVED_PLAYER_EVENTS = {
 export const EMITTED_SERVER_EVENTS = {
     CHAT_MESSAGE: 'emittedChatMessage',
     PLAYER_ADD: 'playerJoined', // username: string, status: PlayerStatuses
-    PLAYER_REMOVE: 'playerLeft',
+    /** When a user has changed status, also applies to new users. */
+    PLAYER_UPDATE: (emitter: Server | Socket, payload: PlayerUpdate) =>
+        emitter.emit('playerChange', payload),
 };
+export interface PlayerUpdate {
+    username: string;
+    status: PlayerStatuses;
+    extra?: string; // e.g. putting (godfather) after the username for other mafia members
+    connected: boolean;
+}
 
 /** Events emitted by the player-specific socket instance - `socket.emit()` */
 export const EMITTED_PLAYER_EVENTS = {

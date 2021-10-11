@@ -48,6 +48,8 @@ export class Game {
 
     private ipList: string[] = [];
 
+    public maxPlayers: number = 15;
+
     public constructor(httpServer: HttpServer, gameCode: string, createdBy: GameCreator) {
         this.io = new Server(httpServer, {
             cors: { origin: true },

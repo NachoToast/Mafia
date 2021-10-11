@@ -16,7 +16,7 @@ export async function findGame(req: Request, res: Response) {
         }
 
         const address = req.socket.remoteAddress;
-        const ip = address?.split(':').slice(-1)[0] ?? 'Unknown';
+        const ip = address?.split(':').slice(-1)[0] || 'Unknown';
 
         if (!allowDuplicateIP) {
             if (ip === 'Unknown') return res.status(200).json('Invalid IP');

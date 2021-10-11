@@ -19,6 +19,13 @@ export interface SocketTokenPayload {
     username: string;
 }
 
+export class NewPlayer {
+    public socket: Socket;
+    constructor(socket: Socket) {
+        this.socket = socket;
+    }
+}
+
 export class Player {
     private parentGame: Game;
     public socket: Socket;
@@ -57,7 +64,9 @@ export class Player {
     }
 
     private setupSocket(socket: Socket) {
-        socket.on(RECEIVED_PLAYER_EVENTS.LEAVE, (reason: string) => this.leaveGame(reason));
+        socket.on(RECEIVED_PLAYER_EVENTS.LEAVE, (reason: string) =>
+            this.leaveGame(reason),
+        );
         socket.on(RECEIVED_PLAYER_EVENTS.CHAT_MESSAGE, (message: string) =>
             this.messageIntentionGetter(message),
         );
@@ -139,7 +148,12 @@ export class PendingPlayer {
                 gameCode: string;
                 username: string;
             }) => {
-                this.parentGame.handleSocketCredentials(this, token, gameCode, username);
+                this.parentGame.handleSocketCredentials(
+                    this,
+                    token,
+                    gameCode,
+                    username,
+                );
             },
         );
     }

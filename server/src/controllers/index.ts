@@ -18,20 +18,18 @@ export async function findGame(req: Request, res: Response) {
         const address = req.socket.remoteAddress;
         const ip = address?.split(':').slice(-1)[0] || 'Unknown';
 
-        if (!allowDuplicateIP) {
-            if (ip === 'Unknown') return res.status(200).json('Invalid IP');
-
-            if (foundGame.isDuplicateIP(ip)) {
-                return res.status(200).json(`Duplicate IP`);
-            }
+        if (foundGame.connectionSystem.isDuplicateIP(ip)) {
+            return res.status(200).json('Duplicate IP');
         }
 
-        if (foundGame.isDuplicateUsername(username)) {
+        if (foundGame.connectionSystem.isDuplicateUsername(username)) {
             return res.status(200).json('Username Taken');
         }
 
-        const token = jwt.sign({ username, gameCode }, jwt_secret, { expiresIn: tokenDuration });
-        foundGame.createPendingPlayer(token, username, ip);
+        const token = jwt.sign({ username, gameCode }, jwt_secret, {
+            expiresIn: tokenDuration,
+        });
+        foundGame.connectionSystem.newStageOne(username, token, ip);
 
         res.status(202).json(token);
     } catch (error) {

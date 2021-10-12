@@ -1,20 +1,15 @@
-export type MafiaRoles = 'None';
+export enum PlayerStatuses {
+    lobby,
+    spectator,
+    alive,
+    dead,
+}
 
-export type PlayerStatuses = 'spectator' | 'alive' | 'dead' | 'lobby' | 'loading' | 'removed';
-
-export type TimePeriods =
-    | 'discussion'
-    | 'night'
-    | 'voting'
-    | 'trial'
-    | 'postDiscussion'
-    | 'pregame';
-
-export const timePeriodName: { [index in TimePeriods]: string } = {
-    discussion: 'discussion',
-    postDiscussion: 'discussion',
-    night: 'night',
-    voting: 'voting',
-    trial: 'a trial',
-    pregame: 'pre-game',
-};
+export enum TimePeriods {
+    discussion = 'discussion',
+    night = 'night',
+    voting = 'voting',
+    trial = 'a trial',
+    postDiscussion = 'discussion',
+    pregame = 'pre-grame',
+}

@@ -3,7 +3,7 @@
     "statsReportInterval": 0,
     "tokenDuration": "1h",
     "requestTimeoutSeconds": 10,
-    "joinValidation": ["token", "ip"],
+    "playerVerification": ["token", "ip"],
     "allowReconnects": true,
     "killDisconnectedPlayers": true
 }

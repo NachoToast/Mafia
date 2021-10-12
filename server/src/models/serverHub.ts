@@ -1,12 +1,11 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Game } from './game';
-import { Server } from 'socket.io';
 import cors from 'cors';
 import gameRoutes from '../routes/game';
 import { gameCodeValidator } from '../constants/auth';
 import Logger, { globalLogger } from './logger';
-import { CODE_GENERATION_MESSAGES, LOG_MESSAGES } from '../constants/logging';
+import { CODE_GENERATION, SERVER_GENERAL } from '../constants/logging';
 
 export interface GameCreator {
     ip: string;
@@ -38,7 +37,8 @@ export default class ServerHub {
         });
     }
 
-    private static alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    private static alphabet =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     /** Makes a random game code, consisting of 3-5 random letters between a-z (inclusive, case sensitive) */
     private static makeRandomGameCode() {
         const codeLength = 3 + Math.floor(Math.random() * 3); // 3 to 5 inclusive
@@ -63,25 +63,25 @@ export default class ServerHub {
 
         if (!gameCode) {
             // no gameCode specified
-            this.gameCodeLogger.log(CODE_GENERATION_MESSAGES.MAKING_NEW(ip, username));
+            this.gameCodeLogger.log(CODE_GENERATION.MAKING_NEW(ip, username));
 
             gameCode = ServerHub.makeRandomGameCode();
             while (this.games[gameCode] !== undefined) {
-                this.gameCodeLogger.log(CODE_GENERATION_MESSAGES.REROLLING(gameCode));
+                this.gameCodeLogger.log(CODE_GENERATION.REROLLING(gameCode));
                 gameCode = ServerHub.makeRandomGameCode();
             }
         } else if (!gameCodeValidator.test(gameCode)) {
             // gameCode specified but invalid
-            this.gameCodeLogger.log(CODE_GENERATION_MESSAGES.INVALID(gameCode));
+            this.gameCodeLogger.log(CODE_GENERATION.INVALID(gameCode));
             return;
         } else if (this.games[gameCode] !== undefined) {
             // gameCode taken
-            this.gameCodeLogger.log(CODE_GENERATION_MESSAGES.TAKEN(gameCode));
+            this.gameCodeLogger.log(CODE_GENERATION.TAKEN(gameCode));
             return;
         }
 
-        this.gameCodeLogger.log(CODE_GENERATION_MESSAGES.ACCEPTED(gameCode));
-        this.logger.log(LOG_MESSAGES.GAME_CREATED(ip, username, gameCode));
+        this.gameCodeLogger.log(CODE_GENERATION.ACCEPTED(gameCode));
+        this.logger.log(SERVER_GENERAL.GAME_CREATED(ip, username, gameCode));
 
         this.games[gameCode] = new Game(this.httpServer, gameCode, createdBy);
     }

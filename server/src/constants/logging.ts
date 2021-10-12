@@ -1,60 +1,109 @@
 import { Socket } from 'socket.io';
-import { PendingPlayer, Player } from '../models/players';
+import {
+    StageOneConnection,
+    StageThreeConnection,
+    StageTwoConnection,
+} from '../models/connectionSystem';
 
-export const LOG_MESSAGES = {
+export const SERVER_GENERAL = {
     GAME_CREATED: (ip: string, username: string, gameCode: string) =>
         `Game '${gameCode}' created by ${username} (${ip})`,
+    GAME_CLOSED: (
+        ip: string,
+        username: string,
+        gameCode: string,
+        createdAt: number,
+        reason: string,
+    ) =>
+        `Game '${gameCode}' created by ${username} (${ip}) closed after ${Math.floor(
+            (Date.now() - createdAt) / 1000,
+        )} seconds with reason: ${reason}`,
+};
+
+export const CONNECTION_SYSTEM = {
     SENT_INITIAL_POST: (ip: string, username: string) =>
         `${username} (${ip}) started joining (1/3)`,
-    TIMEOUT: (username: string, ip: string, sentAt: number, stage = 0 | 1) =>
-        `Timed out ${username} (${ip}) after ${Math.floor(
-            (Date.now() - sentAt) / 1000,
-        )} seconds after not receiving a ${
-            stage === 0 ? 'socket connection' : 'token'
-        }`,
+    INITIAL_SOCKET_CONNECTION: ({
+        username,
+        ip,
+        stageOneAt,
+    }: StageOneConnection) =>
+        `${username} (${ip}) connected socket after ${
+            Date.now() - stageOneAt
+        } ms (2/3)`,
+    SUCCESSFUL_CONNECTION: ({
+        username,
+        ip,
+        stageOneAt,
+        stageTwoAt,
+    }: StageTwoConnection) =>
+        `${username} (${ip}) passed all checks and connected after ${
+            Date.now() - stageOneAt
+        }/${Date.now() - stageTwoAt} ms (3/3)`,
+    TIMEOUT_NO_SOCKET: ({ username, ip, stageOneAt }: StageOneConnection) =>
+        `Timed out ${username} (${ip}) after ${
+            Date.now() - stageOneAt
+        } ms after not receiving a socket connection`,
+    TIMEOUT_NO_CREDENTIALS: ({
+        username,
+        ip,
+        stageOneAt,
+        stageTwoAt,
+    }: StageTwoConnection) =>
+        `Timed out ${username} (${ip}) after ${Date.now() - stageOneAt}/${
+            Date.now() - stageTwoAt
+        } ms after not receiving socket credentials.`,
     INVALID_CREDENTIALS: (
-        player: PendingPlayer,
+        { username, ip }: StageTwoConnection | StageThreeConnection,
         invalidCredentials: string[],
     ) =>
-        `Disconnected socket connection from ${player.username} (${
-            player.ip
-        }) due to ${invalidCredentials.join(', ')}`,
+        `Disconnected socket connection from ${username} (${ip}) due to ${invalidCredentials.join(
+            ', ',
+        )}`,
     FAILED_IP_REMOVAL: (username: string, ip: string) =>
         `Couldn't find IP ${ip} of ${username} to remove from IP list.`,
-    INITIAL_SOCKET_CONNECTION: (ip: string, player: PendingPlayer) =>
-        `${player.username} connected socket with IP ${ip} after ${
-            Date.now() - player.sentAt
-        } ms (2/3)`,
+    FAILED_USERNAME_REMOVAL: (username: string, ip: string) =>
+        `Couldn't find username ${username} of ${ip} to remove from IP list.`,
     UNKNOWN_SOCKET_CONNECTION: (ip: string, socket: Socket) =>
         `Unregistered socket connection from ${ip} (${socket.id})`,
-    POSSIBLE_SOCKET_RECONNECTION: (ip: string, player: Player) =>
-        `Socket connection from ${ip} matches disconnected player ${player.username} (1/2)`,
-    RECONNECTION_INVALID: (player: Player, invalidCredentials: string[]) =>
-        `Socket reconnection for ${player.username} (${
-            player.ip
-        }) failed due to ${invalidCredentials.join(', ')}`,
-    SUCCESSFUL_CONNECTION: (player: Player, sentAt: number) =>
-        `${player.username} (${player.ip}) [${
-            player.playerNumber
-        }] passed all checks and connected after ${
-            Date.now() - sentAt
-        } ms (3/3)`,
-    RECONNECTION_SUCCESSFUL: (player: Player) => {
-        let timeTaken = Date.now() - player.disconnectedAt;
+    POSSIBLE_SOCKET_RECONNECTION: ({ username, ip }: StageThreeConnection) =>
+        `Socket connection from ${ip} matches disconnected player ${username} (1/2)`,
+    RECONNECTION_INVALID_1: ({ username, ip }: StageThreeConnection) =>
+        `Socket reconnection for ${username} (${ip}) failed due to not supplying any authentication`,
+    RECONNECTION_INVALID_2: (
+        { username, ip }: StageThreeConnection,
+        invalidCredentials: string[],
+    ) =>
+        `Socket reconnection for ${username} (${ip}) failed due to ${invalidCredentials.join(
+            ', ',
+        )}`,
+    RECONNECTION_SUCCESSFUL: ({
+        username,
+        ip,
+        disconnectedAt,
+    }: StageThreeConnection) => {
+        let timeTaken = Date.now() - disconnectedAt;
         let timeStep = 'ms';
         if (timeTaken > 1000) {
             timeTaken = Math.floor(timeTaken / 1000);
             timeStep = ' seconds';
         }
-        return `${player.username} (${player.ip}) successfully reconnected after ${timeTaken}${timeStep} (2/2)`;
+        return `${username} (${ip}) successfully reconnected after ${timeTaken}${timeStep} (2/2)`;
     },
-    DISCONNECTED: (player: Player, reason: string) =>
-        `${player.username} (${player.ip}) disconnected after ${Math.floor(
-            (Date.now() - player.disconnectedAt) / 1000,
+    DISCONNECTED: (
+        { username, ip, lastConnectedAt }: StageThreeConnection,
+        reason: string,
+    ) =>
+        `${username} (${ip}) disconnected after ${Math.floor(
+            (Date.now() - lastConnectedAt) / 1000,
         )} seconds with reason: ${reason}`,
+    ERRONEOUS_TOKEN: (
+        { username, ip }: StageTwoConnection | StageThreeConnection,
+        error: unknown,
+    ) => `Error processing token of player ${username} (${ip}): ${error}`,
 };
 
-export const CODE_GENERATION_MESSAGES = {
+export const CODE_GENERATION = {
     MAKING_NEW: (ip: string, username: string) =>
         `Making random game code for ${username} (${ip})`,
     REROLLING: (gameCode: string) =>
@@ -65,8 +114,15 @@ export const CODE_GENERATION_MESSAGES = {
     ACCEPTED: (gameCode: string) => `Got valid code '${gameCode}'`,
 };
 
-export const GAME_LOG = {
-    JOINED_GAME: (player: Player) => `${player.username} joined the game`,
-    LEFT_GAME: (player: Player) => `${player.username} left the game`,
-    RECONNECTED: (player: Player) => `${player.username} reconnected`,
-};
+/** 'External' game messages, aka out of game context but still shown in chat. */
+// export const GAME_EXT = {
+//     JOINED_GAME: (player: Player) => `${player.username} joined the game`,
+//     LEFT_GAME: (player: Player) => `${player.username} left the game`,
+//     RECONNECTED: (player: Player) => `${player.username} reconnected`,
+// };
+
+/** PLAYERNAME died to mafia, PLAYERNAME was shot by, etc... */
+export const GAME_NIGHT = {};
+
+/** PLAYERNAME has been put on trial, PLAYERNAME has been found guilty by a vote of 3-2, etc... */
+export const GAME_DAY = {};

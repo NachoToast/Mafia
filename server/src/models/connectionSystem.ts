@@ -19,7 +19,7 @@ import Logger from './logger';
 /** An external function to be called on a connection event. */
 type ConnectionFunction = (payload: StageThreeConnection) => any;
 
-/** Internal or external validation function for all connection stages. */
+/** External verification function to act in addition to internal one, on stage 2 -> 3 connection upgrades. */
 type ValidationFunction =
     | ((connection: StageTwoConnection | StageThreeConnection) => {
           isValid: boolean;
@@ -87,7 +87,7 @@ export class ConnectionSystem {
         this.onReconnect = onReconnect;
         this.validateJoin = validateJoinFunction;
         this.validateReconnect = validateReconnectFunction;
-        if (!!makeLogger) {
+        if (makeLogger) {
             this.logger = new Logger({
                 name: 'connections',
                 path: `games/${gameCode}`,
@@ -533,7 +533,9 @@ export class StageThreeConnection extends ConnectionBase {
     public connected: boolean = true;
 
     // public socketReserved: boolean = false;
-    // FIXME: during period of time awaiting for reconnecting socket to send credentials, an error is possible since a second reconnecting socket can 'overwrite' this one, using a socketReserved property can fix this, only allowing the first socket to submit details
+    // FIXME: during period of time awaiting for reconnecting socket to send credentials,
+    // an error is possible since a second reconnecting socket can 'overwrite' this one,
+    // using a socketReserved property can fix this, only allowing the first socket to submit details
 
     // for reconnection logging purposes
     public readonly firstConnectedAt: number = Date.now();

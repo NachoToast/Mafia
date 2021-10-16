@@ -118,21 +118,21 @@ export class Game {
         });
     }
 
-    private onLeave(connection: StageThreeConnection) {
+    private onLeave(connection: StageThreeConnection): void {
         const { username } = connection;
 
         const { number, status } = this.players[username.toLowerCase()];
+        EMITTED_SERVER_EVENTS.PLAYER_LEFT(this.io, username);
+
         this.takenNumbers.splice(this.takenNumbers.indexOf(number), 1);
 
         delete this.players[username.toLowerCase()];
-
-        EMITTED_SERVER_EVENTS.PLAYER_LEFT(this.io, username);
 
         EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, {
             author: 'Server',
             content: GAME_EXT.LEFT_GAME(username),
             to:
-                !this.inProgress || status === PlayerStatuses.alive
+                !this.inProgress || status !== PlayerStatuses.spectator
                     ? undefined
                     : 'notAlive',
             props: { hideAuthor: true },

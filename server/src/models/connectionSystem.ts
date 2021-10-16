@@ -1,5 +1,3 @@
-export type JoinVerification = 'token' | 'ip' | 'username' | 'gameCode';
-
 import { JwtPayload, verify } from 'jsonwebtoken';
 import { Socket } from 'socket.io';
 import { CONNECTION_SYSTEM } from '../constants/logging';
@@ -14,8 +12,9 @@ import {
     allowReconnects,
 } from '../gameConfig.json';
 import { jwt_secret } from '../gameSecrets.json';
-import { Game } from './game';
 import Logger from './logger';
+
+type JoinVerification = 'token' | 'ip' | 'username' | 'gameCode';
 
 /** An external function to be called on a connection event. */
 type ConnectionFunction = (payload: StageThreeConnection) => any;
@@ -146,7 +145,6 @@ export class ConnectionSystem {
             token,
             ip,
             this.removeConnection,
-            this.logger,
         );
         this.stageOneConnections[ip] = stageOne;
 
@@ -248,7 +246,7 @@ export class ConnectionSystem {
     private handlePossibleReconnect(
         connection: StageThreeConnection,
         socket: Socket,
-    ) {
+    ): void {
         connection.socket = socket;
         RECEIVED_PLAYER_EVENTS.HERE_IS_TOKEN(
             socket,
@@ -262,7 +260,7 @@ export class ConnectionSystem {
         );
     }
 
-    private timeoutReconnectingSocket(connection: StageThreeConnection) {
+    private timeoutReconnectingSocket(connection: StageThreeConnection): void {
         this.logger?.log(CONNECTION_SYSTEM.RECONNECTION_INVALID_1(connection));
         EMITTED_PLAYER_EVENTS.UNREGISTERED(connection.socket);
     }
@@ -270,7 +268,7 @@ export class ConnectionSystem {
     private handleReconnect(
         connection: StageThreeConnection,
         tokenPayload: SocketTokenPayload,
-    ) {
+    ): void {
         const { isValid, reasons } = this.verification(
             connection,
             tokenPayload,
@@ -401,20 +399,30 @@ export class ConnectionSystem {
             if (!isUpgrade) connection.socket.disconnect();
             delete this.stageThreeConnections[username];
         } else {
-            if (!!connection?.timeoutFunction) {
+            if (!!connection.timeoutFunction) {
                 clearTimeout(connection.timeoutFunction);
             }
 
             if (connection instanceof StageTwoConnection) {
-                if (!isUpgrade) connection.socket.disconnect();
+                if (!isUpgrade) {
+                    this.logger?.log(
+                        CONNECTION_SYSTEM.TIMEOUT_NO_CREDENTIALS(connection),
+                    );
+                    connection.socket.disconnect();
+                }
                 delete this.stageTwoConnections[username];
             } else {
+                if (!isUpgrade) {
+                    this.logger?.log(
+                        CONNECTION_SYSTEM.TIMEOUT_NO_SOCKET(connection),
+                    );
+                }
                 delete this.stageOneConnections[ip];
             }
         }
     }
 
-    private removeIPandUsername(ip: string, username: string) {
+    private removeIPandUsername(ip: string, username: string): void {
         const ipIndex = this.ipList.indexOf(ip);
         const usernameIndex = this.usernameList.indexOf(username);
 
@@ -447,8 +455,6 @@ class ConnectionBase {
     public readonly stageTwoAt: number;
     public readonly stageThreeAt: number;
 
-    public readonly logger?: Logger;
-
     public constructor({
         username,
         token,
@@ -456,7 +462,6 @@ class ConnectionBase {
         stageOneAt,
         stageTwoAt,
         stageThreeAt,
-        logger,
     }: ConnectionArgs | AnyConnection) {
         this.username = username;
         this.token = token;
@@ -464,8 +469,6 @@ class ConnectionBase {
         this.stageOneAt = stageOneAt || Date.now();
         this.stageTwoAt = stageTwoAt || 0;
         this.stageThreeAt = stageThreeAt || 0;
-
-        this.logger = logger;
     }
 }
 
@@ -478,7 +481,6 @@ export class StageOneConnection extends ConnectionBase {
         token: string,
         ip: string,
         callback: TimeoutFunction,
-        logger?: Logger,
     ) {
         super({ username, token, ip });
         this.beginCountdown(callback);
@@ -486,7 +488,6 @@ export class StageOneConnection extends ConnectionBase {
 
     private beginCountdown(callback: TimeoutFunction) {
         this.timeoutFunction = setTimeout(() => {
-            this.logger?.log(CONNECTION_SYSTEM.TIMEOUT_NO_SOCKET(this));
             callback(this);
         }, 1000 * requestTimeoutSeconds);
     }
@@ -518,7 +519,6 @@ export class StageTwoConnection extends ConnectionBase {
 
     private beginCountdown(callback: TimeoutFunction) {
         this.timeoutFunction = setTimeout(() => {
-            this.logger?.log(CONNECTION_SYSTEM.TIMEOUT_NO_CREDENTIALS(this));
             callback(this);
         }, 1000 * requestTimeoutSeconds);
     }

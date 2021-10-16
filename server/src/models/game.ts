@@ -1,8 +1,13 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
-import { SERVER_GENERAL } from '../constants/logging';
-import { TimePeriods } from '../constants/mafia';
-import { RECEIVED_SERVER_EVENTS } from '../constants/socketEvent';
+import { GAME_EXT, SERVER_GENERAL } from '../constants/logging';
+import { PlayerStatuses, TimePeriods } from '../constants/mafia';
+import {
+    EMITTED_PLAYER_EVENTS,
+    EMITTED_SERVER_EVENTS,
+    RECEIVED_SERVER_EVENTS,
+    ROOMS,
+} from '../constants/socketEvent';
 import { ConnectionSystem, StageThreeConnection } from './connectionSystem';
 import Logger from './logger';
 import Player from './players';
@@ -26,6 +31,9 @@ export class Game {
 
     private players: { [username: string]: Player } = {};
 
+    /** For filling-in skipped player number slots. */
+    private takenNumbers: number[] = [];
+
     public constructor(
         httpServer: HttpServer,
         gameCode: string,
@@ -43,9 +51,9 @@ export class Game {
         this.maxPlayers = maxPlayers;
         this.connectionSystem = new ConnectionSystem(
             gameCode,
-            this.onJoin,
-            this.onLeave,
-            this.onReconnect,
+            (connection: StageThreeConnection) => this.onJoin(connection),
+            (connection: StageThreeConnection) => this.onLeave(connection),
+            (connection: StageThreeConnection) => this.onReconnect(connection),
             null,
             null,
             true,
@@ -70,15 +78,69 @@ export class Game {
         );
     }
 
+    // private getNumPlayers(): number {
+    //     return Object.keys(this.players).length;
+    // }
+
+    private playerNumberGenerator() {
+        let num = 1;
+        while (this.takenNumbers.includes(num)) {
+            num++;
+        }
+        this.takenNumbers.push(num);
+        return num;
+    }
+
     private onJoin(connection: StageThreeConnection) {
-        console.log(connection.username, 'joined!');
+        const { username, socket } = connection;
+
+        const status = this.inProgress
+            ? PlayerStatuses.spectator
+            : PlayerStatuses.alive;
+
+        const number = this.playerNumberGenerator();
+        const newPlayer = new Player(this, number, socket, username, status);
+
+        for (const playerName of Object.keys(this.players)) {
+            const { username, status, number } = this.players[playerName];
+            EMITTED_PLAYER_EVENTS.PLAYER_HERE(socket, username, status, number);
+        }
+
+        this.players[username.toLowerCase()] = newPlayer;
+
+        EMITTED_SERVER_EVENTS.PLAYER_JOINED(this.io, username, status, number);
+
+        EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, {
+            author: 'Server',
+            content: GAME_EXT.JOINED_GAME(username),
+            to: !this.inProgress ? undefined : 'notAlive',
+            props: { hideAuthor: true },
+        });
     }
 
     private onLeave(connection: StageThreeConnection) {
-        console.log(connection.username, 'left!');
+        const { username } = connection;
+
+        const { number, status } = this.players[username.toLowerCase()];
+        this.takenNumbers.splice(this.takenNumbers.indexOf(number), 1);
+
+        delete this.players[username.toLowerCase()];
+
+        EMITTED_SERVER_EVENTS.PLAYER_LEFT(this.io, username);
+
+        EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, {
+            author: 'Server',
+            content: GAME_EXT.LEFT_GAME(username),
+            to:
+                !this.inProgress || status === PlayerStatuses.alive
+                    ? undefined
+                    : 'notAlive',
+            props: { hideAuthor: true },
+        });
     }
 
     private onReconnect(connection: StageThreeConnection) {
-        console.log(connection.username, 'reconnected!');
+        console.log('a reconnection!');
+        this.onJoin(connection);
     }
 }

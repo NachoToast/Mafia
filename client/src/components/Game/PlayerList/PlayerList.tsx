@@ -3,69 +3,81 @@ import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Socket } from 'socket.io-client';
 import PlayerLine from './PlayerLine';
 
-export interface ListedPlayer {
+import AliveIcon from '@mui/icons-material/Person';
+import DeadIcon from '@mui/icons-material/AirlineSeatFlat';
+import SpectatorIcon from '@mui/icons-material/RemoveRedEye';
+import { STORAGE } from '../../../constants/localStorageVariables';
+// import DisconnectedIcon from '@mui/icons-material/DeviceUnknown';
+
+export enum PlayerStatuses {
+    spectator,
+    alive,
+    dead,
+}
+export interface Player {
     username: string;
+    number: number;
     status: PlayerStatuses;
     extra?: string;
-    connected: boolean;
 }
 
-export type PlayerStatuses = 'spectator' | 'alive' | 'dead' | 'lobby' | 'loading' | 'removed';
-
 const PlayerList = ({ socket }: { socket: Socket }) => {
-    const [playerList, setPlayerList]: [ListedPlayer[], Dispatch<SetStateAction<any>>] = useState(
-        [],
-    );
+    const [playerList, setPlayerList]: [
+        Player[],
+        Dispatch<SetStateAction<any>>,
+    ] = useState([]);
+
+    const myUsername = localStorage.getItem(STORAGE.usernameKeyName) as string;
 
     useEffect(() => {
-        socket.on('playerChange', (payload: ListedPlayer) => {
-            console.log(`playerChange`, payload);
-            let existingPlayer = playerList.find(({ username }) => username === payload.username);
+        socket.on(
+            'playerJoined',
+            (
+                username: string,
+                status: PlayerStatuses,
+                number: number,
+                extra?: string,
+            ) => {
+                if (username === myUsername) extra = 'You';
+                setPlayerList([
+                    ...playerList,
+                    { username, status, number, extra },
+                ]);
+            },
+        );
 
-            if (!!existingPlayer) {
-                if (
-                    payload.status === 'removed' &&
-                    (existingPlayer.status === 'alive' ||
-                        existingPlayer.status === 'dead' ||
-                        existingPlayer.status === 'lobby')
-                ) {
-                    existingPlayer.connected = false;
-                } else {
-                    playerList.splice(playerList.indexOf(existingPlayer), 1);
-                }
+        socket.on('playerLeft', (username: string) => {
+            const foundPlayer = playerList.find(
+                (player) => player.username === username,
+            );
+            if (!!foundPlayer) {
+                playerList.splice(playerList.indexOf(foundPlayer), 1);
                 setPlayerList([...playerList]);
-            } else {
-                setPlayerList([...playerList, payload]);
             }
         });
 
-        socket.on('playerList', (newPlayerList: ListedPlayer[]) => {
-            let newPlayers: ListedPlayer[] = [];
-            for (const player of newPlayerList) {
-                if (!playerList.includes(player)) {
-                    newPlayers.push(player);
-                }
-            }
-
-            if (!!newPlayers.length) {
-                setPlayerList([...playerList, ...newPlayers]);
-            }
-        });
         return () => {
-            socket.off('playerChange');
+            socket.off('playerJoined');
+            socket.off('playerLeft');
         };
     });
 
     console.log('rendering player list!');
 
-    const alivePlayers = playerList.filter(
-        ({ status }) => status === 'lobby' || status === 'alive',
+    const alivePlayers = playerList
+        .filter(({ status }) => status === PlayerStatuses.alive)
+        .sort((a, b) => a.number - b.number);
+
+    const deadPlayers = playerList
+        .filter(({ status }) => status === PlayerStatuses.dead)
+        .sort((a, b) => (a.number = b.number));
+
+    const spectators = playerList.filter(
+        ({ status }) => status === PlayerStatuses.spectator,
     );
-    const deadPlayers = playerList.filter(({ status }) => status === 'dead');
-    const spectators = playerList.filter(({ status }) => status === 'spectator');
 
     return (
-        <Paper elevation={24} square>
+        <Paper elevation={24} square style={{ boxShadow: 'none' }}>
             <Stack
                 style={{ height: '100vh', overflowY: 'auto', padding: '3px' }}
                 justifyContent="space-evenly"
@@ -73,7 +85,13 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
             >
                 {/* alive */}
                 <Paper style={{ flexGrow: 1, padding: '10px' }} square>
-                    <Typography variant="h5">Alive ({alivePlayers.length})</Typography>
+                    <Typography
+                        variant="h5"
+                        style={{ display: 'flex', alignItems: 'center' }}
+                    >
+                        <AliveIcon />
+                        &nbsp;Alive ({alivePlayers.length})
+                    </Typography>
                     <Divider flexItem style={{ margin: '10px 0 5px 0' }} />
                     <Stack spacing={0.75} divider={<Divider flexItem />}>
                         {alivePlayers.map((e) => (
@@ -83,7 +101,13 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                 </Paper>
                 {/* dead */}
                 <Paper style={{ flexGrow: 1, padding: '10px' }} square>
-                    <Typography variant="h5">Dead ({deadPlayers.length})</Typography>
+                    <Typography
+                        variant="h5"
+                        style={{ display: 'flex', alignItems: 'center' }}
+                    >
+                        <DeadIcon />
+                        &nbsp;Dead ({deadPlayers.length})
+                    </Typography>
                     <Divider flexItem style={{ margin: '10px 0 5px 0' }} />
                     <Stack spacing={0.75} divider={<Divider flexItem />}>
                         {deadPlayers.map((e) => (
@@ -93,7 +117,13 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                 </Paper>
                 {/* spectators */}
                 <Paper style={{ flexGrow: 1, padding: '10px' }} square>
-                    <Typography variant="h5">Spectating ({spectators.length})</Typography>
+                    <Typography
+                        variant="h5"
+                        style={{ display: 'flex', alignItems: 'center' }}
+                    >
+                        <SpectatorIcon />
+                        &nbsp;Spectating ({spectators.length})
+                    </Typography>
                     <Divider flexItem style={{ margin: '10px 0 5px 0' }} />
                     <Stack spacing={0.75} divider={<Divider flexItem />}>
                         {spectators.map((e) => (

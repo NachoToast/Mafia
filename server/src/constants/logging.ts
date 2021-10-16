@@ -4,6 +4,7 @@ import {
     StageThreeConnection,
     StageTwoConnection,
 } from '../models/connectionSystem';
+import Player from '../models/players';
 
 export const SERVER_GENERAL = {
     GAME_CREATED: (ip: string, username: string, gameCode: string) =>
@@ -86,9 +87,9 @@ export const CONNECTION_SYSTEM = {
         let timeStep = 'ms';
         if (timeTaken > 1000) {
             timeTaken = Math.floor(timeTaken / 1000);
-            timeStep = ' seconds';
+            timeStep = 'seconds';
         }
-        return `${username} (${ip}) successfully reconnected after ${timeTaken}${timeStep} (2/2)`;
+        return `${username} (${ip}) successfully reconnected after ${timeTaken} ${timeStep} (2/2)`;
     },
     DISCONNECTED: (
         { username, ip, lastConnectedAt }: StageThreeConnection,
@@ -115,11 +116,11 @@ export const CODE_GENERATION = {
 };
 
 /** 'External' game messages, aka out of game context but still shown in chat. */
-// export const GAME_EXT = {
-//     JOINED_GAME: (player: Player) => `${player.username} joined the game`,
-//     LEFT_GAME: (player: Player) => `${player.username} left the game`,
-//     RECONNECTED: (player: Player) => `${player.username} reconnected`,
-// };
+export const GAME_EXT = {
+    JOINED_GAME: (username: string) => `${username} joined the game`,
+    LEFT_GAME: (username: string) => `${username} left the game`,
+    RECONNECTED: (username: string) => `${username} reconnected`,
+};
 
 /** PLAYERNAME died to mafia, PLAYERNAME was shot by, etc... */
 export const GAME_NIGHT = {};

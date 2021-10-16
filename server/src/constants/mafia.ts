@@ -1,5 +1,4 @@
 export enum PlayerStatuses {
-    lobby,
     spectator,
     alive,
     dead,

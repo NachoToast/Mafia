@@ -14,6 +14,7 @@ import {
     allowReconnects,
 } from '../gameConfig.json';
 import { jwt_secret } from '../gameSecrets.json';
+import { Game } from './game';
 import Logger from './logger';
 
 /** An external function to be called on a connection event. */
@@ -264,7 +265,6 @@ export class ConnectionSystem {
     private timeoutReconnectingSocket(connection: StageThreeConnection) {
         this.logger?.log(CONNECTION_SYSTEM.RECONNECTION_INVALID_1(connection));
         EMITTED_PLAYER_EVENTS.UNREGISTERED(connection.socket);
-        connection.socket.disconnect();
     }
 
     private handleReconnect(
@@ -285,7 +285,6 @@ export class ConnectionSystem {
                 CONNECTION_SYSTEM.RECONNECTION_INVALID_2(connection, reasons),
             );
             EMITTED_PLAYER_EVENTS.UNREGISTERED(connection.socket);
-            connection.socket.disconnect();
             return;
         }
 

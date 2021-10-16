@@ -1,27 +1,18 @@
 import React from 'react';
-import PersonIcon from '@mui/icons-material/Person';
-import DeviceUnknownIcon from '@mui/icons-material/DeviceUnknown';
-import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
-import AirlineSeatFlatIcon from '@mui/icons-material/AirlineSeatFlat';
-import { ListedPlayer } from './PlayerList';
+import { Player } from './PlayerList';
 import { Fade, Stack } from '@mui/material';
 
-const PlayerLine = ({ player }: { player: ListedPlayer }) => {
-    console.log(`${player.username} ${player.connected}`);
-    const icon = !player.connected ? (
-        <DeviceUnknownIcon />
-    ) : player.status === 'lobby' ? (
-        <PersonIcon />
-    ) : player.status === 'spectator' ? (
-        <RemoveRedEyeIcon />
-    ) : player.status === 'dead' ? (
-        <AirlineSeatFlatIcon />
-    ) : null;
-
+const PlayerLine = ({ player }: { player: Player }) => {
     return (
         <Fade in>
-            <Stack direction="row">
-                {icon}
+            <Stack
+                direction="row"
+                style={{
+                    overflowX: 'hidden',
+                    overflowY: 'auto',
+                }}
+            >
+                {player.number}.&nbsp;
                 {player.username}
                 {player.extra && ` (${player.extra})`}
             </Stack>

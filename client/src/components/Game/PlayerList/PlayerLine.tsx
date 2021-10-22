@@ -1,21 +1,37 @@
 import React from 'react';
 import { Player } from './PlayerList';
-import { Fade, Stack } from '@mui/material';
+import { Fade, Tooltip } from '@mui/material';
+
+import DisconnectedIcon from '@mui/icons-material/SignalCellularConnectedNoInternet1Bar';
 
 const PlayerLine = ({ player }: { player: Player }) => {
     return (
         <Fade in>
-            <Stack
-                direction="row"
-                style={{
-                    overflowX: 'hidden',
-                    overflowY: 'auto',
-                }}
+            <Tooltip
+                title={!player.connected ? `Disconnected` : ''}
+                arrow
+                placement="left"
             >
-                {player.number}.&nbsp;
-                {player.username}
-                {player.extra && ` (${player.extra})`}
-            </Stack>
+                <div
+                    style={{
+                        whiteSpace: 'nowrap',
+                        display: 'flex',
+                    }}
+                >
+                    {player.number}.&nbsp;
+                    {!player.connected && (
+                        <DisconnectedIcon
+                            style={{
+                                paddingRight: '3px',
+                                paddingBottom: '5px',
+                            }}
+                        />
+                    )}
+                    {player.username}
+                    {player.extra && ` (${player.extra})`}
+                    {/* {player.connected && DisconnectedExtraText} */}
+                </div>
+            </Tooltip>
         </Fade>
     );
 };

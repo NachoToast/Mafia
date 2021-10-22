@@ -1,15 +1,28 @@
-import { Box, Paper, Button, TextField, Container, Stack, Divider, Fade } from '@mui/material';
+import { Paper, Button, TextField, Stack, Divider, Fade } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import React, { useState, useEffect, Dispatch, SetStateAction, FormEvent } from 'react';
+import React, {
+    useState,
+    useEffect,
+    Dispatch,
+    SetStateAction,
+    FormEvent,
+} from 'react';
 import { Socket } from 'socket.io-client';
-import ChatMessage, { ChatMessageInterface, ExtendedChatmessage } from './ChatMessage';
+import ChatMessage, {
+    ChatMessageInterface,
+    ExtendedChatmessage,
+} from './ChatMessage';
 import { v4 as uuidv4 } from 'uuid';
 
 const ChatBox = ({ socket }: { socket: Socket }) => {
-    const [messages, setMessages]: [ExtendedChatmessage[], Dispatch<SetStateAction<any>>] =
-        useState([]);
-    const [messageToSend, setMessageToSend]: [string, Dispatch<SetStateAction<string>>] =
-        useState('');
+    const [messages, setMessages]: [
+        ExtendedChatmessage[],
+        Dispatch<SetStateAction<any>>,
+    ] = useState([]);
+    const [messageToSend, setMessageToSend]: [
+        string,
+        Dispatch<SetStateAction<string>>,
+    ] = useState('');
 
     useEffect(() => {
         socket.on('emittedChatMessage', (message: ChatMessageInterface) => {
@@ -44,7 +57,11 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
 
     return (
         <Paper
-            style={{ height: '100%', display: 'flex', flexFlow: 'column-reverse' }}
+            style={{
+                height: '100%',
+                display: 'flex',
+                flexFlow: 'column-reverse',
+            }}
             elevation={24}
             square
         >

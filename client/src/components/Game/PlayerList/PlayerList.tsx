@@ -7,6 +7,7 @@ import AliveIcon from '@mui/icons-material/Person';
 import DeadIcon from '@mui/icons-material/AirlineSeatFlat';
 import SpectatorIcon from '@mui/icons-material/RemoveRedEye';
 import { STORAGE } from '../../../constants/localStorageVariables';
+import PlayerCard from './PlayerCard';
 // import DisconnectedIcon from '@mui/icons-material/DeviceUnknown';
 
 export enum PlayerStatuses {
@@ -19,6 +20,7 @@ export interface Player {
     number: number;
     status: PlayerStatuses;
     extra?: string;
+    connected: boolean;
 }
 
 const PlayerList = ({ socket }: { socket: Socket }) => {
@@ -36,13 +38,37 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                 username: string,
                 status: PlayerStatuses,
                 number: number,
+                connected: boolean,
                 extra?: string,
             ) => {
                 if (username === myUsername) extra = 'You';
-                setPlayerList([
-                    ...playerList,
-                    { username, status, number, extra },
-                ]);
+                const newPlayer: Player = {
+                    username,
+                    status,
+                    number,
+                    extra,
+                    connected,
+                };
+                setPlayerList([...playerList, newPlayer]);
+
+                // fake player population for testing purposes
+                // const newPlayers: Player[] = new Array(99)
+                //     .fill(0)
+                //     .map((e, i) => {
+                //         return {
+                //             username: `player ${++i}`,
+                //             number: ++i,
+                //             status:
+                //                 i < 20
+                //                     ? PlayerStatuses.alive
+                //                     : i > 40
+                //                     ? PlayerStatuses.spectator
+                //                     : PlayerStatuses.dead,
+                //             connected: Math.random() < 0.5,
+                //         };
+                //     });
+                // setPlayerList([...playerList, ...newPlayers]);
+                // console.log(newPlayers);
             },
         );
 
@@ -56,13 +82,42 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
             }
         });
 
+        socket.on(
+            'playerUpdate',
+            (
+                username: string,
+                status: PlayerStatuses,
+                number: number,
+                extra: string,
+                connected: boolean,
+            ) => {
+                const existingPlayer = playerList.find(
+                    (player) => player.username === username,
+                );
+                if (!!existingPlayer) {
+                    existingPlayer.status = status;
+                    existingPlayer.extra = extra || existingPlayer.extra;
+                    existingPlayer.connected = connected;
+                    setPlayerList([...playerList]);
+                } else {
+                    const newPlayer: Player = {
+                        username,
+                        status,
+                        extra,
+                        connected,
+                        number,
+                    };
+                    setPlayerList([...playerList, newPlayer]);
+                }
+            },
+        );
+
         return () => {
             socket.off('playerJoined');
             socket.off('playerLeft');
+            socket.off('playerUpdate');
         };
     });
-
-    console.log('rendering player list!');
 
     const alivePlayers = playerList
         .filter(({ status }) => status === PlayerStatuses.alive)
@@ -79,28 +134,54 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
     return (
         <Paper elevation={24} square style={{ boxShadow: 'none' }}>
             <Stack
-                style={{ height: '100vh', overflowY: 'auto', padding: '3px' }}
+                style={{
+                    height: '100vh',
+                    padding: '3px',
+                    overflowY: 'auto',
+                    maxHeight: '100vh',
+                }}
                 justifyContent="space-evenly"
                 spacing={0.75}
             >
                 {/* alive */}
-                <Paper style={{ flexGrow: 1, padding: '10px' }} square>
+                <Paper
+                    style={{
+                        flexGrow: 1,
+                        padding: '10px',
+                        maxHeight: '32%',
+                    }}
+                    square
+                >
                     <Typography
                         variant="h5"
-                        style={{ display: 'flex', alignItems: 'center' }}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                        }}
                     >
                         <AliveIcon />
                         &nbsp;Alive ({alivePlayers.length})
                     </Typography>
                     <Divider flexItem style={{ margin: '10px 0 5px 0' }} />
-                    <Stack spacing={0.75} divider={<Divider flexItem />}>
+                    <Stack
+                        spacing={0.75}
+                        divider={<Divider flexItem />}
+                        style={{ overflowY: 'auto', maxHeight: '80%' }}
+                    >
                         {alivePlayers.map((e) => (
                             <PlayerLine key={e.username} player={e} />
                         ))}
                     </Stack>
                 </Paper>
                 {/* dead */}
-                <Paper style={{ flexGrow: 1, padding: '10px' }} square>
+                <Paper
+                    style={{
+                        flexGrow: 1,
+                        padding: '10px',
+                        maxHeight: '32%',
+                    }}
+                    square
+                >
                     <Typography
                         variant="h5"
                         style={{ display: 'flex', alignItems: 'center' }}
@@ -109,14 +190,25 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                         &nbsp;Dead ({deadPlayers.length})
                     </Typography>
                     <Divider flexItem style={{ margin: '10px 0 5px 0' }} />
-                    <Stack spacing={0.75} divider={<Divider flexItem />}>
+                    <Stack
+                        spacing={0.75}
+                        divider={<Divider flexItem />}
+                        style={{ overflowY: 'auto', maxHeight: '80%' }}
+                    >
                         {deadPlayers.map((e) => (
                             <PlayerLine key={e.username} player={e} />
                         ))}
                     </Stack>
                 </Paper>
                 {/* spectators */}
-                <Paper style={{ flexGrow: 1, padding: '10px' }} square>
+                <Paper
+                    style={{
+                        flexGrow: 1,
+                        padding: '10px',
+                        maxHeight: '32%',
+                    }}
+                    square
+                >
                     <Typography
                         variant="h5"
                         style={{ display: 'flex', alignItems: 'center' }}
@@ -125,11 +217,18 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                         &nbsp;Spectating ({spectators.length})
                     </Typography>
                     <Divider flexItem style={{ margin: '10px 0 5px 0' }} />
-                    <Stack spacing={0.75} divider={<Divider flexItem />}>
-                        {spectators.map((e) => (
-                            <PlayerLine key={e.username} player={e} />
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexFlow: 'row wrap',
+                            overflowY: 'auto',
+                            maxHeight: '80%',
+                        }}
+                    >
+                        {spectators.map((e, i) => (
+                            <PlayerCard player={e} index={i} key={e.username} />
                         ))}
-                    </Stack>
+                    </div>
                 </Paper>
             </Stack>
         </Paper>

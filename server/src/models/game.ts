@@ -12,12 +12,16 @@ import { ConnectionSystem, StageThreeConnection } from './connectionSystem';
 import Logger from './logger';
 import Player from './players';
 import { GameCreator } from './serverHub';
+import {
+    killDisconnectedPlayers,
+    alwaysAllowReconnects,
+} from '../gameConfig.json';
 
 /** A single game/lobby. */
 export class Game {
     private readonly io: Server;
     private readonly gameCode: string;
-    private readonly createdBy: GameCreator;
+    private readonly createdBy: GameCreator | null;
     private timePeriod: TimePeriods = TimePeriods.pregame;
     private dayNumber: number = 0;
     public maxPlayers: number;
@@ -91,6 +95,39 @@ export class Game {
         return num;
     }
 
+    /** Stuff that happens on both join and rejoin, such as:
+     * socket binding
+     * updating connected status
+     * emitting existing players to newly (re)joined one
+     * joining rooms
+     */
+    private joinRejoinHandlers(player: Player, socket: Socket) {
+        player.socket = socket;
+        player.connected = true;
+
+        const usernameLower = player.username.toLowerCase();
+        for (const playerName of Object.keys(this.players)) {
+            if (playerName === usernameLower) continue;
+            const { username, status, number, connected } =
+                this.players[playerName];
+            EMITTED_PLAYER_EVENTS.PLAYER_HERE(
+                socket,
+                username,
+                status,
+                number,
+                connected,
+            );
+        }
+
+        if (player.status === PlayerStatuses.alive) {
+            socket.join(ROOMS.alive);
+        } else {
+            socket.join(ROOMS.notAlive);
+        }
+
+        // TODO: more socket binding stuff
+    }
+
     private onJoin(connection: StageThreeConnection) {
         const { username, socket } = connection;
 
@@ -101,9 +138,10 @@ export class Game {
         const number = this.playerNumberGenerator();
         const newPlayer = new Player(this, number, socket, username, status);
 
-        for (const playerName of Object.keys(this.players)) {
-            const { username, status, number } = this.players[playerName];
-            EMITTED_PLAYER_EVENTS.PLAYER_HERE(socket, username, status, number);
+        this.joinRejoinHandlers(newPlayer, socket);
+
+        if (this.inProgress && status !== PlayerStatuses.spectator) {
+            this.logger?.log(GAME_EXT.JOINED_GAME(username));
         }
 
         this.players[username.toLowerCase()] = newPlayer;
@@ -113,34 +151,114 @@ export class Game {
         EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, {
             author: 'Server',
             content: GAME_EXT.JOINED_GAME(username),
-            to: !this.inProgress ? undefined : 'notAlive',
+            to: !this.inProgress ? undefined : ROOMS.notAlive,
             props: { hideAuthor: true },
         });
     }
 
-    private onLeave(connection: StageThreeConnection): void {
+    private onLeave(connection: StageThreeConnection): {
+        shouldRemove: boolean;
+        removalReason?: string;
+    } {
         const { username } = connection;
 
-        const { number, status } = this.players[username.toLowerCase()];
-        EMITTED_SERVER_EVENTS.PLAYER_LEFT(this.io, username);
+        const leavingPlayer = this.players[username.toLowerCase()];
+        if (!leavingPlayer) {
+            this.logger?.log(
+                `ConnectionSystem wanted to disconnect player ${connection.username} (${connection.ip}) but no such player exists`,
+            );
+            return { shouldRemove: true };
+        }
 
-        this.takenNumbers.splice(this.takenNumbers.indexOf(number), 1);
-
-        delete this.players[username.toLowerCase()];
+        const { number, status } = leavingPlayer;
 
         EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, {
             author: 'Server',
             content: GAME_EXT.LEFT_GAME(username),
             to:
-                !this.inProgress || status !== PlayerStatuses.spectator
-                    ? undefined
-                    : 'notAlive',
+                this.inProgress && status === PlayerStatuses.spectator
+                    ? ROOMS.notAlive
+                    : undefined,
             props: { hideAuthor: true },
         });
+
+        if (this.inProgress && status !== PlayerStatuses.spectator) {
+            this.logger?.log(GAME_EXT.LEFT_GAME(username));
+        }
+
+        if (
+            (!this.inProgress || status === PlayerStatuses.spectator) &&
+            !alwaysAllowReconnects
+        ) {
+            EMITTED_SERVER_EVENTS.PLAYER_LEFT(this.io, username);
+            this.takenNumbers.splice(this.takenNumbers.indexOf(number), 1);
+            delete this.players[username.toLowerCase()];
+            return {
+                shouldRemove: true,
+                removalReason: !this.inProgress
+                    ? 'game not started yet'
+                    : 'player was spectator',
+            };
+        } else {
+            this.players[username.toLowerCase()].connected = false;
+
+            if (
+                killDisconnectedPlayers &&
+                status === PlayerStatuses.alive &&
+                this.inProgress
+            ) {
+                // TODO: kill player here
+            }
+            EMITTED_SERVER_EVENTS.PLAYER_UPDATE(
+                this.io,
+                username,
+                status,
+                number,
+                '',
+                false,
+            );
+
+            return { shouldRemove: false };
+        }
     }
 
     private onReconnect(connection: StageThreeConnection) {
-        console.log('a reconnection!');
-        this.onJoin(connection);
+        const disconnectedPlayer =
+            this.players[connection.username.toLowerCase()];
+        if (!disconnectedPlayer) {
+            this.logger?.log(
+                `ConnectionSystem wanted to reconnect player ${connection.username} (${connection.ip}) but no such player exists`,
+            );
+            return;
+        }
+        disconnectedPlayer.socket = connection.socket;
+        const { username, status, socket, number } = disconnectedPlayer;
+
+        EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, {
+            author: 'Server',
+            content: GAME_EXT.RECONNECTED(username),
+            to:
+                status === PlayerStatuses.spectator && this.inProgress
+                    ? ROOMS.notAlive
+                    : undefined,
+            props: { hideAuthor: true },
+        });
+
+        if (this.inProgress && status !== PlayerStatuses.spectator) {
+            this.logger?.log(GAME_EXT.RECONNECTED(username));
+        }
+
+        EMITTED_SERVER_EVENTS.PLAYER_UPDATE(
+            this.io,
+            username,
+            status,
+            number,
+            '',
+            true,
+        );
+
+        const usernameLower = username.toLowerCase();
+
+        this.joinRejoinHandlers(disconnectedPlayer, socket);
     }
 }

@@ -4,7 +4,6 @@ import {
     StageThreeConnection,
     StageTwoConnection,
 } from '../models/connectionSystem';
-import Player from '../models/players';
 
 export const SERVER_GENERAL = {
     GAME_CREATED: (ip: string, username: string, gameCode: string) =>
@@ -102,6 +101,16 @@ export const CONNECTION_SYSTEM = {
         { username, ip }: StageTwoConnection | StageThreeConnection,
         error: unknown,
     ) => `Error processing token of player ${username} (${ip}): ${error}`,
+    /** Disconnected and removed from connection list, will not be able to reconnect - but username slot will be unreserved. */
+    HARD_DISCONNECT: ({ username, ip }: StageThreeConnection, reason: string) =>
+        `${username} (${ip}) removed from connections list with reason: ${reason}`,
+    /** Disconnected, but reconnection is possible. */
+    SOFT_DISCONNECT: ({ username, ip }: StageThreeConnection) =>
+        `${username} (${ip}) will be able to reconnect`,
+    POST_LIKELY_RECONNECT: (username: string, ip: string) =>
+        `${username} (${ip}) started joining and is likely a reconnecting player`,
+    POST_LIKELY_RECONNECT_DISABLED: (username: string, ip: string) =>
+        `${username} (${ip}) started joining and is likely a reconnecting player, this should never occur since reconnects are disabled`,
 };
 
 export const CODE_GENERATION = {

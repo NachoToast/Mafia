@@ -13,9 +13,11 @@ export const RECEIVED_PLAYER_EVENTS = {
     LEAVE: (socket: Socket, callback: Function) =>
         socket.on('disconnect', (reason: string) => callback(reason)),
     HERE_IS_TOKEN: (socket: Socket, callback: Function) =>
-        socket.on(`heresToken`, (payload: SocketTokenPayload) =>
+        socket.on('heresToken', (payload: SocketTokenPayload) =>
             callback(payload),
         ),
+    CHAT_MESSAGE: (socket: Socket, callback: Function) =>
+        socket.on('chatMessage', (message: string) => callback(message)),
     // CHAT_MESSAGE: 'chatMessage',
 };
 
@@ -27,16 +29,24 @@ export const EMITTED_SERVER_EVENTS = {
             io.to(message.to).emit('emittedChatMessage', message);
         else io.emit('emittedChatMessage', message);
     },
+    /** @deprecated Use `PLAYER_UPDATE` instead. */
     PLAYER_JOINED: (
         io: Server,
         username: string,
         status: PlayerStatuses,
         number: number,
         extra?: string,
-    ) => io.emit('playerJoined', username, status, number, extra),
+    ) => io.emit('playerJoined', username, status, number, true, extra),
     PLAYER_LEFT: (io: Server, username: string) =>
         io.emit('playerLeft', username),
-
+    PLAYER_UPDATE: (
+        io: Server,
+        username: string,
+        status: PlayerStatuses,
+        number: number,
+        extra: string = '',
+        connected: boolean = true,
+    ) => io.emit('playerUpdate', username, status, number, extra, connected),
     // username: string, status: PlayerStatuses
     /** When a user has changed status, also applies to new users. */
     // PLAYER_UPDATE: (emitter: Server | Socket, payload: PlayerUpdate) =>
@@ -50,16 +60,23 @@ export const EMITTED_PLAYER_EVENTS = {
         socket.disconnect();
     },
     GIVE_TOKEN: (socket: Socket) => socket.emit('giveToken'),
+    // TODO: make PLAYER_HERE use playerUpdate instead of playerJoined
     PLAYER_HERE: (
         socket: Socket,
         username: string,
         status: PlayerStatuses,
         number: number,
+        connected: boolean,
         extra?: string,
-    ) => socket.emit('playerJoined', username, status, number, extra),
+    ) =>
+        socket.emit('playerJoined', username, status, number, connected, extra),
 };
 
-export type ROOMS = 'alive' | 'notAlive';
+export enum ROOMS {
+    alive = 'alive',
+    /** includes spectators */
+    notAlive = 'notAlive',
+}
 
 export interface MessageProps {
     color?: string;

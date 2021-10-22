@@ -10,6 +10,7 @@ import {
     requestTimeoutSeconds,
     playerVerification,
     allowReconnects,
+    alwaysAllowReconnects,
 } from '../gameConfig.json';
 import { jwt_secret } from '../gameSecrets.json';
 import Logger from './logger';
@@ -139,6 +140,24 @@ export class ConnectionSystem {
     }
 
     public newStageOne(username: string, token: string, ip: string): void {
+        // FIXME: reconnect detection for when same IP address registered to multiple players
+        if (
+            this.usernameList.includes(username) ||
+            this.ipList.includes(username)
+        ) {
+            if (allowReconnects) {
+                CONNECTION_SYSTEM.POST_LIKELY_RECONNECT(username, ip);
+            } else {
+                this.logger?.log(
+                    CONNECTION_SYSTEM.POST_LIKELY_RECONNECT_DISABLED(
+                        username,
+                        ip,
+                    ),
+                );
+            }
+            return;
+        }
+
         this.logger?.log(CONNECTION_SYSTEM.SENT_INITIAL_POST(ip, username));
         const stageOne = new StageOneConnection(
             username,
@@ -155,11 +174,12 @@ export class ConnectionSystem {
     public toStageTwo(socket: Socket): void {
         const ip = ConnectionSystem.getIPFromSocket(socket);
 
-        const associatedConnection: StageOneConnection | undefined =
+        const associatedStageOneConnection: StageOneConnection | undefined =
             this.stageOneConnections[ip];
 
-        if (!associatedConnection) {
-            // no associated player, check if ip matches a disconnected stage three connection
+        if (!associatedStageOneConnection) {
+            // no associated player: check if ip matches a disconnected stage three connection
+            // or possible stage three:
             if (allowReconnects && this.ipList.includes(ip)) {
                 const possibleConnection: StageThreeConnection | undefined =
                     this.stageThreeConnections[
@@ -186,20 +206,24 @@ export class ConnectionSystem {
             EMITTED_PLAYER_EVENTS.UNREGISTERED(socket);
             return;
         }
+
         // associatedConnection found, upgrade to stage 2
         this.logger?.log(
-            CONNECTION_SYSTEM.INITIAL_SOCKET_CONNECTION(associatedConnection),
+            CONNECTION_SYSTEM.INITIAL_SOCKET_CONNECTION(
+                associatedStageOneConnection,
+            ),
         );
-        this.removeConnection(associatedConnection, true);
+        this.removeConnection(associatedStageOneConnection, true);
         const stageTwo = new StageTwoConnection(
-            associatedConnection,
+            associatedStageOneConnection,
             socket,
             this.removeConnection,
             this.toStageThree,
         );
 
-        this.stageTwoConnections[associatedConnection.username.toLowerCase()] =
-            stageTwo;
+        this.stageTwoConnections[
+            associatedStageOneConnection.username.toLowerCase()
+        ] = stageTwo;
     }
 
     private toStageThree(
@@ -237,9 +261,21 @@ export class ConnectionSystem {
         connection.disconnectedAt = Date.now();
         connection.connected = false;
         this.logger?.log(CONNECTION_SYSTEM.DISCONNECTED(connection, reason));
-        this.onLeave(connection);
-        if (!allowReconnects) {
+        const {
+            shouldRemove,
+            removalReason,
+        }: { shouldRemove: boolean; removalReason?: string } =
+            this.onLeave(connection);
+        if ((!allowReconnects || shouldRemove) && !alwaysAllowReconnects) {
+            this.logger?.log(
+                CONNECTION_SYSTEM.HARD_DISCONNECT(
+                    connection,
+                    removalReason || 'game config set to always remove',
+                ),
+            );
             this.removeConnection(connection);
+        } else {
+            this.logger?.log(CONNECTION_SYSTEM.SOFT_DISCONNECT(connection));
         }
     }
 

@@ -16,7 +16,7 @@ export async function findGame(req: Request, res: Response) {
         }
 
         const address = req.socket.remoteAddress;
-        const ip = address?.split(':').slice(-1)[0] || 'Unknown';
+        const ip = address?.split(':')?.slice(-1)[0] || 'Unknown';
 
         if (foundGame.connectionSystem.isDuplicateIP(ip)) {
             return res.status(200).json('Duplicate IP');
@@ -29,9 +29,16 @@ export async function findGame(req: Request, res: Response) {
         const token = jwt.sign({ username, gameCode }, jwt_secret, {
             expiresIn: tokenDuration,
         });
-        foundGame.connectionSystem.newStageOne(username, token, ip);
-
-        res.status(202).json(token);
+        const successfulReservation = foundGame.connectionSystem.newStageOne(
+            username,
+            token,
+            ip,
+        );
+        if (!successfulReservation) {
+            res.status(200).json('Cannot connect under that username/IP');
+        } else {
+            res.status(202).json(token);
+        }
     } catch (error) {
         globalLogger.log(error);
         res.status(500).json(INTERNAL_ERRORS.BASIC(error));

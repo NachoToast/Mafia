@@ -148,7 +148,7 @@ export class ConnectionSystem {
         return this.stageThreeConnections[username].connected;
     }
 
-    public newStageOne(username: string, token: string, ip: string): void {
+    public newStageOne(username: string, token: string, ip: string): boolean {
         // FIXME: reconnect detection for when same IP address registered to multiple players
         if (
             this.usernameList.includes(username) ||
@@ -164,7 +164,7 @@ export class ConnectionSystem {
                     ),
                 );
             }
-            return;
+            return allowReconnects;
         }
 
         this.logger?.log(CONNECTION_SYSTEM.SENT_INITIAL_POST(ip, username));
@@ -178,6 +178,8 @@ export class ConnectionSystem {
 
         this.ipList.push(ip);
         this.usernameList.push(username.toLowerCase());
+
+        return true;
     }
 
     public toStageTwo(socket: Socket): void {

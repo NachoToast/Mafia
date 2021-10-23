@@ -1,5 +1,6 @@
 import { Socket } from 'socket.io';
 import { PlayerStatuses } from '../constants/mafia';
+import { RECEIVED_PLAYER_EVENTS, ROOMS } from '../constants/socketEvent';
 import { Game } from './game';
 
 export default class Player {
@@ -22,5 +23,22 @@ export default class Player {
         this.username = username;
         this.number = number;
         this.status = status;
+    }
+
+    public bindSocket(socket: Socket) {
+        this.socket = socket;
+        this.connected = true;
+        RECEIVED_PLAYER_EVENTS.CHAT_MESSAGE(socket, (message: string) =>
+            this.message(message),
+        );
+    }
+
+    private message(message: string) {
+        if (message.length < 1) return;
+        if (message[0] === '/') {
+            // TODO: commands
+            return;
+        }
+        this.parentGame.sendChatMessage(this, message);
     }
 }

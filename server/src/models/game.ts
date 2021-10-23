@@ -3,6 +3,7 @@ import { Server, Socket } from 'socket.io';
 import { GAME_EXT, SERVER_GENERAL } from '../constants/logging';
 import { PlayerStatuses, TimePeriods } from '../constants/mafia';
 import {
+    ChatMessage,
     EMITTED_PLAYER_EVENTS,
     EMITTED_SERVER_EVENTS,
     RECEIVED_SERVER_EVENTS,
@@ -95,15 +96,13 @@ export class Game {
         return num;
     }
 
-    /** Stuff that happens on both join and rejoin, such as:
-     * socket binding
-     * updating connected status
-     * emitting existing players to newly (re)joined one
-     * joining rooms
+    /** Stuff that happens on both join and rejoin, such as
+     * socket binding,
+     * emitting existing players to the newly (re)joined one,
+     * and joining rooms
      */
     private joinRejoinHandlers(player: Player, socket: Socket) {
-        player.socket = socket;
-        player.connected = true;
+        player.bindSocket(socket);
 
         const usernameLower = player.username.toLowerCase();
         for (const playerName of Object.keys(this.players)) {
@@ -124,8 +123,6 @@ export class Game {
         } else {
             socket.join(ROOMS.notAlive);
         }
-
-        // TODO: more socket binding stuff
     }
 
     private onJoin(connection: StageThreeConnection) {
@@ -260,5 +257,24 @@ export class Game {
         const usernameLower = username.toLowerCase();
 
         this.joinRejoinHandlers(disconnectedPlayer, socket);
+    }
+
+    public sendChatMessage(player: Player, message: string) {
+        let room: ROOMS | undefined;
+        if (this.inProgress) {
+            room =
+                player.status === PlayerStatuses.alive
+                    ? ROOMS.alive
+                    : ROOMS.notAlive;
+
+            this.logger?.log(`<${player.username}> (to ${room}) ${message}`);
+        }
+
+        const constructedMessage: ChatMessage = {
+            author: player.username,
+            content: message,
+            to: room,
+        };
+        EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, constructedMessage);
     }
 }

@@ -17,7 +17,7 @@ export const RECEIVED_PLAYER_EVENTS = {
             callback(payload),
         ),
     CHAT_MESSAGE: (socket: Socket, callback: Function) =>
-        socket.on('chatMessage', (message: string) => callback(message)),
+        socket.on('chatMessage', (message: string) => callback(message.trim())),
     // CHAT_MESSAGE: 'chatMessage',
 };
 

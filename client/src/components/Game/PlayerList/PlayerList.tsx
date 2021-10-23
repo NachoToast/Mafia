@@ -52,23 +52,23 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                 setPlayerList([...playerList, newPlayer]);
 
                 // fake player population for testing purposes
-                // const newPlayers: Player[] = new Array(99)
-                //     .fill(0)
-                //     .map((e, i) => {
-                //         return {
-                //             username: `player ${++i}`,
-                //             number: ++i,
-                //             status:
-                //                 i < 20
-                //                     ? PlayerStatuses.alive
-                //                     : i > 40
-                //                     ? PlayerStatuses.spectator
-                //                     : PlayerStatuses.dead,
-                //             connected: Math.random() < 0.5,
-                //         };
-                //     });
-                // setPlayerList([...playerList, ...newPlayers]);
-                // console.log(newPlayers);
+                const newPlayers: Player[] = new Array(99)
+                    .fill(0)
+                    .map((e, i) => {
+                        return {
+                            username: `player ${++i}`,
+                            number: ++i,
+                            status:
+                                i < 20
+                                    ? PlayerStatuses.alive
+                                    : i > 40
+                                    ? PlayerStatuses.spectator
+                                    : PlayerStatuses.dead,
+                            connected: Math.random() < 0.5,
+                        };
+                    });
+                setPlayerList([...playerList, ...newPlayers]);
+                console.log(newPlayers);
             },
         );
 
@@ -140,15 +140,14 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                     overflowY: 'auto',
                     maxHeight: '100vh',
                 }}
-                justifyContent="space-evenly"
-                spacing={0.75}
+                justifyContent="space-between"
             >
                 {/* alive */}
                 <Paper
                     style={{
                         flexGrow: 1,
                         padding: '10px',
-                        maxHeight: '32%',
+                        maxHeight: '33%',
                     }}
                     square
                 >
@@ -178,7 +177,7 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                     style={{
                         flexGrow: 1,
                         padding: '10px',
-                        maxHeight: '32%',
+                        maxHeight: '33%',
                     }}
                     square
                 >
@@ -205,7 +204,7 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                     style={{
                         flexGrow: 1,
                         padding: '10px',
-                        maxHeight: '32%',
+                        maxHeight: '33%',
                     }}
                     square
                 >

@@ -60,7 +60,7 @@ export class Game {
             (connection: StageThreeConnection) => this.onReconnect(connection),
             null,
             null,
-            true,
+            doLogging,
         );
 
         if (doLogging) {

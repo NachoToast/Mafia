@@ -73,6 +73,15 @@ export class ConnectionSystem {
     private validateReconnect: ValidationFunction;
     private logger?: Logger;
 
+    /**
+     * @param {string} gameCode Game code of associate game, for verification and logging purposes.
+     * @param {ConnectionFunction} onJoin Function that runs when a player successfully joins the game, no return value needed.
+     * @param {ConnectionFunction} onLeave Function that runs when a player disconnects, and returns whether to permanently remove the player or not.
+     * @param {ConnectionFunction} onReconnect Like `onJoin` but for reconnects.
+     * @param {ValidationFunction?} validateJoinFunction If specified, provides additional steps to establish a valid connection.
+     * @param {ValidationFunction} validateReconnectFunction Same as `validateJoinFunction` but for reconnects.
+     * @param {boolean?} makeLogger Whether to make and log to a `connections.log` file.
+     */
     constructor(
         gameCode: string,
         onJoin: ConnectionFunction,

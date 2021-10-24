@@ -61,6 +61,7 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
                 height: '100%',
                 display: 'flex',
                 flexFlow: 'column-reverse',
+                boxShadow: 'none',
             }}
             elevation={24}
             square

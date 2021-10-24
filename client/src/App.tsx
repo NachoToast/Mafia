@@ -18,7 +18,14 @@ class App extends Component {
         this.reRender = this.reRender.bind(this);
     }
 
+    private fromDisconnect() {
+        this.token = null;
+        localStorage.removeItem(STORAGE.tokenKeyName);
+        this.forceUpdate();
+    }
+
     private reRender() {
+        this.token = null;
         this.setState(this.state);
     }
 
@@ -58,7 +65,7 @@ class App extends Component {
         return (
             <Game
                 token={this.token}
-                render={this.reRender}
+                returnCallback={() => this.fromDisconnect()}
                 gameCode={this.gameCode}
                 username={this.username}
             />

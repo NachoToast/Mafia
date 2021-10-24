@@ -52,23 +52,22 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                 setPlayerList([...playerList, newPlayer]);
 
                 // fake player population for testing purposes
-                const newPlayers: Player[] = new Array(99)
-                    .fill(0)
-                    .map((e, i) => {
-                        return {
-                            username: `player ${++i}`,
-                            number: ++i,
-                            status:
-                                i < 20
-                                    ? PlayerStatuses.alive
-                                    : i > 40
-                                    ? PlayerStatuses.spectator
-                                    : PlayerStatuses.dead,
-                            connected: Math.random() < 0.5,
-                        };
-                    });
-                setPlayerList([...playerList, ...newPlayers]);
-                console.log(newPlayers);
+                // const newPlayers: Player[] = new Array(99)
+                //     .fill(0)
+                //     .map((e, i) => {
+                //         return {
+                //             username: `player ${++i}`,
+                //             number: ++i,
+                //             status:
+                //                 i < 20
+                //                     ? PlayerStatuses.alive
+                //                     : i > 40
+                //                     ? PlayerStatuses.spectator
+                //                     : PlayerStatuses.dead,
+                //             connected: Math.random() < 0.5,
+                //         };
+                //     });
+                // setPlayerList([...playerList, ...newPlayers]);
             },
         );
 
@@ -225,7 +224,7 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                         }}
                     >
                         {spectators.map((e, i) => (
-                            <PlayerCard player={e} index={i} key={e.username} />
+                            <PlayerCard player={e} key={e.username} />
                         ))}
                     </div>
                 </Paper>

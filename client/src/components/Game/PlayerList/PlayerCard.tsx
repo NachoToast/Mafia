@@ -1,7 +1,7 @@
 import React from 'react';
 import { Player } from './PlayerList';
 
-const PlayerCard = ({ player, index }: { player: Player; index: number }) => {
+const PlayerCard = ({ player }: { player: Player }) => {
     const { username, connected } = player;
     return (
         <span

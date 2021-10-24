@@ -1,8 +1,10 @@
 import { Box, Card, Grid, Paper, Stack } from '@mui/material';
 import React, { Component } from 'react';
+import { render } from 'react-dom';
 import io, { Socket } from 'socket.io-client';
 import { STORAGE } from '../../constants/localStorageVariables';
 import ChatBox from './Chat/ChatBox';
+import DisconnectedModal from './DisconnectedModal/DisconnectedModal';
 import GameInfo from './GameInfo/GameInfo';
 import PlayerList from './PlayerList/PlayerList';
 import RoleCard from './RoleCard/RoleCard';
@@ -17,10 +19,12 @@ interface GameProps {
     gameCode: string;
     username: string;
     token: string;
-    render: Function;
+    returnCallback: Function;
 }
 
 class Game extends Component<GameProps> {
+    private returnCallback: Function;
+
     public state: GameState = {
         connected: false,
         authenticated: true,
@@ -33,9 +37,17 @@ class Game extends Component<GameProps> {
 
     public constructor(props: GameProps) {
         super(props);
-        this.gameCode = props.gameCode || localStorage.getItem(STORAGE.gameCodeKeyName) || '';
-        this.username = props.username || localStorage.getItem(STORAGE.usernameKeyName) || '';
-        this.token = props.token || localStorage.getItem(STORAGE.tokenKeyName) || '';
+        this.returnCallback = props.returnCallback;
+        this.gameCode =
+            props.gameCode ||
+            localStorage.getItem(STORAGE.gameCodeKeyName) ||
+            '';
+        this.username =
+            props.username ||
+            localStorage.getItem(STORAGE.usernameKeyName) ||
+            '';
+        this.token =
+            props.token || localStorage.getItem(STORAGE.tokenKeyName) || '';
 
         this.socket = io(`ntgc.ddns.net:3001`, {
             path: `/${this.gameCode}`,
@@ -46,10 +58,11 @@ class Game extends Component<GameProps> {
     }
 
     public componentDidMount() {
-        this.socket.on('connect', () => this.setState({ connected: true } as GameState));
+        this.socket.on('connect', () =>
+            this.setState({ connected: true } as GameState),
+        );
         this.socket.on('disconnect', () => {
             this.setState({ connected: false } as GameState);
-            console.log('disconnectwd');
         });
 
         this.socket.on('unregistered', () => {
@@ -65,8 +78,6 @@ class Game extends Component<GameProps> {
             console.log('emitting deets');
         });
 
-        // this.socket.on('')
-
         this.socket.connect();
     }
 
@@ -74,21 +85,26 @@ class Game extends Component<GameProps> {
         // if (!this.state.authenticated) return <div>Not authenticated :P</div>;
         console.log(`${Date.now()} Rendering Game`);
         return (
-            <Grid container>
-                <Grid item xs={3}>
-                    <Stack style={{ height: '100vh' }}>
-                        <RoleCard />
-                        <RoleList />
-                        <GameInfo />
-                    </Stack>
+            <>
+                {!this.state.connected && (
+                    <DisconnectedModal rerender={() => this.returnCallback()} />
+                )}
+                <Grid container>
+                    <Grid item xs={3}>
+                        <Stack style={{ height: '100vh' }}>
+                            <RoleCard />
+                            <RoleList />
+                            <GameInfo />
+                        </Stack>
+                    </Grid>
+                    <Grid item xs={6} style={{ height: '100vh' }}>
+                        <ChatBox socket={this.socket} />
+                    </Grid>
+                    <Grid item xs={3}>
+                        <PlayerList socket={this.socket} />
+                    </Grid>
                 </Grid>
-                <Grid item xs={6} style={{ height: '100vh' }}>
-                    <ChatBox socket={this.socket} />
-                </Grid>
-                <Grid item xs={3}>
-                    <PlayerList socket={this.socket} />
-                </Grid>
-            </Grid>
+            </>
         );
     }
 }

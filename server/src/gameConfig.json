@@ -3,7 +3,7 @@
     "tokenDuration": "1h",
     "requestTimeoutSeconds": 10,
     "playerVerification": ["token", "ip"],
-    "allowReconnects": false,
+    "allowReconnects": true,
     "alwaysAllowReconnects": true,
     "killDisconnectedPlayers": true
 }

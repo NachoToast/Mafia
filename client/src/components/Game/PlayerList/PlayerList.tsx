@@ -32,45 +32,6 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
     const myUsername = localStorage.getItem(STORAGE.usernameKeyName) as string;
 
     useEffect(() => {
-        socket.on(
-            'playerJoined',
-            (
-                username: string,
-                status: PlayerStatuses,
-                number: number,
-                connected: boolean,
-                extra?: string,
-            ) => {
-                if (username === myUsername) extra = 'You';
-                const newPlayer: Player = {
-                    username,
-                    status,
-                    number,
-                    extra,
-                    connected,
-                };
-                setPlayerList([...playerList, newPlayer]);
-
-                // fake player population for testing purposes
-                // const newPlayers: Player[] = new Array(99)
-                //     .fill(0)
-                //     .map((e, i) => {
-                //         return {
-                //             username: `player ${++i}`,
-                //             number: ++i,
-                //             status:
-                //                 i < 20
-                //                     ? PlayerStatuses.alive
-                //                     : i > 40
-                //                     ? PlayerStatuses.spectator
-                //                     : PlayerStatuses.dead,
-                //             connected: Math.random() < 0.5,
-                //         };
-                //     });
-                // setPlayerList([...playerList, ...newPlayers]);
-            },
-        );
-
         socket.on('playerLeft', (username: string) => {
             const foundPlayer = playerList.find(
                 (player) => player.username === username,
@@ -93,6 +54,7 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                 const existingPlayer = playerList.find(
                     (player) => player.username === username,
                 );
+
                 if (!!existingPlayer) {
                     existingPlayer.status = status;
                     existingPlayer.extra = extra || existingPlayer.extra;
@@ -106,13 +68,31 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                         connected,
                         number,
                     };
+                    if (username === myUsername) newPlayer.extra = 'You';
                     setPlayerList([...playerList, newPlayer]);
                 }
+
+                // fake player population for testing purposes
+                // const newPlayers: Player[] = new Array(99)
+                //     .fill(0)
+                //     .map((e, i) => {
+                //         return {
+                //             username: `player ${++i}`,
+                //             number: ++i,
+                //             status:
+                //                 i < 20
+                //                     ? PlayerStatuses.alive
+                //                     : i > 40
+                //                     ? PlayerStatuses.spectator
+                //                     : PlayerStatuses.dead,
+                //             connected: Math.random() < 0.5,
+                //         };
+                //     });
+                // setPlayerList([...playerList, ...newPlayers]);
             },
         );
 
         return () => {
-            socket.off('playerJoined');
             socket.off('playerLeft');
             socket.off('playerUpdate');
         };

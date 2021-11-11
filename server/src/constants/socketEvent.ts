@@ -61,7 +61,7 @@ export const EMITTED_PLAYER_EVENTS = {
         connected: boolean,
         extra?: string,
     ) =>
-        socket.emit('playerJoined', username, status, number, connected, extra),
+        socket.emit('playerUpdate', username, status, number, extra, connected),
 };
 
 export enum ROOMS {

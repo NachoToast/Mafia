@@ -16,13 +16,14 @@ import { GameCreator } from './serverHub';
 import {
     killDisconnectedPlayers,
     alwaysAllowReconnects,
+    allowReconnects,
 } from '../gameConfig.json';
 
 /** A single game/lobby. */
 export class Game {
     private readonly io: Server;
     private readonly gameCode: string;
-    private readonly createdBy: GameCreator | null;
+    private createdBy: GameCreator;
     private timePeriod: TimePeriods = TimePeriods.pregame;
     private dayNumber: number = 0;
     public maxPlayers: number;
@@ -143,7 +144,7 @@ export class Game {
 
         this.players[username.toLowerCase()] = newPlayer;
 
-        EMITTED_SERVER_EVENTS.PLAYER_JOINED(this.io, username, status, number);
+        EMITTED_SERVER_EVENTS.PLAYER_UPDATE(this.io, username, status, number);
 
         EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, {
             author: 'Server',
@@ -183,9 +184,16 @@ export class Game {
             this.logger?.log(GAME_EXT.LEFT_GAME(username));
         }
 
+        // permanently remove player
+        const removeBecauseNotStarted =
+            !this.inProgress && !alwaysAllowReconnects;
+        const removeBecauseSpectator =
+            status === PlayerStatuses.spectator && !alwaysAllowReconnects;
+        const removeBecauseNoReconnects = !allowReconnects;
         if (
-            (!this.inProgress || status === PlayerStatuses.spectator) &&
-            !alwaysAllowReconnects
+            removeBecauseNoReconnects ||
+            removeBecauseSpectator ||
+            removeBecauseNotStarted
         ) {
             EMITTED_SERVER_EVENTS.PLAYER_LEFT(this.io, username);
             this.takenNumbers.splice(this.takenNumbers.indexOf(number), 1);

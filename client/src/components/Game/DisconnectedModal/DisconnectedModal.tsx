@@ -50,7 +50,7 @@ const DisconnectedModal = ({
                             Lost Connection to the Mafia Servers
                         </Typography>
                         <Box
-                            sx={{ mt: 2 }}
+                            sx={{ mt: 2, mb: -2 }}
                             style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',

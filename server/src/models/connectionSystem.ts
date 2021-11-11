@@ -20,6 +20,14 @@ type JoinVerification = 'token' | 'ip' | 'username' | 'gameCode';
 /** An external function to be called on a connection event. */
 type ConnectionFunction = (payload: StageThreeConnection) => any;
 
+/** An external function to be called on a leave event, determines whether the
+ * connection should be able to reconnect or not.
+ */
+export type LeaveFunction = (connection: StageThreeConnection) => {
+    shouldRemove: boolean;
+    removalReason?: string;
+};
+
 /** External verification function to act in addition to internal one, on stage 2 -> 3 connection upgrades. */
 type ValidationFunction =
     | ((connection: StageTwoConnection | StageThreeConnection) => {
@@ -67,7 +75,7 @@ export class ConnectionSystem {
     private readonly gameCode: string;
 
     private onJoin: ConnectionFunction;
-    private onLeave: ConnectionFunction;
+    private onLeave: LeaveFunction;
     private onReconnect: ConnectionFunction;
     private validateJoin: ValidationFunction;
     private validateReconnect: ValidationFunction;
@@ -85,7 +93,7 @@ export class ConnectionSystem {
     constructor(
         gameCode: string,
         onJoin: ConnectionFunction,
-        onLeave: ConnectionFunction,
+        onLeave: LeaveFunction,
         onReconnect: ConnectionFunction,
         validateJoinFunction: ValidationFunction,
         validateReconnectFunction: ValidationFunction,
@@ -277,7 +285,7 @@ export class ConnectionSystem {
             removalReason,
         }: { shouldRemove: boolean; removalReason?: string } =
             this.onLeave(connection);
-        if ((!allowReconnects || shouldRemove) && !alwaysAllowReconnects) {
+        if (shouldRemove) {
             this.logger?.log(
                 CONNECTION_SYSTEM.HARD_DISCONNECT(
                     connection,

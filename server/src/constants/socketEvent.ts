@@ -29,14 +29,6 @@ export const EMITTED_SERVER_EVENTS = {
             io.to(message.to).emit('emittedChatMessage', message);
         else io.emit('emittedChatMessage', message);
     },
-    /** @deprecated Use `PLAYER_UPDATE` instead. */
-    PLAYER_JOINED: (
-        io: Server,
-        username: string,
-        status: PlayerStatuses,
-        number: number,
-        extra?: string,
-    ) => io.emit('playerJoined', username, status, number, true, extra),
     PLAYER_LEFT: (io: Server, username: string) =>
         io.emit('playerLeft', username),
     PLAYER_UPDATE: (

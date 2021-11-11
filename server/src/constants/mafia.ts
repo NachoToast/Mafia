@@ -10,5 +10,5 @@ export enum TimePeriods {
     voting = 'voting',
     trial = 'a trial',
     postDiscussion = 'discussion',
-    pregame = 'pre-grame',
+    pregame = 'pre-game',
 }

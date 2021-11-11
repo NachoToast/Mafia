@@ -1,10 +1,9 @@
 {
     "allowDuplicateIP": true,
-    "statsReportInterval": 0,
     "tokenDuration": "1h",
     "requestTimeoutSeconds": 10,
     "playerVerification": ["token", "ip"],
-    "allowReconnects": true,
+    "allowReconnects": false,
     "alwaysAllowReconnects": true,
     "killDisconnectedPlayers": true
 }

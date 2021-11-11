@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { STORAGE } from '../../constants/localStorageVariables';
 import ChatBox from './Chat/ChatBox';
-import DisconnectedModal from './DisconnectedModal/DisconnectedModal';
+import DisconnectedModal from './Modals/DisconnectedModal';
 import GameInfo from './GameInfo/GameInfo';
 import PlayerList from './PlayerList/PlayerList';
 import RoleCard from './RoleCard/RoleCard';
@@ -93,7 +93,10 @@ class Game extends Component<GameProps> {
                         <Stack style={{ height: '100vh' }}>
                             <RoleCard />
                             <RoleList />
-                            <GameInfo />
+                            <GameInfo
+                                exitCallback={() => this.returnCallback()}
+                                socket={this.socket}
+                            />
                         </Stack>
                     </Grid>
                     <Grid item xs={6} style={{ height: '100vh' }}>

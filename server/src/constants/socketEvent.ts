@@ -18,7 +18,8 @@ export const RECEIVED_PLAYER_EVENTS = {
         ),
     CHAT_MESSAGE: (socket: Socket, callback: Function) =>
         socket.on('chatMessage', (message: string) => callback(message.trim())),
-    // CHAT_MESSAGE: 'chatMessage',
+    INTENTIONAL_LEAVE: (socket: Socket, callback: Function) =>
+        socket.on('intentionalDisconnect', () => callback()),
 };
 
 /** Events emitted by the game's global io instance - `io.emit()`  */

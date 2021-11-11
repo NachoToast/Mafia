@@ -23,7 +23,10 @@ type ConnectionFunction = (payload: StageThreeConnection) => any;
 /** An external function to be called on a leave event, determines whether the
  * connection should be able to reconnect or not.
  */
-export type LeaveFunction = (connection: StageThreeConnection) => {
+export type LeaveFunction = (
+    connection: StageThreeConnection,
+    intentional: boolean,
+) => {
     shouldRemove: boolean;
     removalReason?: string;
 };
@@ -271,11 +274,15 @@ export class ConnectionSystem {
         RECEIVED_PLAYER_EVENTS.LEAVE(stageThree.socket, (reason: string) =>
             this.handleDisconnect(stageThree, reason),
         );
+        RECEIVED_PLAYER_EVENTS.INTENTIONAL_LEAVE(stageThree.socket, () =>
+            this.handleDisconnect(stageThree, 'intentional disconnect', true),
+        );
     }
 
     public handleDisconnect(
         connection: StageThreeConnection,
         reason: string,
+        intentional: boolean = false,
     ): void {
         connection.disconnectedAt = Date.now();
         connection.connected = false;
@@ -283,13 +290,17 @@ export class ConnectionSystem {
         const {
             shouldRemove,
             removalReason,
-        }: { shouldRemove: boolean; removalReason?: string } =
-            this.onLeave(connection);
+        }: { shouldRemove: boolean; removalReason?: string } = this.onLeave(
+            connection,
+            intentional,
+        );
         if (shouldRemove) {
             this.logger?.log(
                 CONNECTION_SYSTEM.HARD_DISCONNECT(
                     connection,
-                    removalReason || 'game config set to always remove',
+                    intentional
+                        ? reason
+                        : removalReason || 'game config set to always remove',
                 ),
             );
             this.removeConnection(connection);
@@ -348,6 +359,9 @@ export class ConnectionSystem {
         this.onReconnect(connection);
         RECEIVED_PLAYER_EVENTS.LEAVE(connection.socket, (reason: string) =>
             this.handleDisconnect(connection, reason),
+        );
+        RECEIVED_PLAYER_EVENTS.INTENTIONAL_LEAVE(connection.socket, () =>
+            this.handleDisconnect(connection, 'intentional disconnect', true),
         );
     }
 
@@ -451,7 +465,10 @@ export class ConnectionSystem {
         }
 
         if (connection instanceof StageThreeConnection) {
-            if (!isUpgrade) connection.socket.disconnect();
+            if (!isUpgrade) {
+                connection.socket.removeAllListeners();
+                connection.socket.disconnect();
+            }
             delete this.stageThreeConnections[username];
         } else {
             if (!!connection.timeoutFunction) {

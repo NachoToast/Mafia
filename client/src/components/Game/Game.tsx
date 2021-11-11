@@ -1,6 +1,5 @@
-import { Box, Card, Grid, Paper, Stack } from '@mui/material';
+import { Grid, Stack } from '@mui/material';
 import React, { Component } from 'react';
-import { render } from 'react-dom';
 import io, { Socket } from 'socket.io-client';
 import { STORAGE } from '../../constants/localStorageVariables';
 import ChatBox from './Chat/ChatBox';

@@ -10,8 +10,23 @@ import {
 import SettingsIcon from '@mui/icons-material/Settings';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import InfoIcon from '@mui/icons-material/Info';
+import { Socket } from 'socket.io-client';
 
-const GameInfo = () => {
+const GameInfo = ({
+    socket,
+    exitCallback,
+}: {
+    socket: Socket;
+    exitCallback: Function;
+}) => {
+    const confirmLeaveGame = () => {
+        const actuallyLeave = window.confirm('Do you really want to leave?');
+        if (actuallyLeave) {
+            socket.emit('intentionalDisconnect');
+            exitCallback();
+        }
+    };
+
     return (
         <Paper
             elevation={24}
@@ -70,6 +85,7 @@ const GameInfo = () => {
                             style={{
                                 flexGrow: 1,
                             }}
+                            onClick={confirmLeaveGame}
                         >
                             <ExitToAppIcon color="action" />
                         </Button>

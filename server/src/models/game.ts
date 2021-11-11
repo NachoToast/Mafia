@@ -58,7 +58,8 @@ export class Game {
         this.connectionSystem = new ConnectionSystem(
             gameCode,
             (connection: StageThreeConnection) => this.onJoin(connection),
-            (connection: StageThreeConnection) => this.onLeave(connection),
+            (connection: StageThreeConnection, intentional: boolean) =>
+                this.onLeave(connection, intentional),
             (connection: StageThreeConnection) => this.onReconnect(connection),
             null,
             null,
@@ -154,7 +155,10 @@ export class Game {
         });
     }
 
-    private onLeave(connection: StageThreeConnection): {
+    private onLeave(
+        connection: StageThreeConnection,
+        intentional: boolean,
+    ): {
         shouldRemove: boolean;
         removalReason?: string;
     } {
@@ -193,14 +197,17 @@ export class Game {
         if (
             removeBecauseNoReconnects ||
             removeBecauseSpectator ||
-            removeBecauseNotStarted
+            removeBecauseNotStarted ||
+            intentional
         ) {
             EMITTED_SERVER_EVENTS.PLAYER_LEFT(this.io, username);
             this.takenNumbers.splice(this.takenNumbers.indexOf(number), 1);
             delete this.players[username.toLowerCase()];
             return {
                 shouldRemove: true,
-                removalReason: !this.inProgress
+                removalReason: intentional
+                    ? 'intentional disconnect'
+                    : !this.inProgress
                     ? 'game not started yet'
                     : 'player was spectator',
             };

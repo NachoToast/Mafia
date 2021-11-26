@@ -1,10 +1,7 @@
 import { JwtPayload, verify } from 'jsonwebtoken';
 import { Socket } from 'socket.io';
 import { CONNECTION_SYSTEM } from '../constants/logging';
-import {
-    EMITTED_PLAYER_EVENTS,
-    RECEIVED_PLAYER_EVENTS,
-} from '../constants/socketEvent';
+import { EMITTED_PLAYER_EVENTS, RECEIVED_PLAYER_EVENTS } from '../constants/socketEvent';
 import {
     allowDuplicateIP,
     requestTimeoutSeconds,
@@ -13,7 +10,7 @@ import {
     alwaysAllowReconnects,
 } from '../gameConfig.json';
 import { jwt_secret } from '../gameSecrets.json';
-import Logger from './logger';
+import Logger, { BaseLoggerParams, LoggerParams } from './logger';
 
 type JoinVerification = 'token' | 'ip' | 'username' | 'gameCode';
 
@@ -39,17 +36,11 @@ type ValidationFunction =
       })
     | null;
 
-type AnyConnection =
-    | StageOneConnection
-    | StageTwoConnection
-    | StageThreeConnection;
+type AnyConnection = StageOneConnection | StageTwoConnection | StageThreeConnection;
 
 type TimeoutFunction = (payload: AnyConnection) => void;
 
-type UpgradeFunction = (
-    connection: StageTwoConnection,
-    payload: SocketTokenPayload,
-) => void;
+type UpgradeFunction = (connection: StageTwoConnection, payload: SocketTokenPayload) => void;
 
 export interface SocketTokenPayload {
     token: string;
@@ -58,34 +49,31 @@ export interface SocketTokenPayload {
 }
 
 /**
- * @description The connection system handles connecting, disconnecting, and reconnecting players to a game. It uses a 3 step system:
+ * @description The connection system handles connecting, disconnecting,and reconnecting players to a game. It uses a 3 step system:
  * 1. "Reserve" a slot (identified by ip)
  * 2. Get a socket connection
  * 3. Get socket's credentials (pre-defined socket emit)
  */
 export class ConnectionSystem {
-    private stageOneConnections: { [ip: string]: StageOneConnection } = {};
-
-    private stageTwoConnections: { [username: string]: StageTwoConnection } =
-        {};
-
-    private stageThreeConnections: {
+    private readonly stageOneConnections: { [ip: string]: StageOneConnection } = {};
+    private readonly stageTwoConnections: { [username: string]: StageTwoConnection } = {};
+    private readonly stageThreeConnections: {
         [username: string]: StageThreeConnection;
     } = {};
 
-    private ipList: string[] = [];
-    private usernameList: string[] = [];
+    private readonly ipList: string[] = [];
+    private readonly usernameList: string[] = [];
     private readonly gameCode: string;
 
-    private onJoin: ConnectionFunction;
-    private onLeave: LeaveFunction;
-    private onReconnect: ConnectionFunction;
-    private validateJoin: ValidationFunction;
-    private validateReconnect: ValidationFunction;
-    private logger?: Logger;
+    private readonly onJoin: ConnectionFunction;
+    private readonly onLeave: LeaveFunction;
+    private readonly onReconnect: ConnectionFunction;
+    private readonly validateJoin: ValidationFunction;
+    private readonly validateReconnect: ValidationFunction;
+    private readonly logger?: Logger;
 
     /**
-     * @param {string} gameCode Game code of associate game, for verification and logging purposes.
+     * @param {string} gameCode Game code of associated game, for verification and logging purposes.
      * @param {ConnectionFunction} onJoin Function that runs when a player successfully joins the game, no return value needed.
      * @param {ConnectionFunction} onLeave Function that runs when a player disconnects, and returns whether to permanently remove the player or not.
      * @param {ConnectionFunction} onReconnect Like `onJoin` but for reconnects.
@@ -101,6 +89,7 @@ export class ConnectionSystem {
         validateJoinFunction: ValidationFunction,
         validateReconnectFunction: ValidationFunction,
         makeLogger?: boolean,
+        loggerParams?: BaseLoggerParams,
     ) {
         this.gameCode = gameCode;
         this.onJoin = onJoin;
@@ -112,13 +101,13 @@ export class ConnectionSystem {
             this.logger = new Logger({
                 name: 'connections',
                 path: `games/${gameCode}`,
+                ...loggerParams,
             });
         }
 
         this.removeConnection = this.removeConnection.bind(this);
         this.toStageThree = this.toStageThree.bind(this);
-        this.timeoutReconnectingSocket =
-            this.timeoutReconnectingSocket.bind(this);
+        this.timeoutReconnectingSocket = this.timeoutReconnectingSocket.bind(this);
     }
 
     private static getIPFromSocket(socket: Socket) {
@@ -132,9 +121,7 @@ export class ConnectionSystem {
         if (index === -1) return false;
         if (!allowReconnects) return true;
 
-        const disconnectedWithSameIP = Object.keys(
-            this.stageThreeConnections,
-        ).find(
+        const disconnectedWithSameIP = Object.keys(this.stageThreeConnections).find(
             (name) =>
                 this.stageThreeConnections[name].ip === ip &&
                 !this.stageThreeConnections[name].connected,
@@ -149,9 +136,7 @@ export class ConnectionSystem {
         if (index === -1) return false;
         if (!allowReconnects) return true;
 
-        const playerWithSameUsername = Object.keys(
-            this.stageThreeConnections,
-        ).includes(username);
+        const playerWithSameUsername = Object.keys(this.stageThreeConnections).includes(username);
 
         // seems counter-intuitive, but it means that the username is taken by a stage 1 or 2 connection instead.
         if (!playerWithSameUsername) return true;
@@ -161,30 +146,17 @@ export class ConnectionSystem {
 
     public newStageOne(username: string, token: string, ip: string): boolean {
         // FIXME: reconnect detection for when same IP address registered to multiple players
-        if (
-            this.usernameList.includes(username) ||
-            this.ipList.includes(username)
-        ) {
+        if (this.usernameList.includes(username) || this.ipList.includes(username)) {
             if (allowReconnects) {
                 CONNECTION_SYSTEM.POST_LIKELY_RECONNECT(username, ip);
             } else {
-                this.logger?.log(
-                    CONNECTION_SYSTEM.POST_LIKELY_RECONNECT_DISABLED(
-                        username,
-                        ip,
-                    ),
-                );
+                this.logger?.log(CONNECTION_SYSTEM.POST_LIKELY_RECONNECT_DISABLED(username, ip));
             }
             return allowReconnects;
         }
 
         this.logger?.log(CONNECTION_SYSTEM.SENT_INITIAL_POST(ip, username));
-        const stageOne = new StageOneConnection(
-            username,
-            token,
-            ip,
-            this.removeConnection,
-        );
+        const stageOne = new StageOneConnection(username, token, ip, this.removeConnection);
         this.stageOneConnections[ip] = stageOne;
 
         this.ipList.push(ip);
@@ -214,27 +186,19 @@ export class ConnectionSystem {
 
                 if (!!possibleConnection) {
                     this.logger?.log(
-                        CONNECTION_SYSTEM.POSSIBLE_SOCKET_RECONNECTION(
-                            possibleConnection,
-                        ),
+                        CONNECTION_SYSTEM.POSSIBLE_SOCKET_RECONNECTION(possibleConnection),
                     );
                     this.handlePossibleReconnect(possibleConnection, socket);
                     return;
                 }
             }
-            this.logger?.log(
-                CONNECTION_SYSTEM.UNKNOWN_SOCKET_CONNECTION(ip, socket),
-            );
+            this.logger?.log(CONNECTION_SYSTEM.UNKNOWN_SOCKET_CONNECTION(ip, socket));
             EMITTED_PLAYER_EVENTS.UNREGISTERED(socket);
             return;
         }
 
         // associatedConnection found, upgrade to stage 2
-        this.logger?.log(
-            CONNECTION_SYSTEM.INITIAL_SOCKET_CONNECTION(
-                associatedStageOneConnection,
-            ),
-        );
+        this.logger?.log(CONNECTION_SYSTEM.INITIAL_SOCKET_CONNECTION(associatedStageOneConnection));
         this.removeConnection(associatedStageOneConnection, true);
         const stageTwo = new StageTwoConnection(
             associatedStageOneConnection,
@@ -243,34 +207,23 @@ export class ConnectionSystem {
             this.toStageThree,
         );
 
-        this.stageTwoConnections[
-            associatedStageOneConnection.username.toLowerCase()
-        ] = stageTwo;
+        this.stageTwoConnections[associatedStageOneConnection.username.toLowerCase()] = stageTwo;
     }
 
-    private toStageThree(
-        connection: StageTwoConnection,
-        tokenPayload: SocketTokenPayload,
-    ) {
-        const { isValid, reasons } = this.verification(
-            connection,
-            tokenPayload,
-        );
+    private toStageThree(connection: StageTwoConnection, tokenPayload: SocketTokenPayload) {
+        const { isValid, reasons } = this.verification(connection, tokenPayload);
 
         this.removeConnection(connection, isValid);
 
         if (!isValid) {
-            this.logger?.log(
-                CONNECTION_SYSTEM.INVALID_CREDENTIALS(connection, reasons),
-            );
+            this.logger?.log(CONNECTION_SYSTEM.INVALID_CREDENTIALS(connection, reasons));
             return;
         }
 
         const stageThree = new StageThreeConnection(connection);
         this.logger?.log(CONNECTION_SYSTEM.SUCCESSFUL_CONNECTION(connection));
         this.onJoin(stageThree);
-        this.stageThreeConnections[connection.username.toLowerCase()] =
-            stageThree;
+        this.stageThreeConnections[connection.username.toLowerCase()] = stageThree;
         RECEIVED_PLAYER_EVENTS.LEAVE(stageThree.socket, (reason: string) =>
             this.handleDisconnect(stageThree, reason),
         );
@@ -287,20 +240,13 @@ export class ConnectionSystem {
         connection.disconnectedAt = Date.now();
         connection.connected = false;
         this.logger?.log(CONNECTION_SYSTEM.DISCONNECTED(connection, reason));
-        const {
-            shouldRemove,
-            removalReason,
-        }: { shouldRemove: boolean; removalReason?: string } = this.onLeave(
-            connection,
-            intentional,
-        );
+        const { shouldRemove, removalReason }: { shouldRemove: boolean; removalReason?: string } =
+            this.onLeave(connection, intentional);
         if (shouldRemove) {
             this.logger?.log(
                 CONNECTION_SYSTEM.HARD_DISCONNECT(
                     connection,
-                    intentional
-                        ? reason
-                        : removalReason || 'game config set to always remove',
+                    intentional ? reason : removalReason || 'game config set to always remove',
                 ),
             );
             this.removeConnection(connection);
@@ -309,21 +255,13 @@ export class ConnectionSystem {
         }
     }
 
-    private handlePossibleReconnect(
-        connection: StageThreeConnection,
-        socket: Socket,
-    ): void {
+    private handlePossibleReconnect(connection: StageThreeConnection, socket: Socket): void {
         connection.socket = socket;
-        RECEIVED_PLAYER_EVENTS.HERE_IS_TOKEN(
-            socket,
-            (payload: SocketTokenPayload) => {
-                this.handleReconnect(connection, payload);
-            },
-        );
+        RECEIVED_PLAYER_EVENTS.HERE_IS_TOKEN(socket, (payload: SocketTokenPayload) => {
+            this.handleReconnect(connection, payload);
+        });
         EMITTED_PLAYER_EVENTS.GIVE_TOKEN(socket);
-        connection.beginCountdown(
-            this.timeoutReconnectingSocket as TimeoutFunction,
-        );
+        connection.beginCountdown(this.timeoutReconnectingSocket as TimeoutFunction);
     }
 
     private timeoutReconnectingSocket(connection: StageThreeConnection): void {
@@ -335,19 +273,14 @@ export class ConnectionSystem {
         connection: StageThreeConnection,
         tokenPayload: SocketTokenPayload,
     ): void {
-        const { isValid, reasons } = this.verification(
-            connection,
-            tokenPayload,
-        );
+        const { isValid, reasons } = this.verification(connection, tokenPayload);
 
         if (!!connection?.timeoutFunction) {
             clearTimeout(connection.timeoutFunction);
         }
 
         if (!isValid) {
-            this.logger?.log(
-                CONNECTION_SYSTEM.RECONNECTION_INVALID_2(connection, reasons),
-            );
+            this.logger?.log(CONNECTION_SYSTEM.RECONNECTION_INVALID_2(connection, reasons));
             EMITTED_PLAYER_EVENTS.UNREGISTERED(connection.socket);
             return;
         }
@@ -417,24 +350,16 @@ export class ConnectionSystem {
             } catch (error) {
                 isValid = false;
                 reasons.push('erroneous token');
-                this.logger?.log(
-                    CONNECTION_SYSTEM.ERRONEOUS_TOKEN(connection, error),
-                );
+                this.logger?.log(CONNECTION_SYSTEM.ERRONEOUS_TOKEN(connection, error));
             }
         } else {
             // if token isn't specified, check for alternate forms of verification
             // Note these are nowhere near as secure as jwt
-            if (
-                verificationMethods.includes('username') &&
-                username !== connection.username
-            ) {
+            if (verificationMethods.includes('username') && username !== connection.username) {
                 isValid = false;
                 reasons.push('non-matching username');
             }
-            if (
-                verificationMethods.includes('gameCode') &&
-                gameCode !== this.gameCode
-            ) {
+            if (verificationMethods.includes('gameCode') && gameCode !== this.gameCode) {
                 isValid = false;
                 reasons.push('non-matching game code');
             }
@@ -442,8 +367,7 @@ export class ConnectionSystem {
 
         if (
             verificationMethods.includes('ip') &&
-            connection.ip !==
-                ConnectionSystem.getIPFromSocket(connection.socket)
+            connection.ip !== ConnectionSystem.getIPFromSocket(connection.socket)
         ) {
             isValid = false;
             reasons.push('non-matching IP address');
@@ -453,10 +377,7 @@ export class ConnectionSystem {
     }
 
     /** Completely erases a connection. */
-    private removeConnection(
-        connection: AnyConnection,
-        isUpgrade: boolean = false,
-    ): void {
+    private removeConnection(connection: AnyConnection, isUpgrade: boolean = false): void {
         const { ip } = connection;
         const username = connection.username.toLowerCase();
 
@@ -477,17 +398,13 @@ export class ConnectionSystem {
 
             if (connection instanceof StageTwoConnection) {
                 if (!isUpgrade) {
-                    this.logger?.log(
-                        CONNECTION_SYSTEM.TIMEOUT_NO_CREDENTIALS(connection),
-                    );
+                    this.logger?.log(CONNECTION_SYSTEM.TIMEOUT_NO_CREDENTIALS(connection));
                     connection.socket.disconnect();
                 }
                 delete this.stageTwoConnections[username];
             } else {
                 if (!isUpgrade) {
-                    this.logger?.log(
-                        CONNECTION_SYSTEM.TIMEOUT_NO_SOCKET(connection),
-                    );
+                    this.logger?.log(CONNECTION_SYSTEM.TIMEOUT_NO_SOCKET(connection));
                 }
                 delete this.stageOneConnections[ip];
             }
@@ -503,9 +420,7 @@ export class ConnectionSystem {
         } else this.ipList.splice(ipIndex, 1);
 
         if (usernameIndex === -1) {
-            this.logger?.log(
-                CONNECTION_SYSTEM.FAILED_USERNAME_REMOVAL(username, ip),
-            );
+            this.logger?.log(CONNECTION_SYSTEM.FAILED_USERNAME_REMOVAL(username, ip));
         } else this.usernameList.splice(usernameIndex, 1);
     }
 }
@@ -548,12 +463,7 @@ class ConnectionBase {
 export class StageOneConnection extends ConnectionBase {
     public timeoutFunction?: NodeJS.Timeout;
 
-    constructor(
-        username: string,
-        token: string,
-        ip: string,
-        callback: TimeoutFunction,
-    ) {
+    constructor(username: string, token: string, ip: string, callback: TimeoutFunction) {
         super({ username, token, ip });
         this.beginCountdown(callback);
     }
@@ -580,12 +490,9 @@ export class StageTwoConnection extends ConnectionBase {
         this.socket = socket;
         this.beginCountdown(timeoutCallback);
 
-        RECEIVED_PLAYER_EVENTS.HERE_IS_TOKEN(
-            socket,
-            (payload: SocketTokenPayload) => {
-                upgradeCallback(this, payload);
-            },
-        );
+        RECEIVED_PLAYER_EVENTS.HERE_IS_TOKEN(socket, (payload: SocketTokenPayload) => {
+            upgradeCallback(this, payload);
+        });
         EMITTED_PLAYER_EVENTS.GIVE_TOKEN(socket);
     }
 

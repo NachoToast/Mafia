@@ -72,11 +72,7 @@ export class Game {
                 path: `games/${gameCode}`,
             });
             this.logger.log(
-                SERVER_GENERAL.GAME_CREATED(
-                    createdBy.ip,
-                    createdBy.username,
-                    gameCode,
-                ),
+                SERVER_GENERAL.GAME_CREATED(createdBy.ip, createdBy.username, gameCode),
             );
         }
 
@@ -109,15 +105,8 @@ export class Game {
         const usernameLower = player.username.toLowerCase();
         for (const playerName of Object.keys(this.players)) {
             if (playerName === usernameLower) continue;
-            const { username, status, number, connected } =
-                this.players[playerName];
-            EMITTED_PLAYER_EVENTS.PLAYER_HERE(
-                socket,
-                username,
-                status,
-                number,
-                connected,
-            );
+            const { username, status, number, connected } = this.players[playerName];
+            EMITTED_PLAYER_EVENTS.PLAYER_HERE(socket, username, status, number, connected);
         }
 
         if (player.status === PlayerStatuses.alive) {
@@ -130,9 +119,7 @@ export class Game {
     private onJoin(connection: StageThreeConnection) {
         const { username, socket } = connection;
 
-        const status = this.inProgress
-            ? PlayerStatuses.spectator
-            : PlayerStatuses.alive;
+        const status = this.inProgress ? PlayerStatuses.spectator : PlayerStatuses.alive;
 
         const number = this.playerNumberGenerator();
         const newPlayer = new Player(this, number, socket, username, status);
@@ -177,10 +164,7 @@ export class Game {
         EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, {
             author: 'Server',
             content: GAME_EXT.LEFT_GAME(username),
-            to:
-                this.inProgress && status === PlayerStatuses.spectator
-                    ? ROOMS.notAlive
-                    : undefined,
+            to: this.inProgress && status === PlayerStatuses.spectator ? ROOMS.notAlive : undefined,
             props: { hideAuthor: true },
         });
 
@@ -189,8 +173,7 @@ export class Game {
         }
 
         // permanently remove player
-        const removeBecauseNotStarted =
-            !this.inProgress && !alwaysAllowReconnects;
+        const removeBecauseNotStarted = !this.inProgress && !alwaysAllowReconnects;
         const removeBecauseSpectator =
             status === PlayerStatuses.spectator && !alwaysAllowReconnects;
         const removeBecauseNoReconnects = !allowReconnects;
@@ -214,29 +197,17 @@ export class Game {
         } else {
             this.players[username.toLowerCase()].connected = false;
 
-            if (
-                killDisconnectedPlayers &&
-                status === PlayerStatuses.alive &&
-                this.inProgress
-            ) {
+            if (killDisconnectedPlayers && status === PlayerStatuses.alive && this.inProgress) {
                 // TODO: kill player here
             }
-            EMITTED_SERVER_EVENTS.PLAYER_UPDATE(
-                this.io,
-                username,
-                status,
-                number,
-                '',
-                false,
-            );
+            EMITTED_SERVER_EVENTS.PLAYER_UPDATE(this.io, username, status, number, '', false);
 
             return { shouldRemove: false };
         }
     }
 
     private onReconnect(connection: StageThreeConnection) {
-        const disconnectedPlayer =
-            this.players[connection.username.toLowerCase()];
+        const disconnectedPlayer = this.players[connection.username.toLowerCase()];
         if (!disconnectedPlayer) {
             this.logger?.log(
                 `ConnectionSystem wanted to reconnect player ${connection.username} (${connection.ip}) but no such player exists`,
@@ -249,10 +220,7 @@ export class Game {
         EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, {
             author: 'Server',
             content: GAME_EXT.RECONNECTED(username),
-            to:
-                status === PlayerStatuses.spectator && this.inProgress
-                    ? ROOMS.notAlive
-                    : undefined,
+            to: status === PlayerStatuses.spectator && this.inProgress ? ROOMS.notAlive : undefined,
             props: { hideAuthor: true },
         });
 
@@ -260,14 +228,7 @@ export class Game {
             this.logger?.log(GAME_EXT.RECONNECTED(username));
         }
 
-        EMITTED_SERVER_EVENTS.PLAYER_UPDATE(
-            this.io,
-            username,
-            status,
-            number,
-            '',
-            true,
-        );
+        EMITTED_SERVER_EVENTS.PLAYER_UPDATE(this.io, username, status, number, '', true);
 
         const usernameLower = username.toLowerCase();
 
@@ -277,10 +238,7 @@ export class Game {
     public sendChatMessage(player: Player, message: string) {
         let room: ROOMS | undefined;
         if (this.inProgress) {
-            room =
-                player.status === PlayerStatuses.alive
-                    ? ROOMS.alive
-                    : ROOMS.notAlive;
+            room = player.status === PlayerStatuses.alive ? ROOMS.alive : ROOMS.notAlive;
 
             this.logger?.log(`<${player.username}> (to ${room}) ${message}`);
         }

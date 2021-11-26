@@ -14,12 +14,15 @@ interface ExtendedError extends Error {
     path: string;
 }
 
-interface LoggerParams {
-    name: string;
+export interface BaseLoggerParams {
+    name?: string;
     overwrite?: boolean;
     path?: string | Logger;
     timestampFormat?: TIMESTAMP_OPTIONS;
     customTimestamp?: () => string;
+}
+export interface LoggerParams extends BaseLoggerParams {
+    name: string;
 }
 
 try {

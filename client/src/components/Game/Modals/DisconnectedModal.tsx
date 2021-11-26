@@ -12,16 +12,9 @@ const style = {
     p: 4,
 };
 
-const DisconnectedModal = ({
-    rerender: exitCallback,
-}: {
-    rerender: Function;
-}) => {
+const DisconnectedModal = ({ rerender: exitCallback }: { rerender: Function }) => {
     const [open, setOpen] = useState(true);
-    const handleClose = (
-        event: {},
-        reason: 'backdropClick' | 'escapeKeyDown',
-    ) => {
+    const handleClose = (event: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
         if (reason !== 'backdropClick') {
             setOpen(false);
         }
@@ -65,11 +58,7 @@ const DisconnectedModal = ({
                             >
                                 Exit To Lobby
                             </Button>
-                            <Button
-                                onClick={() => handleClose({}, 'escapeKeyDown')}
-                            >
-                                Close
-                            </Button>
+                            <Button onClick={() => handleClose({}, 'escapeKeyDown')}>Close</Button>
                         </Box>
                     </Box>
                 </Fade>

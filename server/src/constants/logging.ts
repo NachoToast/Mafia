@@ -23,33 +23,17 @@ export const SERVER_GENERAL = {
 export const CONNECTION_SYSTEM = {
     SENT_INITIAL_POST: (ip: string, username: string) =>
         `${username} (${ip}) started joining (1/3)`,
-    INITIAL_SOCKET_CONNECTION: ({
-        username,
-        ip,
-        stageOneAt,
-    }: StageOneConnection) =>
-        `${username} (${ip}) connected socket after ${
-            Date.now() - stageOneAt
-        } ms (2/3)`,
-    SUCCESSFUL_CONNECTION: ({
-        username,
-        ip,
-        stageOneAt,
-        stageTwoAt,
-    }: StageTwoConnection) =>
-        `${username} (${ip}) passed all checks and connected after ${
-            Date.now() - stageOneAt
-        }/${Date.now() - stageTwoAt} ms (3/3)`,
+    INITIAL_SOCKET_CONNECTION: ({ username, ip, stageOneAt }: StageOneConnection) =>
+        `${username} (${ip}) connected socket after ${Date.now() - stageOneAt} ms (2/3)`,
+    SUCCESSFUL_CONNECTION: ({ username, ip, stageOneAt, stageTwoAt }: StageTwoConnection) =>
+        `${username} (${ip}) passed all checks and connected after ${Date.now() - stageOneAt}/${
+            Date.now() - stageTwoAt
+        } ms (3/3)`,
     TIMEOUT_NO_SOCKET: ({ username, ip, stageOneAt }: StageOneConnection) =>
         `Timed out ${username} (${ip}) after ${
             Date.now() - stageOneAt
         } ms after not receiving a socket connection`,
-    TIMEOUT_NO_CREDENTIALS: ({
-        username,
-        ip,
-        stageOneAt,
-        stageTwoAt,
-    }: StageTwoConnection) =>
+    TIMEOUT_NO_CREDENTIALS: ({ username, ip, stageOneAt, stageTwoAt }: StageTwoConnection) =>
         `Timed out ${username} (${ip}) after ${Date.now() - stageOneAt}/${
             Date.now() - stageTwoAt
         } ms after not receiving socket credentials.`,
@@ -77,11 +61,7 @@ export const CONNECTION_SYSTEM = {
         `Socket reconnection for ${username} (${ip}) failed due to ${invalidCredentials.join(
             ', ',
         )}`,
-    RECONNECTION_SUCCESSFUL: ({
-        username,
-        ip,
-        disconnectedAt,
-    }: StageThreeConnection) => {
+    RECONNECTION_SUCCESSFUL: ({ username, ip, disconnectedAt }: StageThreeConnection) => {
         let timeTaken = Date.now() - disconnectedAt;
         let timeStep = 'ms';
         if (timeTaken > 1000) {
@@ -90,10 +70,7 @@ export const CONNECTION_SYSTEM = {
         }
         return `${username} (${ip}) successfully reconnected after ${timeTaken} ${timeStep} (2/2)`;
     },
-    DISCONNECTED: (
-        { username, ip, lastConnectedAt }: StageThreeConnection,
-        reason: string,
-    ) =>
+    DISCONNECTED: ({ username, ip, lastConnectedAt }: StageThreeConnection, reason: string) =>
         `${username} (${ip}) disconnected after ${Math.floor(
             (Date.now() - lastConnectedAt) / 1000,
         )} seconds with reason: ${reason}`,
@@ -114,12 +91,9 @@ export const CONNECTION_SYSTEM = {
 };
 
 export const CODE_GENERATION = {
-    MAKING_NEW: (ip: string, username: string) =>
-        `Making random game code for ${username} (${ip})`,
-    REROLLING: (gameCode: string) =>
-        `Duplicate game code '${gameCode}', re-rolling...`,
-    INVALID: (gameCode: string) =>
-        `Code '${gameCode}' is not a valid game code`,
+    MAKING_NEW: (ip: string, username: string) => `Making random game code for ${username} (${ip})`,
+    REROLLING: (gameCode: string) => `Duplicate game code '${gameCode}', re-rolling...`,
+    INVALID: (gameCode: string) => `Code '${gameCode}' is not a valid game code`,
     TAKEN: (gameCode: string) => `Game '${gameCode}' already exists`,
     ACCEPTED: (gameCode: string) => `Got valid code '${gameCode}'`,
 };

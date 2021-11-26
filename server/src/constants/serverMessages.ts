@@ -2,8 +2,7 @@
 import { TimePeriods } from './mafia';
 
 export const INTERNAL_ERRORS = {
-    BASIC: (error: unknown) =>
-        error instanceof Error ? error.message : `Unknown Error Occured`,
+    BASIC: (error: unknown) => (error instanceof Error ? error.message : `Unknown Error Occured`),
 };
 
 // export const MESSAGE_DENIED_REASONS = {

@@ -13,9 +13,7 @@ export const RECEIVED_PLAYER_EVENTS = {
     LEAVE: (socket: Socket, callback: Function) =>
         socket.on('disconnect', (reason: string) => callback(reason)),
     HERE_IS_TOKEN: (socket: Socket, callback: Function) =>
-        socket.on('heresToken', (payload: SocketTokenPayload) =>
-            callback(payload),
-        ),
+        socket.on('heresToken', (payload: SocketTokenPayload) => callback(payload)),
     CHAT_MESSAGE: (socket: Socket, callback: Function) =>
         socket.on('chatMessage', (message: string) => callback(message.trim())),
     INTENTIONAL_LEAVE: (socket: Socket, callback: Function) =>
@@ -26,12 +24,10 @@ export const RECEIVED_PLAYER_EVENTS = {
 export const EMITTED_SERVER_EVENTS = {
     // CHAT_MESSAGE: 'emittedChatMessage',
     CHAT_MESSAGE: (io: Server, message: ChatMessage) => {
-        if (!!message?.to)
-            io.to(message.to).emit('emittedChatMessage', message);
+        if (!!message?.to) io.to(message.to).emit('emittedChatMessage', message);
         else io.emit('emittedChatMessage', message);
     },
-    PLAYER_LEFT: (io: Server, username: string) =>
-        io.emit('playerLeft', username),
+    PLAYER_LEFT: (io: Server, username: string) => io.emit('playerLeft', username),
     PLAYER_UPDATE: (
         io: Server,
         username: string,
@@ -61,8 +57,7 @@ export const EMITTED_PLAYER_EVENTS = {
         number: number,
         connected: boolean,
         extra?: string,
-    ) =>
-        socket.emit('playerUpdate', username, status, number, extra, connected),
+    ) => socket.emit('playerUpdate', username, status, number, extra, connected),
 };
 
 export enum ROOMS {

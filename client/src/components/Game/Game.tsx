@@ -39,16 +39,9 @@ class Game extends Component<GameProps> {
     public constructor(props: GameProps) {
         super(props);
         this.returnCallback = props.returnCallback;
-        this.gameCode =
-            props.gameCode ||
-            localStorage.getItem(STORAGE.gameCodeKeyName) ||
-            '';
-        this.username =
-            props.username ||
-            localStorage.getItem(STORAGE.usernameKeyName) ||
-            '';
-        this.token =
-            props.token || localStorage.getItem(STORAGE.tokenKeyName) || '';
+        this.gameCode = props.gameCode || localStorage.getItem(STORAGE.gameCodeKeyName) || '';
+        this.username = props.username || localStorage.getItem(STORAGE.usernameKeyName) || '';
+        this.token = props.token || localStorage.getItem(STORAGE.tokenKeyName) || '';
 
         this.socket = io(`${serverEndpoint}:${serverPort}`, {
             path: `/${this.gameCode}`,
@@ -59,9 +52,7 @@ class Game extends Component<GameProps> {
     }
 
     public componentDidMount() {
-        this.socket.on('connect', () =>
-            this.setState({ connected: true } as GameState),
-        );
+        this.socket.on('connect', () => this.setState({ connected: true } as GameState));
         this.socket.on('disconnect', () => {
             this.setState({ connected: false } as GameState);
         });

@@ -29,11 +29,7 @@ export async function findGame(req: Request, res: Response) {
         const token = jwt.sign({ username, gameCode }, jwt_secret, {
             expiresIn: tokenDuration,
         });
-        const successfulReservation = foundGame.connectionSystem.newStageOne(
-            username,
-            token,
-            ip,
-        );
+        const successfulReservation = foundGame.connectionSystem.newStageOne(username, token, ip);
         if (!successfulReservation) {
             res.status(200).json('Cannot connect under that username/IP');
         } else {

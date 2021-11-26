@@ -28,9 +28,7 @@ export default class Player {
     public bindSocket(socket: Socket) {
         this.socket = socket;
         this.connected = true;
-        RECEIVED_PLAYER_EVENTS.CHAT_MESSAGE(socket, (message: string) =>
-            this.message(message),
-        );
+        RECEIVED_PLAYER_EVENTS.CHAT_MESSAGE(socket, (message: string) => this.message(message));
     }
 
     private message(message: string) {

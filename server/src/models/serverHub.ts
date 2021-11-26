@@ -37,8 +37,7 @@ export default class ServerHub {
         });
     }
 
-    private static alphabet =
-        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    private static alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     /** Makes a random game code, consisting of 3-5 random letters between a-z (inclusive, case sensitive) */
     private static makeRandomGameCode() {
         const codeLength = 3 + Math.floor(Math.random() * 3); // 3 to 5 inclusive

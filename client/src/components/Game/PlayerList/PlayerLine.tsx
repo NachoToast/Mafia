@@ -7,11 +7,7 @@ import DisconnectedIcon from '@mui/icons-material/SignalCellularConnectedNoInter
 const PlayerLine = ({ player }: { player: Player }) => {
     return (
         <Fade in>
-            <Tooltip
-                title={!player.connected ? `Disconnected` : ''}
-                arrow
-                placement="left"
-            >
+            <Tooltip title={!player.connected ? `Disconnected` : ''} arrow placement="left">
                 <div
                     style={{
                         whiteSpace: 'nowrap',

@@ -24,18 +24,13 @@ export interface Player {
 }
 
 const PlayerList = ({ socket }: { socket: Socket }) => {
-    const [playerList, setPlayerList]: [
-        Player[],
-        Dispatch<SetStateAction<any>>,
-    ] = useState([]);
+    const [playerList, setPlayerList]: [Player[], Dispatch<SetStateAction<any>>] = useState([]);
 
     const myUsername = localStorage.getItem(STORAGE.usernameKeyName) as string;
 
     useEffect(() => {
         socket.on('playerLeft', (username: string) => {
-            const foundPlayer = playerList.find(
-                (player) => player.username === username,
-            );
+            const foundPlayer = playerList.find((player) => player.username === username);
             if (!!foundPlayer) {
                 playerList.splice(playerList.indexOf(foundPlayer), 1);
                 setPlayerList([...playerList]);
@@ -51,9 +46,7 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                 extra: string,
                 connected: boolean,
             ) => {
-                const existingPlayer = playerList.find(
-                    (player) => player.username === username,
-                );
+                const existingPlayer = playerList.find((player) => player.username === username);
 
                 if (!!existingPlayer) {
                     existingPlayer.status = status;
@@ -106,9 +99,7 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
         .filter(({ status }) => status === PlayerStatuses.dead)
         .sort((a, b) => (a.number = b.number));
 
-    const spectators = playerList.filter(
-        ({ status }) => status === PlayerStatuses.spectator,
-    );
+    const spectators = playerList.filter(({ status }) => status === PlayerStatuses.spectator);
 
     return (
         <Paper elevation={24} square style={{ boxShadow: 'none' }}>
@@ -160,10 +151,7 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                     }}
                     square
                 >
-                    <Typography
-                        variant="h5"
-                        style={{ display: 'flex', alignItems: 'center' }}
-                    >
+                    <Typography variant="h5" style={{ display: 'flex', alignItems: 'center' }}>
                         <DeadIcon />
                         &nbsp;Dead ({deadPlayers.length})
                     </Typography>
@@ -187,10 +175,7 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                     }}
                     square
                 >
-                    <Typography
-                        variant="h5"
-                        style={{ display: 'flex', alignItems: 'center' }}
-                    >
+                    <Typography variant="h5" style={{ display: 'flex', alignItems: 'center' }}>
                         <SpectatorIcon />
                         &nbsp;Spectating ({spectators.length})
                     </Typography>

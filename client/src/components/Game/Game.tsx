@@ -9,6 +9,8 @@ import PlayerList from './PlayerList/PlayerList';
 import RoleCard from './RoleCard/RoleCard';
 import RoleList from './RoleList/RoleList';
 
+import { serverEndpoint, serverPort } from '../../constants/endpoints';
+
 interface GameState {
     connected: boolean;
     authenticated: boolean;
@@ -48,7 +50,7 @@ class Game extends Component<GameProps> {
         this.token =
             props.token || localStorage.getItem(STORAGE.tokenKeyName) || '';
 
-        this.socket = io(`ntgc.ddns.net:3001`, {
+        this.socket = io(`${serverEndpoint}:${serverPort}`, {
             path: `/${this.gameCode}`,
             autoConnect: false,
         });

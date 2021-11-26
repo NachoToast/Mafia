@@ -9,7 +9,3 @@ serverHub.app.get('/', (_, res) => {
         "Congratulations, you found the mafia server endpoint! Shame you're not a websocket.",
     );
 });
-
-serverHub.app.get('/status', (_, res) => {
-    res.status(200).send(`Server is up with ${serverHub.getNumberOfGames()} game(s)`);
-});

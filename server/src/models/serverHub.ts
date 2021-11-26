@@ -6,23 +6,27 @@ import gameRoutes from '../routes/game';
 import { gameCodeValidator } from '../constants/auth';
 import Logger, { globalLogger } from './logger';
 import { CODE_GENERATION, SERVER_GENERAL } from '../constants/logging';
+import { hubDefaults } from '../constants/defaults';
 
 export interface GameCreator {
     ip: string;
     username: string;
     token: string;
 }
-
 export default class ServerHub {
     private readonly games: { [gameCode: string]: Game } = {};
     public readonly app = express();
     private readonly httpServer = createServer(this.app);
 
     /** Logging for key server events, like game creation and destruction. */
-    private readonly logger = new Logger({ name: 'main', path: 'serverHub' });
+    private readonly logger = hubDefaults.gameCreationLogging
+        ? new Logger({ name: 'main', path: 'serverHub' })
+        : null;
 
     /** Logging for game code generation. */
-    private readonly gameCodeLogger = new Logger({ name: 'codes', path: 'serverHub' });
+    private readonly gameCodeLogger = hubDefaults.codeLogging
+        ? new Logger({ name: 'codes', path: 'serverHub' })
+        : null;
 
     public constructor(port: number) {
         this.app.use(cors());
@@ -32,7 +36,7 @@ export default class ServerHub {
         this.httpServer.listen(port, () => {
             const msg = `Server hub started on port ${port}`;
             console.log(msg);
-            this.logger.log(msg);
+            this.logger?.log(msg);
             globalLogger.log(msg);
         });
     }
@@ -57,30 +61,30 @@ export default class ServerHub {
         return this.games[gameCode];
     }
 
-    public createGame(createdBy: GameCreator, gameCode?: string) {
+    public createGame(createdBy: GameCreator, gameCode?: string, maxPlayers?: number) {
         const { ip, username } = createdBy;
 
         if (!gameCode) {
-            // no gameCode specified
-            this.gameCodeLogger.log(CODE_GENERATION.MAKING_NEW(ip, username));
+            // no game code specified
+            this.gameCodeLogger?.log(CODE_GENERATION.MAKING_NEW(ip, username));
 
             gameCode = ServerHub.makeRandomGameCode();
             while (this.games[gameCode] !== undefined) {
-                this.gameCodeLogger.log(CODE_GENERATION.REROLLING(gameCode));
+                this.gameCodeLogger?.log(CODE_GENERATION.REROLLING(gameCode));
                 gameCode = ServerHub.makeRandomGameCode();
             }
         } else if (!gameCodeValidator.test(gameCode)) {
             // gameCode specified but invalid
-            this.gameCodeLogger.log(CODE_GENERATION.INVALID(gameCode));
+            this.gameCodeLogger?.log(CODE_GENERATION.INVALID(gameCode));
             return;
         } else if (this.games[gameCode] !== undefined) {
             // gameCode taken
-            this.gameCodeLogger.log(CODE_GENERATION.TAKEN(gameCode));
+            this.gameCodeLogger?.log(CODE_GENERATION.TAKEN(gameCode));
             return;
         }
 
-        this.gameCodeLogger.log(CODE_GENERATION.ACCEPTED(gameCode));
-        this.logger.log(SERVER_GENERAL.GAME_CREATED(ip, username, gameCode));
+        this.gameCodeLogger?.log(CODE_GENERATION.ACCEPTED(gameCode));
+        this.logger?.log(SERVER_GENERAL.GAME_CREATED(ip, username, gameCode));
 
         this.games[gameCode] = new Game(this.httpServer, gameCode, createdBy);
     }

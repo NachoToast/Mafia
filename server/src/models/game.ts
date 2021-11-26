@@ -18,6 +18,7 @@ import {
     alwaysAllowReconnects,
     allowReconnects,
 } from '../config/gameConfig.json';
+import { gameDefaults } from '../constants/defaults';
 
 /** A single game/lobby. */
 export class Game {
@@ -44,8 +45,11 @@ export class Game {
         httpServer: HttpServer,
         gameCode: string,
         createdBy: GameCreator,
-        maxPlayers: number = 15,
-        doLogging: boolean = true,
+        maxPlayers: number = gameDefaults.maxPlayers,
+        doLogging: boolean = gameDefaults.logging,
+
+        /** Whether to log all connection, reconnection, and disconnection attempts. */
+        doConnectionLogging: boolean = gameDefaults.connectionLogging,
     ) {
         this.io = new Server(httpServer, {
             cors: { origin: true },
@@ -62,7 +66,7 @@ export class Game {
             (connection) => this.onReconnect(connection),
             null,
             null,
-            doLogging,
+            doConnectionLogging,
         );
 
         if (doLogging) {

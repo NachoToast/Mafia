@@ -14,15 +14,15 @@ export interface GameCreator {
 }
 
 export default class ServerHub {
-    private games: { [gameCode: string]: Game } = {};
-    private app = express();
-    private httpServer = createServer(this.app);
+    private readonly games: { [gameCode: string]: Game } = {};
+    public readonly app = express();
+    private readonly httpServer = createServer(this.app);
 
     /** Logging for key server events, like game creation and destruction. */
-    private logger = new Logger({ name: 'main', path: 'serverHub' });
+    private readonly logger = new Logger({ name: 'main', path: 'serverHub' });
 
     /** Logging for game code generation. */
-    private gameCodeLogger = new Logger({ name: 'codes', path: 'serverHub' });
+    private readonly gameCodeLogger = new Logger({ name: 'codes', path: 'serverHub' });
 
     public constructor(port: number) {
         this.app.use(cors());

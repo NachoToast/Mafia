@@ -1,6 +1,3 @@
-// import { ChatMessage } from '../models/chatMessage';
-import { TimePeriods } from './mafia';
-
 export const INTERNAL_ERRORS = {
     BASIC: (error: unknown) => (error instanceof Error ? error.message : `Unknown Error Occured`),
 };

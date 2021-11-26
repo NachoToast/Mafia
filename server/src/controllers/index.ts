@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { allowDuplicateIP, tokenDuration } from '../gameConfig.json';
+import { tokenDuration } from '../config/gameConfig.json';
 import { INTERNAL_ERRORS } from '../constants/serverMessages';
-import { jwt_secret } from '../gameSecrets.json';
+import { jwt_secret } from '../config/gameSecrets.json';
 import { serverHub } from '..';
 import { globalLogger } from '../models/logger';
 

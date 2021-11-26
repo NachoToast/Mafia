@@ -17,7 +17,7 @@ import {
     killDisconnectedPlayers,
     alwaysAllowReconnects,
     allowReconnects,
-} from '../gameConfig.json';
+} from '../config/gameConfig.json';
 
 /** A single game/lobby. */
 export class Game {
@@ -57,10 +57,9 @@ export class Game {
         this.maxPlayers = maxPlayers;
         this.connectionSystem = new ConnectionSystem(
             gameCode,
-            (connection: StageThreeConnection) => this.onJoin(connection),
-            (connection: StageThreeConnection, intentional: boolean) =>
-                this.onLeave(connection, intentional),
-            (connection: StageThreeConnection) => this.onReconnect(connection),
+            (connection) => this.onJoin(connection),
+            (connection, intentional) => this.onLeave(connection, intentional),
+            (connection) => this.onReconnect(connection),
             null,
             null,
             doLogging,

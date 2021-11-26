@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io';
 import { PlayerStatuses } from '../constants/mafia';
-import { RECEIVED_PLAYER_EVENTS, ROOMS } from '../constants/socketEvent';
+import { RECEIVED_PLAYER_EVENTS } from '../constants/socketEvent';
 import { Game } from './game';
 
 export default class Player {

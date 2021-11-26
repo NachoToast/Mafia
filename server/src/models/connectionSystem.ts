@@ -7,10 +7,9 @@ import {
     requestTimeoutSeconds,
     playerVerification,
     allowReconnects,
-    alwaysAllowReconnects,
-} from '../gameConfig.json';
-import { jwt_secret } from '../gameSecrets.json';
-import Logger, { BaseLoggerParams, LoggerParams } from './logger';
+} from '../config/gameConfig.json';
+import { jwt_secret } from '../config/gameSecrets.json';
+import Logger, { BaseLoggerParams } from './logger';
 
 type JoinVerification = 'token' | 'ip' | 'username' | 'gameCode';
 

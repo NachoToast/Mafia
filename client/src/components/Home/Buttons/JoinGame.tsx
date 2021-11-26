@@ -4,7 +4,7 @@ import * as React from 'react';
 import ButtonUnstyled, {
     ButtonUnstyledProps,
     buttonUnstyledClasses,
-} from '@mui/core/ButtonUnstyled';
+} from '@mui/base/ButtonUnstyled';
 import { styled, Theme } from '@mui/system';
 
 const ButtonRoot = React.forwardRef(function ButtonRoot(
@@ -28,12 +28,18 @@ const CustomButtonRoot = styled(ButtonRoot)(
     ({ theme }: { theme: Theme }) => `
   overflow: visible;
   cursor: pointer;
-  --main-color: ${theme.palette.mode === 'light' ? 'rgb(25,118,210)' : 'rgb(144,202,249)'};
+  --main-color: ${
+      theme.palette.mode === 'light' ? 'rgb(25,118,210)' : 'rgb(144,202,249)'
+  };
   --hover-color: ${
-      theme.palette.mode === 'light' ? 'rgba(25,118,210,0.04)' : 'rgba(144,202,249,0.08)'
+      theme.palette.mode === 'light'
+          ? 'rgba(25,118,210,0.04)'
+          : 'rgba(144,202,249,0.08)'
   };
   --active-color: ${
-      theme.palette.mode === 'light' ? 'rgba(25,118,210,0.12)' : 'rgba(144,202,249,0.24)'
+      theme.palette.mode === 'light'
+          ? 'rgba(25,118,210,0.12)'
+          : 'rgba(144,202,249,0.24)'
   };
 
   & polygon {

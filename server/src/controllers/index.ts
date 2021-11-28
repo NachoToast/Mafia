@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { tokenDuration } from '../config/gameConfig.json';
 import { INTERNAL_ERRORS } from '../constants/serverMessages';
 import { jwt_secret } from '../config/gameSecrets.json';
 import { serverHub } from '..';
-import { globalLogger } from '../models/logger';
+import { globalLogger } from '../classes/Logger';
 
 export async function findGame(req: Request, res: Response) {
     try {
@@ -27,7 +26,7 @@ export async function findGame(req: Request, res: Response) {
         }
 
         const token = jwt.sign({ username, gameCode }, jwt_secret, {
-            expiresIn: tokenDuration,
+            expiresIn: foundGame.connectionSettings.tokenDuration,
         });
         const successfulReservation = foundGame.connectionSystem.newStageOne(username, token, ip);
         if (!successfulReservation) {

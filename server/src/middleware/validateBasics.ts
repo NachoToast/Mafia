@@ -1,7 +1,7 @@
 import { NextFunction, Response, Request } from 'express';
 import { gameCodeValidator, usernameValidator } from '../constants/auth';
 import { INTERNAL_ERRORS } from '../constants/serverMessages';
-import { globalLogger } from '../models/logger';
+import { globalLogger } from '../classes/Logger';
 
 /** Validates gameCode and username. */
 export async function validateBasics(req: Request, res: Response, next: NextFunction) {

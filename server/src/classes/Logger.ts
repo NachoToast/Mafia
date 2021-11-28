@@ -2,8 +2,6 @@ import { appendFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 
 // logger config
 const GLOBAL_LOG_DIRECTORY = 'logs';
-const DEFAULT_TIMESTAMP_OPTION = 'time';
-const DEFAULT_OVERWRITE_OPTION = true;
 
 type TIMESTAMP_OPTIONS = 'date' | 'time' | 'both' | 'none' | 'custom';
 
@@ -16,6 +14,8 @@ interface ExtendedError extends Error {
 
 export interface BaseLoggerParams {
     name?: string;
+
+    /** Whether to overwrite existing log file or make a new one (`filename-1.log`). */
     overwrite?: boolean;
     path?: string | Logger;
     timestampFormat?: TIMESTAMP_OPTIONS;
@@ -23,6 +23,11 @@ export interface BaseLoggerParams {
 }
 export interface LoggerParams extends BaseLoggerParams {
     name: string;
+}
+
+export interface LogOutputParams {
+    customTimestamp?: string;
+    newline?: boolean;
 }
 
 try {
@@ -54,9 +59,9 @@ class Logger {
      */
     public constructor({
         path,
-        overwrite = DEFAULT_OVERWRITE_OPTION,
+        overwrite = true,
         name,
-        timestampFormat = DEFAULT_TIMESTAMP_OPTION,
+        timestampFormat,
         customTimestamp,
     }: LoggerParams) {
         this.basePath = Logger.getBasePath(path);
@@ -92,7 +97,7 @@ class Logger {
             case 'custom':
                 this.timestamp = customTimestamp ?? (() => `[NO TIMESTAMP SPECIFIED] `);
                 break;
-            case 'none':
+            default:
                 this.timestamp = () => '';
                 break;
         }
@@ -125,11 +130,20 @@ class Logger {
         }
     }
 
-    public async log(message: any) {
-        appendFileSync(this.logFile, `${this.timestamp()}${message}\n`, { encoding: 'utf-8' });
+    public async log(
+        message: any,
+        { customTimestamp, newline = true }: LogOutputParams = { newline: true },
+    ) {
+        let output = `${customTimestamp ?? this.timestamp()}${message}`;
+        if (newline) output += '\n';
+        appendFileSync(this.logFile, output, { encoding: 'utf-8' });
     }
 }
 
-export const globalLogger = new Logger({ name: 'global' });
+export const globalLogger = new Logger({
+    name: 'global',
+    overwrite: true,
+    timestampFormat: 'time',
+});
 
 export default Logger;

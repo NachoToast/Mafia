@@ -9,48 +9,71 @@ import {
     RECEIVED_SERVER_EVENTS,
     ROOMS,
 } from '../constants/socketEvent';
-import { ConnectionSystem, StageThreeConnection } from './connectionSystem';
-import Logger from './logger';
-import Player from './players';
-import { GameCreator } from './serverHub';
+import { ConnectionSystem, StageThreeConnection } from './ConnectionSystem';
+import Logger from './Logger';
+import Player from './Player';
 import {
-    killDisconnectedPlayers,
-    alwaysAllowReconnects,
-    allowReconnects,
-} from '../config/gameConfig.json';
-import { gameDefaults } from '../constants/defaults';
+    connectionSettings as defaultConnectionSettings,
+    defaultMaxPlayers,
+    loggingSettings as defaultLoggingSettings,
+} from '../config/defaultConfig';
+import { connectionOverrides, loggingOverrides, maxPlayerOverride } from '../config/overrideConfig';
+import { ConnectionSettings, LoggingSettings } from '../types/settings';
+import { StringIndexed } from '../types/miscTypes';
+
+export interface GameCreator {
+    ip: string;
+    username: string;
+    token: string;
+}
+
+export interface CreateGameOptions {
+    httpServer: HttpServer;
+    gameCode: string;
+    createdBy?: GameCreator;
+    maxPlayers?: number;
+    connectionSettings?: ConnectionSettings;
+    loggingSettings?: LoggingSettings;
+}
 
 /** A single game/lobby. */
 export class Game {
     private readonly io: Server;
-    private readonly gameCode: string;
-    private createdBy: GameCreator;
+    public readonly gameCode: string;
+    public createdBy?: GameCreator;
+    public createdAt: number;
+    public maxPlayers: number = defaultMaxPlayers;
+
     private timePeriod: TimePeriods = TimePeriods.pregame;
     private dayNumber: number = 0;
-    public maxPlayers: number;
     public inProgress: boolean = false;
-
-    /** Logging for game events, like day/night cycles, voting, etc.. */
-    private readonly logger?: Logger;
 
     /** Handles player connections. */
     public readonly connectionSystem: ConnectionSystem;
+
+    /** Logging for game events, like day/night cycles, voting, etc.. */
+    private readonly logger?: Logger;
 
     private players: { [username: string]: Player } = {};
 
     /** For filling-in skipped player number slots. */
     private takenNumbers: number[] = [];
 
-    public constructor(
-        httpServer: HttpServer,
-        gameCode: string,
-        createdBy: GameCreator,
-        maxPlayers: number = gameDefaults.maxPlayers,
-        doLogging: boolean = gameDefaults.logging,
+    public readonly connectionSettings: ConnectionSettings = JSON.parse(
+        JSON.stringify(defaultConnectionSettings),
+    );
+    public readonly loggingSettings: LoggingSettings = JSON.parse(
+        JSON.stringify(defaultLoggingSettings),
+    );
 
-        /** Whether to log all connection, reconnection, and disconnection attempts. */
-        doConnectionLogging: boolean = gameDefaults.connectionLogging,
-    ) {
+    public constructor({
+        httpServer,
+        gameCode,
+        createdBy,
+        maxPlayers,
+        connectionSettings,
+        loggingSettings,
+    }: CreateGameOptions) {
         this.io = new Server(httpServer, {
             cors: { origin: true },
             path: `/${gameCode}`,
@@ -58,7 +81,49 @@ export class Game {
 
         this.gameCode = gameCode;
         this.createdBy = createdBy;
-        this.maxPlayers = maxPlayers;
+        this.createdAt = Date.now();
+
+        /** Stuff we want to log but don't have a logger yet (i.e. logger option report) */
+        const loggingQueue = [];
+
+        if (maxPlayers) {
+            if (maxPlayerOverride) {
+                loggingQueue.push(
+                    `Max players was attempted to be overridden to ${maxPlayers} but disallowed`,
+                );
+            } else {
+                this.maxPlayers = maxPlayers;
+            }
+        }
+
+        if (loggingSettings) {
+            for (const key of Object.keys(loggingSettings)) {
+                const isOverriden = loggingOverrides.includes(key as never);
+                if (isOverriden) {
+                    loggingQueue.push(`Option '${key}' can't be overridden`);
+                } else {
+                    (this.loggingSettings as StringIndexed)[key] = (
+                        loggingSettings as StringIndexed
+                    )[key];
+                }
+            }
+        }
+
+        if (connectionSettings) {
+            for (const key of Object.keys(connectionSettings)) {
+                const isOverridden = connectionOverrides.includes(key as never);
+                if (isOverridden) {
+                    // put in logging queue so it'll be logged in same place as logging settings for consistency
+                    loggingQueue.push(`Option '${key}' can't be overriden`);
+                } else {
+                    console.log(`overriding ${key}`);
+                    (this.connectionSettings as StringIndexed)[key] = (
+                        connectionSettings as StringIndexed
+                    )[key];
+                }
+            }
+        }
+
         this.connectionSystem = new ConnectionSystem(
             gameCode,
             (connection) => this.onJoin(connection),
@@ -66,22 +131,29 @@ export class Game {
             (connection) => this.onReconnect(connection),
             null,
             null,
-            doConnectionLogging,
+            this.connectionSettings,
+            !!this.loggingSettings.logConnections,
+            { ...this.loggingSettings.connectionParams },
         );
 
-        if (doLogging) {
+        if (this.loggingSettings.enabled) {
             this.logger = new Logger({
                 name: 'game',
                 path: `games/${gameCode}`,
+                ...this.loggingSettings.baseParams,
             });
-            this.logger.log(
-                SERVER_GENERAL.GAME_CREATED(createdBy.ip, createdBy.username, gameCode),
-            );
+
+            for (const msg of loggingQueue) {
+                this.logger.log(msg, { customTimestamp: '' });
+            }
         }
 
         RECEIVED_SERVER_EVENTS.JOIN(this.io, (socket: Socket) =>
             this.connectionSystem.toStageTwo(socket),
         );
+
+        this.logger?.log(SERVER_GENERAL.GAME_CONFIG(this), { customTimestamp: '' });
+        this.logger?.log(SERVER_GENERAL.GAME_CREATED(this));
     }
 
     // private getNumPlayers(): number {
@@ -176,10 +248,12 @@ export class Game {
         }
 
         // permanently remove player
-        const removeBecauseNotStarted = !this.inProgress && !alwaysAllowReconnects;
+        const removeBecauseNotStarted =
+            !this.inProgress && !this.connectionSettings.allowPregameReconnects;
         const removeBecauseSpectator =
-            status === PlayerStatuses.spectator && !alwaysAllowReconnects;
-        const removeBecauseNoReconnects = !allowReconnects;
+            status === PlayerStatuses.spectator &&
+            !this.connectionSettings.allowSpectatorReconnects;
+        const removeBecauseNoReconnects = !this.connectionSettings.allowReconnects;
         if (
             removeBecauseNoReconnects ||
             removeBecauseSpectator ||
@@ -200,7 +274,11 @@ export class Game {
         } else {
             this.players[username.toLowerCase()].connected = false;
 
-            if (killDisconnectedPlayers && status === PlayerStatuses.alive && this.inProgress) {
+            if (
+                this.connectionSettings.killDisconnectedPlayers &&
+                status === PlayerStatuses.alive &&
+                this.inProgress
+            ) {
                 // TODO: kill player here
             }
             EMITTED_SERVER_EVENTS.PLAYER_UPDATE(this.io, username, status, number, '', false);
@@ -232,8 +310,6 @@ export class Game {
         }
 
         EMITTED_SERVER_EVENTS.PLAYER_UPDATE(this.io, username, status, number, '', true);
-
-        const usernameLower = username.toLowerCase();
 
         this.joinRejoinHandlers(disconnectedPlayer, socket);
     }

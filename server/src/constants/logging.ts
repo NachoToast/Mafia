@@ -3,20 +3,65 @@ import {
     StageOneConnection,
     StageThreeConnection,
     StageTwoConnection,
-} from '../models/connectionSystem';
+} from '../classes/ConnectionSystem';
+import { Game, GameCreator } from '../classes/Game';
+import {
+    connectionSettings as defaultConnectionSettings,
+    loggingSettings as defaultLoggingSettings,
+} from '../config/defaultConfig';
+
+function compareObjectValues(val1: any, val2: any): boolean {
+    if (Array.isArray(val1)) {
+        return val1.map((_, i) => compareObjectValues(val1[i], val2[i])).every((e) => e);
+    } else return val1 === val2;
+}
+
+function mapObjectKeys(
+    obj: { [index: string]: any },
+    defaultObj: { [index: string]: any },
+    offset: number = 4,
+): string[] {
+    const output: string[] = [];
+    for (const key of Object.keys(obj)) {
+        if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+            output.push(...mapObjectKeys(obj[key], defaultObj[key], offset + 4));
+            // const res = mapObjectKeys(obj[key], defaultObj[key], offset + 4);
+            // console.log(key, obj[key], defaultObj[key]);
+            // console.log(res);
+            // output.push(`${' '.repeat(offset)}${key}:`, `/shrug`);
+        } else {
+            output.push(
+                `${' '.repeat(offset)}${key}: ${obj[key]}${
+                    compareObjectValues(obj[key], defaultObj[key])
+                        ? ''
+                        : ` (default: ${defaultObj[key]})`
+                }`,
+            );
+        }
+    }
+    return output;
+}
 
 export const SERVER_GENERAL = {
-    GAME_CREATED: (ip: string, username: string, gameCode: string) =>
-        `Game '${gameCode}' created by ${username} (${ip})`,
-    GAME_CLOSED: (
-        ip: string,
-        username: string,
-        gameCode: string,
-        createdAt: number,
-        reason: string,
-    ) =>
-        `Game '${gameCode}' created by ${username} (${ip}) closed after ${Math.floor(
-            (Date.now() - createdAt) / 1000,
+    GAME_CONFIG: (game: Game) => {
+        const output: string[] = [`Connection Settings`];
+        output.push(...mapObjectKeys(game.connectionSettings, defaultConnectionSettings));
+        output.push(
+            `Logging Settings`,
+            ...mapObjectKeys(game.loggingSettings, defaultLoggingSettings),
+        );
+        return output.join('\n');
+    },
+    GAME_CREATED: (game: Game) => {
+        return `Game '${game.gameCode}' created by ${
+            game.createdBy ? `${game.createdBy.username} (${game.createdBy.ip})` : 'server'
+        }`;
+    },
+    GAME_CLOSED: (game: Game, reason: string) =>
+        `Game '${game.gameCode}' created by ${
+            game.createdBy ? `${game.createdBy.username} (${game.createdBy.ip})` : 'server'
+        } closed after ${Math.floor(
+            (Date.now() - game.createdAt) / 1000,
         )} seconds with reason: ${reason}`,
 };
 
@@ -91,7 +136,10 @@ export const CONNECTION_SYSTEM = {
 };
 
 export const CODE_GENERATION = {
-    MAKING_NEW: (ip: string, username: string) => `Making random game code for ${username} (${ip})`,
+    MAKING_NEW: (creator?: GameCreator) =>
+        `Making random game code for ${
+            !creator ? 'server' : `${creator.username} (${creator.ip})`
+        }`,
     REROLLING: (gameCode: string) => `Duplicate game code '${gameCode}', re-rolling...`,
     INVALID: (gameCode: string) => `Code '${gameCode}' is not a valid game code`,
     TAKEN: (gameCode: string) => `Game '${gameCode}' already exists`,

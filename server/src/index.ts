@@ -1,11 +1,11 @@
-import ServerHub from './models/serverHub';
+import ServerHub from './classes/ServerHub';
 
 export const serverHub = new ServerHub(3001);
 
-serverHub.createGame({ ip: '127.0.0.1', username: 'Server', token: '' }, 'dev');
+serverHub.createGame({
+    gameCode: 'dev',
+});
 
 serverHub.app.get('/', (_, res) => {
-    res.status(200).send(
-        "Congratulations, you found the mafia server endpoint! Shame you're not a websocket.",
-    );
+    res.status(200).send('Mafia server endpoint!');
 });

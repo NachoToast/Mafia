@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { SocketTokenPayload } from '../models/connectionSystem';
+import { SocketTokenPayload } from '../classes/ConnectionSystem';
 import { PlayerStatuses } from './mafia';
 
 /** Events captured by the game's global io instance, `io.on()`  */

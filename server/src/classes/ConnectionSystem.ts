@@ -2,16 +2,11 @@ import { JwtPayload, verify } from 'jsonwebtoken';
 import { Socket } from 'socket.io';
 import { CONNECTION_SYSTEM } from '../constants/logging';
 import { EMITTED_PLAYER_EVENTS, RECEIVED_PLAYER_EVENTS } from '../constants/socketEvent';
-import {
-    allowDuplicateIP,
-    requestTimeoutSeconds,
-    playerVerification,
-    allowReconnects,
-} from '../config/gameConfig.json';
 import { jwt_secret } from '../config/gameSecrets.json';
-import Logger, { BaseLoggerParams } from './logger';
+import Logger, { BaseLoggerParams } from './Logger';
+import { ConnectionSettings } from '../types/settings';
 
-type JoinVerification = 'token' | 'ip' | 'username' | 'gameCode';
+export type JoinVerification = 'token' | 'ip' | 'username' | 'gamecode';
 
 /** An external function to be called on a connection event. */
 type ConnectionFunction = (payload: StageThreeConnection) => any;
@@ -71,6 +66,8 @@ export class ConnectionSystem {
     private readonly validateReconnect: ValidationFunction;
     private readonly logger?: Logger;
 
+    private readonly connectionSettings: ConnectionSettings;
+
     /**
      * @param {string} gameCode Game code of associated game, for verification and logging purposes.
      * @param {ConnectionFunction} onJoin Function that runs when a player successfully joins the game, no return value needed.
@@ -87,6 +84,7 @@ export class ConnectionSystem {
         onReconnect: ConnectionFunction,
         validateJoinFunction: ValidationFunction,
         validateReconnectFunction: ValidationFunction,
+        connectionSettings: ConnectionSettings,
         makeLogger?: boolean,
         loggerParams?: BaseLoggerParams,
     ) {
@@ -96,6 +94,9 @@ export class ConnectionSystem {
         this.onReconnect = onReconnect;
         this.validateJoin = validateJoinFunction;
         this.validateReconnect = validateReconnectFunction;
+
+        this.connectionSettings = connectionSettings;
+
         if (makeLogger) {
             this.logger = new Logger({
                 name: 'connections',
@@ -114,11 +115,11 @@ export class ConnectionSystem {
     }
 
     public isDuplicateIP(ip: string): boolean {
-        if (allowDuplicateIP) return false;
+        if (this.connectionSettings.allowDuplicateIP) return false;
         if (ip === 'Unknown') return true;
         const index = this.ipList.indexOf(ip);
         if (index === -1) return false;
-        if (!allowReconnects) return true;
+        if (!this.connectionSettings.allowReconnects) return true;
 
         const disconnectedWithSameIP = Object.keys(this.stageThreeConnections).find(
             (name) =>
@@ -133,7 +134,7 @@ export class ConnectionSystem {
         username = username.toLowerCase();
         const index = this.usernameList.indexOf(username);
         if (index === -1) return false;
-        if (!allowReconnects) return true;
+        if (!this.connectionSettings.allowReconnects) return true;
 
         const playerWithSameUsername = Object.keys(this.stageThreeConnections).includes(username);
 
@@ -146,16 +147,22 @@ export class ConnectionSystem {
     public newStageOne(username: string, token: string, ip: string): boolean {
         // FIXME: reconnect detection for when same IP address registered to multiple players
         if (this.usernameList.includes(username) || this.ipList.includes(username)) {
-            if (allowReconnects) {
+            if (this.connectionSettings.allowReconnects) {
                 CONNECTION_SYSTEM.POST_LIKELY_RECONNECT(username, ip);
             } else {
                 this.logger?.log(CONNECTION_SYSTEM.POST_LIKELY_RECONNECT_DISABLED(username, ip));
             }
-            return allowReconnects;
+            return !!this.connectionSettings.allowReconnects;
         }
 
         this.logger?.log(CONNECTION_SYSTEM.SENT_INITIAL_POST(ip, username));
-        const stageOne = new StageOneConnection(username, token, ip, this.removeConnection);
+        const stageOne = new StageOneConnection(
+            username,
+            token,
+            ip,
+            this.removeConnection,
+            this.connectionSettings.requestTimeoutSeconds,
+        );
         this.stageOneConnections[ip] = stageOne;
 
         this.ipList.push(ip);
@@ -173,7 +180,7 @@ export class ConnectionSystem {
         if (!associatedStageOneConnection) {
             // no associated player: check if ip matches a disconnected stage three connection
             // or possible stage three:
-            if (allowReconnects && this.ipList.includes(ip)) {
+            if (this.connectionSettings.allowReconnects && this.ipList.includes(ip)) {
                 const possibleConnection: StageThreeConnection | undefined =
                     this.stageThreeConnections[
                         Object.keys(this.stageThreeConnections).filter(
@@ -306,7 +313,7 @@ export class ConnectionSystem {
         isValid: boolean;
         reasons: string[];
     } {
-        const verificationMethods = playerVerification as JoinVerification[];
+        const verificationMethods = this.connectionSettings.playerVerification;
         let isValid = true;
         const reasons: string[] = [];
         const { token, username, gameCode } = tokenPayload;
@@ -321,7 +328,7 @@ export class ConnectionSystem {
             reasons.push(...result.reasons);
         }
 
-        if (verificationMethods.includes('token')) {
+        if (verificationMethods?.includes('token')) {
             // token verifies gameCode and username
             try {
                 const validatedToken = verify(token, jwt_secret) as JwtPayload;
@@ -354,18 +361,18 @@ export class ConnectionSystem {
         } else {
             // if token isn't specified, check for alternate forms of verification
             // Note these are nowhere near as secure as jwt
-            if (verificationMethods.includes('username') && username !== connection.username) {
+            if (verificationMethods?.includes('username') && username !== connection.username) {
                 isValid = false;
                 reasons.push('non-matching username');
             }
-            if (verificationMethods.includes('gameCode') && gameCode !== this.gameCode) {
+            if (verificationMethods?.includes('gamecode') && gameCode !== this.gameCode) {
                 isValid = false;
                 reasons.push('non-matching game code');
             }
         }
 
         if (
-            verificationMethods.includes('ip') &&
+            verificationMethods?.includes('ip') &&
             connection.ip !== ConnectionSystem.getIPFromSocket(connection.socket)
         ) {
             isValid = false;
@@ -432,6 +439,7 @@ interface ConnectionArgs {
     stageTwoAt?: number;
     stageThreeAt?: number;
     logger?: Logger;
+    requestTimeout?: number;
 }
 class ConnectionBase {
     public readonly username: string;
@@ -441,6 +449,8 @@ class ConnectionBase {
     public readonly stageTwoAt: number;
     public readonly stageThreeAt: number;
 
+    public readonly requestTimeout: number;
+
     public constructor({
         username,
         token,
@@ -448,6 +458,7 @@ class ConnectionBase {
         stageOneAt,
         stageTwoAt,
         stageThreeAt,
+        requestTimeout = 10,
     }: ConnectionArgs | AnyConnection) {
         this.username = username;
         this.token = token;
@@ -455,6 +466,8 @@ class ConnectionBase {
         this.stageOneAt = stageOneAt || Date.now();
         this.stageTwoAt = stageTwoAt || 0;
         this.stageThreeAt = stageThreeAt || 0;
+
+        this.requestTimeout = requestTimeout;
     }
 }
 
@@ -462,15 +475,21 @@ class ConnectionBase {
 export class StageOneConnection extends ConnectionBase {
     public timeoutFunction?: NodeJS.Timeout;
 
-    constructor(username: string, token: string, ip: string, callback: TimeoutFunction) {
-        super({ username, token, ip });
+    constructor(
+        username: string,
+        token: string,
+        ip: string,
+        callback: TimeoutFunction,
+        requestTimeout?: number,
+    ) {
+        super({ username, token, ip, requestTimeout });
         this.beginCountdown(callback);
     }
 
     private beginCountdown(callback: TimeoutFunction) {
         this.timeoutFunction = setTimeout(() => {
             callback(this);
-        }, 1000 * requestTimeoutSeconds);
+        }, 1000 * this.requestTimeout);
     }
 }
 
@@ -498,7 +517,7 @@ export class StageTwoConnection extends ConnectionBase {
     private beginCountdown(callback: TimeoutFunction) {
         this.timeoutFunction = setTimeout(() => {
             callback(this);
-        }, 1000 * requestTimeoutSeconds);
+        }, 1000 * this.requestTimeout);
     }
 }
 
@@ -533,6 +552,6 @@ export class StageThreeConnection extends ConnectionBase {
     public beginCountdown(callback: TimeoutFunction) {
         this.timeoutFunction = setTimeout(() => {
             callback(this);
-        }, 1000 * requestTimeoutSeconds);
+        }, 1000 * this.requestTimeout);
     }
 }

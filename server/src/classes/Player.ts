@@ -1,7 +1,7 @@
 import { Socket } from 'socket.io';
 import { PlayerStatuses } from '../constants/mafia';
 import { RECEIVED_PLAYER_EVENTS } from '../constants/socketEvent';
-import { Game } from './game';
+import { Game } from './Game';
 
 export default class Player {
     private readonly parentGame: Game;

@@ -129,10 +129,10 @@ export const CONNECTION_SYSTEM = {
     /** Disconnected, but reconnection is possible. */
     SOFT_DISCONNECT: ({ username, ip }: StageThreeConnection) =>
         `${username} (${ip}) will be able to reconnect`,
-    POST_LIKELY_RECONNECT: (username: string, ip: string) =>
-        `${username} (${ip}) started joining and is likely a reconnecting player`,
-    POST_LIKELY_RECONNECT_DISABLED: (username: string, ip: string) =>
-        `${username} (${ip}) started joining and is likely a reconnecting player, this should never occur since reconnects are disabled`,
+    // POST_LIKELY_RECONNECT: (username: string, ip: string) =>
+    //     `${username} (${ip}) started joining and is likely a reconnecting player`,
+    // POST_LIKELY_RECONNECT_DISABLED: (username: string, ip: string) =>
+    //     `${username} (${ip}) started joining and is likely a reconnecting player, this should never occur since reconnects are disabled`,
 };
 
 export const CODE_GENERATION = {

@@ -4,7 +4,6 @@ import { CONNECTION_SYSTEM } from '../constants/logging';
 import { EMITTED_PLAYER_EVENTS, RECEIVED_PLAYER_EVENTS } from '../constants/socketEvent';
 import { jwt_secret } from '../config/gameSecrets.json';
 import Logger, { BaseLoggerParams } from './Logger';
-import { ConnectionSettings } from '../types/settings';
 
 export type JoinVerification = 'token' | 'ip' | 'username' | 'gamecode';
 
@@ -66,7 +65,7 @@ export class ConnectionSystem {
     private readonly validateReconnect: ValidationFunction;
     private readonly logger?: Logger;
 
-    private readonly connectionSettings: ConnectionSettings;
+    private verificationMethods: JoinVerification[];
 
     /**
      * @param {string} gameCode Game code of associated game, for verification and logging purposes.
@@ -84,7 +83,7 @@ export class ConnectionSystem {
         onReconnect: ConnectionFunction,
         validateJoinFunction: ValidationFunction,
         validateReconnectFunction: ValidationFunction,
-        connectionSettings: ConnectionSettings,
+        verificationMethods: JoinVerification[] = ['token', 'ip'],
         makeLogger?: boolean,
         loggerParams?: BaseLoggerParams,
     ) {
@@ -94,8 +93,7 @@ export class ConnectionSystem {
         this.onReconnect = onReconnect;
         this.validateJoin = validateJoinFunction;
         this.validateReconnect = validateReconnectFunction;
-
-        this.connectionSettings = connectionSettings;
+        this.verificationMethods = verificationMethods;
 
         if (makeLogger) {
             this.logger = new Logger({
@@ -114,12 +112,16 @@ export class ConnectionSystem {
         return socket.handshake.address.split(':').slice(-1)[0];
     }
 
-    public isDuplicateIP(ip: string): boolean {
-        if (this.connectionSettings.allowDuplicateIP) return false;
+    public isDuplicateIP(
+        ip: string,
+        allowReconnects?: boolean,
+        allowDuplicateIP?: boolean,
+    ): boolean {
+        if (allowDuplicateIP) return false;
         if (ip === 'Unknown') return true;
         const index = this.ipList.indexOf(ip);
         if (index === -1) return false;
-        if (!this.connectionSettings.allowReconnects) return true;
+        if (!allowReconnects) return true;
 
         const disconnectedWithSameIP = Object.keys(this.stageThreeConnections).find(
             (name) =>
@@ -130,11 +132,11 @@ export class ConnectionSystem {
         return !disconnectedWithSameIP;
     }
 
-    public isDuplicateUsername(username: string): boolean {
+    public isDuplicateUsername(username: string, allowReconnects?: boolean): boolean {
         username = username.toLowerCase();
         const index = this.usernameList.indexOf(username);
         if (index === -1) return false;
-        if (!this.connectionSettings.allowReconnects) return true;
+        if (!allowReconnects) return true;
 
         const playerWithSameUsername = Object.keys(this.stageThreeConnections).includes(username);
 
@@ -144,15 +146,32 @@ export class ConnectionSystem {
         return this.stageThreeConnections[username].connected;
     }
 
-    public newStageOne(username: string, token: string, ip: string): boolean {
+    /**
+     * @returns Whether or not operation was successful.
+     */
+    public newStageOne(
+        username: string,
+        token: string,
+        ip: string,
+        allowReconnects?: boolean,
+        requestTimeoutSeconds?: number,
+    ): boolean {
         // FIXME: reconnect detection for when same IP address registered to multiple players
         if (this.usernameList.includes(username) || this.ipList.includes(username)) {
-            if (this.connectionSettings.allowReconnects) {
-                CONNECTION_SYSTEM.POST_LIKELY_RECONNECT(username, ip);
-            } else {
-                this.logger?.log(CONNECTION_SYSTEM.POST_LIKELY_RECONNECT_DISABLED(username, ip));
-            }
-            return !!this.connectionSettings.allowReconnects;
+            this.logger?.log(
+                `New stage on connection from ${username} (${ip}) is already in: ${
+                    this.usernameList.includes(username) ? 'username list, ' : ''
+                }${
+                    this.ipList.includes(username) ? 'ip list, ' : ''
+                }this should NEVER occur (unless...)`,
+            );
+            return false;
+            // if (allowReconnects) {
+            //     CONNECTION_SYSTEM.POST_LIKELY_RECONNECT(username, ip);
+            // } else {
+            //     this.logger?.log(CONNECTION_SYSTEM.POST_LIKELY_RECONNECT_DISABLED(username, ip));
+            // }
+            // return !!allowReconnects;
         }
 
         this.logger?.log(CONNECTION_SYSTEM.SENT_INITIAL_POST(ip, username));
@@ -161,7 +180,7 @@ export class ConnectionSystem {
             token,
             ip,
             this.removeConnection,
-            this.connectionSettings.requestTimeoutSeconds,
+            requestTimeoutSeconds,
         );
         this.stageOneConnections[ip] = stageOne;
 
@@ -171,7 +190,7 @@ export class ConnectionSystem {
         return true;
     }
 
-    public toStageTwo(socket: Socket): void {
+    public toStageTwo(socket: Socket, allowReconnects?: boolean): void {
         const ip = ConnectionSystem.getIPFromSocket(socket);
 
         const associatedStageOneConnection: StageOneConnection | undefined =
@@ -180,7 +199,7 @@ export class ConnectionSystem {
         if (!associatedStageOneConnection) {
             // no associated player: check if ip matches a disconnected stage three connection
             // or possible stage three:
-            if (this.connectionSettings.allowReconnects && this.ipList.includes(ip)) {
+            if (allowReconnects && this.ipList.includes(ip)) {
                 const possibleConnection: StageThreeConnection | undefined =
                     this.stageThreeConnections[
                         Object.keys(this.stageThreeConnections).filter(
@@ -313,22 +332,21 @@ export class ConnectionSystem {
         isValid: boolean;
         reasons: string[];
     } {
-        const verificationMethods = this.connectionSettings.playerVerification;
         let isValid = true;
         const reasons: string[] = [];
         const { token, username, gameCode } = tokenPayload;
 
         if (!isReconnect && !!this.validateJoin) {
             const result = this.validateJoin(connection);
-            isValid &&= result.isValid;
+            isValid = result.isValid;
             reasons.push(...result.reasons);
         } else if (isReconnect && !!this.validateReconnect) {
             const result = this.validateReconnect(connection);
-            isValid &&= result.isValid;
+            isValid = result.isValid;
             reasons.push(...result.reasons);
         }
 
-        if (verificationMethods?.includes('token')) {
+        if (this.verificationMethods?.includes('token')) {
             // token verifies gameCode and username
             try {
                 const validatedToken = verify(token, jwt_secret) as JwtPayload;
@@ -361,18 +379,21 @@ export class ConnectionSystem {
         } else {
             // if token isn't specified, check for alternate forms of verification
             // Note these are nowhere near as secure as jwt
-            if (verificationMethods?.includes('username') && username !== connection.username) {
+            if (
+                this.verificationMethods?.includes('username') &&
+                username !== connection.username
+            ) {
                 isValid = false;
                 reasons.push('non-matching username');
             }
-            if (verificationMethods?.includes('gamecode') && gameCode !== this.gameCode) {
+            if (this.verificationMethods?.includes('gamecode') && gameCode !== this.gameCode) {
                 isValid = false;
                 reasons.push('non-matching game code');
             }
         }
 
         if (
-            verificationMethods?.includes('ip') &&
+            this.verificationMethods?.includes('ip') &&
             connection.ip !== ConnectionSystem.getIPFromSocket(connection.socket)
         ) {
             isValid = false;
@@ -441,6 +462,7 @@ interface ConnectionArgs {
     logger?: Logger;
     requestTimeout?: number;
 }
+
 class ConnectionBase {
     public readonly username: string;
     public readonly token: string;

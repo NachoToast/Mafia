@@ -66,21 +66,19 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                 }
 
                 // fake player population for testing purposes
-                // const newPlayers: Player[] = new Array(99)
-                //     .fill(0)
-                //     .map((e, i) => {
-                //         return {
-                //             username: `player ${++i}`,
-                //             number: ++i,
-                //             status:
-                //                 i < 20
-                //                     ? PlayerStatuses.alive
-                //                     : i > 40
-                //                     ? PlayerStatuses.spectator
-                //                     : PlayerStatuses.dead,
-                //             connected: Math.random() < 0.5,
-                //         };
-                //     });
+                // const newPlayers: Player[] = new Array(99).fill(0).map((e, i) => {
+                //     return {
+                //         username: `player ${++i}`,
+                //         number: ++i,
+                //         status:
+                //             i < 20
+                //                 ? PlayerStatuses.alive
+                //                 : i > 40
+                //                 ? PlayerStatuses.spectator
+                //                 : PlayerStatuses.dead,
+                //         connected: Math.random() < 0.5,
+                //     };
+                // });
                 // setPlayerList([...playerList, ...newPlayers]);
             },
         );

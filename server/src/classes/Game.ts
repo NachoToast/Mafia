@@ -131,7 +131,7 @@ export class Game {
             (connection) => this.onReconnect(connection),
             null,
             null,
-            this.connectionSettings,
+            this.connectionSettings.playerVerification,
             !!this.loggingSettings.logConnections,
             { ...this.loggingSettings.connectionParams },
         );
@@ -149,7 +149,7 @@ export class Game {
         }
 
         RECEIVED_SERVER_EVENTS.JOIN(this.io, (socket: Socket) =>
-            this.connectionSystem.toStageTwo(socket),
+            this.connectionSystem.toStageTwo(socket, this.connectionSettings.allowReconnects),
         );
 
         this.logger?.log(SERVER_GENERAL.GAME_CONFIG(this), { customTimestamp: '' });

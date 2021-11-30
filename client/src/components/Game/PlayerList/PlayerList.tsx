@@ -21,6 +21,7 @@ export interface Player {
     status: PlayerStatuses;
     extra?: string;
     connected: boolean;
+    isOwner: boolean;
 }
 
 const PlayerList = ({ socket }: { socket: Socket }) => {
@@ -44,14 +45,17 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                 status: PlayerStatuses,
                 number: number,
                 extra: string,
-                connected: boolean,
+                connected,
+                isOwner,
             ) => {
+                console.log('playerUpdate', username, isOwner);
                 const existingPlayer = playerList.find((player) => player.username === username);
 
                 if (!!existingPlayer) {
                     existingPlayer.status = status;
                     existingPlayer.extra = extra || existingPlayer.extra;
                     existingPlayer.connected = connected;
+                    existingPlayer.isOwner = isOwner;
                     setPlayerList([...playerList]);
                 } else {
                     const newPlayer: Player = {
@@ -60,6 +64,7 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                         extra,
                         connected,
                         number,
+                        isOwner,
                     };
                     if (username === myUsername) newPlayer.extra = 'You';
                     setPlayerList([...playerList, newPlayer]);

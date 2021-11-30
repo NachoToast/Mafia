@@ -151,6 +151,7 @@ export const GAME_EXT = {
     JOINED_GAME: (username: string) => `${username} joined the game`,
     LEFT_GAME: (username: string) => `${username} left the game`,
     RECONNECTED: (username: string) => `${username} reconnected`,
+    NEW_GAME_OWNER: (username: string) => `${username} is the new game owner`,
 };
 
 /** PLAYERNAME died to mafia, PLAYERNAME was shot by, etc... */

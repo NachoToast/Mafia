@@ -24,8 +24,17 @@ export const RECEIVED_PLAYER_EVENTS = {
 export const EMITTED_SERVER_EVENTS = {
     // CHAT_MESSAGE: 'emittedChatMessage',
     CHAT_MESSAGE: (io: Server, message: ChatMessage) => {
-        if (!!message?.to) io.to(message.to).emit('emittedChatMessage', message);
+        if (message?.to) io.to(message.to).emit('emittedChatMessage', message);
         else io.emit('emittedChatMessage', message);
+    },
+    SERVER_CHAT_MESSAGE: (io: Server, content: string, to?: ROOMS) => {
+        const messageBody: ChatMessage = {
+            content,
+            author: 'Server',
+            props: { hideAuthor: true, color: '#FFFF00' },
+        };
+        if (to) io.to(to).emit('emittedChatMessage', messageBody);
+        else io.emit('emittedChatMessage', messageBody);
     },
     PLAYER_LEFT: (io: Server, username: string) => io.emit('playerLeft', username),
     PLAYER_UPDATE: (
@@ -33,9 +42,10 @@ export const EMITTED_SERVER_EVENTS = {
         username: string,
         status: PlayerStatuses,
         number: number,
-        extra: string = '',
-        connected: boolean = true,
-    ) => io.emit('playerUpdate', username, status, number, extra, connected),
+        extra: string,
+        connected: boolean,
+        isOwner: boolean,
+    ) => io.emit('playerUpdate', username, status, number, extra, connected, isOwner),
     // username: string, status: PlayerStatuses
     /** When a user has changed status, also applies to new users. */
     // PLAYER_UPDATE: (emitter: Server | Socket, payload: PlayerUpdate) =>
@@ -56,8 +66,9 @@ export const EMITTED_PLAYER_EVENTS = {
         status: PlayerStatuses,
         number: number,
         connected: boolean,
-        extra?: string,
-    ) => socket.emit('playerUpdate', username, status, number, extra, connected),
+        extra: string,
+        isOwner: boolean,
+    ) => socket.emit('playerUpdate', username, status, number, extra, connected, isOwner),
 };
 
 export enum ROOMS {

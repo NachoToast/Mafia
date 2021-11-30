@@ -108,7 +108,7 @@ export class ConnectionSystem {
         this.timeoutReconnectingSocket = this.timeoutReconnectingSocket.bind(this);
     }
 
-    private static getIPFromSocket(socket: Socket) {
+    public static getIPFromSocket(socket: Socket) {
         return socket.handshake.address.split(':').slice(-1)[0];
     }
 

@@ -3,7 +3,7 @@ import SendIcon from '@mui/icons-material/Send';
 import React, { useState, useEffect, Dispatch, SetStateAction, FormEvent } from 'react';
 import { Socket } from 'socket.io-client';
 import ChatMessage, { ChatMessageInterface, ExtendedChatmessage } from './ChatMessage';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuid } from 'uuid';
 
 const ChatBox = ({ socket }: { socket: Socket }) => {
     const [messages, setMessages]: [ExtendedChatmessage[], Dispatch<SetStateAction<any>>] =
@@ -17,7 +17,7 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
                 author: message.author,
                 content: message.content,
                 props: message.props,
-                key: uuidv4(),
+                key: uuid(),
             };
 
             setMessages([newMessage, ...messages.slice(0, 99)]);

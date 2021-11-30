@@ -4,6 +4,9 @@ export const serverHub = new ServerHub(3001);
 
 serverHub.createGame({
     gameCode: 'dev',
+    connectionSettings: {
+        allowPregameReconnects: false,
+    },
 });
 
 serverHub.app.get('/', (_, res) => {

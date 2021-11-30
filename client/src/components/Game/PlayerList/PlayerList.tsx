@@ -48,7 +48,6 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                 connected,
                 isOwner,
             ) => {
-                console.log('playerUpdate', username, isOwner);
                 const existingPlayer = playerList.find((player) => player.username === username);
 
                 if (!!existingPlayer) {

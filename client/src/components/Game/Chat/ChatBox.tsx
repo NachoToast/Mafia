@@ -40,8 +40,6 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
         }
     }
 
-    console.log('rendering chatbox!');
-
     return (
         <Paper
             style={{

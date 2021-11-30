@@ -47,8 +47,6 @@ class Game extends Component<GameProps> {
             path: `/${this.gameCode}`,
             autoConnect: false,
         });
-
-        console.log(this.gameCode, this.username, this.token);
     }
 
     public componentDidMount() {
@@ -59,7 +57,6 @@ class Game extends Component<GameProps> {
 
         this.socket.on('unregistered', () => {
             this.setState({ authenticated: false } as GameState);
-            console.log('unauythetnictyu');
         });
         this.socket.on('giveToken', () => {
             this.socket.emit('heresToken', {
@@ -67,7 +64,6 @@ class Game extends Component<GameProps> {
                 gameCode: this.gameCode,
                 username: this.username,
             });
-            console.log('emitting deets');
         });
 
         this.socket.connect();
@@ -75,7 +71,6 @@ class Game extends Component<GameProps> {
 
     public render() {
         // if (!this.state.authenticated) return <div>Not authenticated :P</div>;
-        console.log(`${Date.now()} Rendering Game`);
         return (
             <>
                 {!this.state.connected && (

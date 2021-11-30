@@ -1,10 +1,10 @@
 {
-    // comment 1
+    // Endpoint for the websocket to hit. 
     "serverEndpoint": "http://ntgc.ddns.net",
 
-    // comment 2
+    // Port for the websocket to use. 
     "serverPort": 3001,
 
-    // comment 3
+    // Name of the server hub.
     "serverName": "mafia"
 }

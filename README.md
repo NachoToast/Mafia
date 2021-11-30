@@ -2,7 +2,7 @@
 
 # Changing Endpoints
 
-![image](https://user-images.githubusercontent.com/32235595/143978116-ef786576-64cb-445b-af61-0e6c6e270016.png)
+![image](https://user-images.githubusercontent.com/32235595/143984774-d2526a22-9956-4813-b0c9-f1b49abb26b3.png)
 
 **Client** endpoints are located in the [endpoints](./client/src/config/endpoints.jsonc) file, make sure they're the same as the ones for the server (see below).
 

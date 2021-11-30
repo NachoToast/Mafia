@@ -1,0 +1,5 @@
+{
+    "serverEndpoint": "http://localhost",
+    "serverPort": 3001,
+    "serverName": "mafia"
+}

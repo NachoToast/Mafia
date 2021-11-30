@@ -9,7 +9,7 @@ import PlayerList from './PlayerList/PlayerList';
 import RoleCard from './RoleCard/RoleCard';
 import RoleList from './RoleList/RoleList';
 
-import { serverEndpoint, serverPort } from '../../constants/endpoints';
+import { serverEndpoint, serverPort } from '../../config/endPoints.json';
 
 interface GameState {
     connected: boolean;

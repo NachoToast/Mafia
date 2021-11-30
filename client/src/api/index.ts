@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { serverName, serverPort, serverEndpoint } from '../constants/endpoints';
+import { serverName, serverPort, serverEndpoint } from '../config/endPoints.json';
 
 export interface FindGameRequestBody {
     gameCode: string;

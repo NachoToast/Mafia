@@ -1,0 +1,10 @@
+{
+    // comment 1
+    "serverEndpoint": "http://ntgc.ddns.net",
+
+    // comment 2
+    "serverPort": 3001,
+
+    // comment 3
+    "serverName": "mafia"
+}

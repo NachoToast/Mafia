@@ -1,12 +1,15 @@
 import axios from 'axios';
 
+import { serverName, serverPort, serverEndpoint } from '../constants/endpoints';
+
 export interface FindGameRequestBody {
     gameCode: string;
     username: string;
     token?: string;
 }
 
-const API = axios.create({ baseURL: `http://ntgc.ddns.net:3001/mafia` });
+const baseURL = `${serverEndpoint}:${serverPort}/${serverName}`;
+const API = axios.create({ baseURL });
 
 /* Adds web token to all requests if present, probably don't need so leaving commented out for now */
 // API.interceptors.request.use((req: any) => {

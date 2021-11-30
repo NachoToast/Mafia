@@ -15,7 +15,7 @@ const PlayerLine = ({ player }: { player: Player }) => {
             case !player.connected && player.isOwner:
                 return `Owner (Disconnected)`;
             default:
-                return `stinky`;
+                return ``;
         }
     }, [player.connected, player.isOwner]);
 

@@ -46,10 +46,6 @@ export const EMITTED_SERVER_EVENTS = {
         connected: boolean,
         isOwner: boolean,
     ) => io.emit('playerUpdate', username, status, number, extra, connected, isOwner),
-    // username: string, status: PlayerStatuses
-    /** When a user has changed status, also applies to new users. */
-    // PLAYER_UPDATE: (emitter: Server | Socket, payload: PlayerUpdate) =>
-    //     emitter.emit('playerChange', payload),
 };
 
 /** Events emitted by the player-specific socket instance - `socket.emit()` */

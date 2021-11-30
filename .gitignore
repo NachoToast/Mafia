@@ -3,4 +3,4 @@ package-lock.json
 gameSecrets.json
 *.log
 logs
-endPointOverrides.json
+endPoints.json

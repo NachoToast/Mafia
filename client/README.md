@@ -11,7 +11,7 @@ Make sure you have the **current** version of [Node](https://nodejs.org/en/) ins
 
 -   If you just installed `Node`, you'll need to restart your VS Code so it realised you have it installed, otherwise you'll have some issues with the `npm` and `yarn` commands later on.
 
-Note that the client will automatically connect to the ntgc.ddns.net server on startup, if you want to test out interactions with the `server` side of this repository, edit the `serverEndpoint` and port constants in the [endpoints](./src/config/endPointOverrides.jsonc) file. 
+Note that the client will automatically connect to the ntgc.ddns.net server on startup, if you want to test out interactions with the `server` side of this repository, edit the `serverEndpoint` and port constants in the [endpoints](./src/config/endPointOverrides.jsonc) file.
 
 To apply this, change the file extension to .json and remove comments from the endPointOverrides file.
 
@@ -33,6 +33,10 @@ To apply this, change the file extension to .json and remove comments from the e
 -   `npm` is already downloaded with Node, but is slower than `yarn`.
 -   `yarn` is much faster, but you'll need to quickly download it first using `npm install yarn -g` (The `-g` is a global flag, meaning you'll never have to download it again).
 -   This _will_ take a while since the client uses lots of dependencies (~40k).
+
+### Configuring Endpoints
+
+Make a [endpoints.json](./src/config/endpoints.json) file in the `src/config` directory and fill it in with the fields in the [template file](./src/config/endpoints.jsonc).
 
 ### Running the Client
 

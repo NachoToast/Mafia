@@ -162,7 +162,7 @@ export class Game {
         return Object.keys(this.players).length;
     }
 
-    private playerNumberGenerator() {
+    private playerNumberGenerator(): number {
         let num = 1;
         while (this.takenNumbers.includes(num)) {
             num++;
@@ -176,7 +176,7 @@ export class Game {
      * emitting existing players to the newly (re)joined one,
      * and joining rooms
      */
-    private joinRejoinHandlers(player: Player, socket: Socket) {
+    private joinRejoinHandlers(player: Player, socket: Socket): void {
         player.bindSocket(socket);
 
         const usernameLower = player.username.toLowerCase();
@@ -247,7 +247,7 @@ export class Game {
         }
     }
 
-    private onJoin(connection: StageThreeConnection) {
+    private onJoin(connection: StageThreeConnection): void {
         const { username, socket } = connection;
 
         const status = this.inProgress ? PlayerStatuses.spectator : PlayerStatuses.alive;
@@ -481,5 +481,80 @@ export class Game {
             to: room,
         };
         EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, constructedMessage);
+    }
+
+    public sendWhisper(player: Player, target: string, message: string, presTarget: string): void {
+        if (player.status !== PlayerStatuses.alive) {
+            return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
+                player.socket,
+                `You can only whisper to alive players`,
+            );
+        }
+        let targetPlayer: Player | undefined;
+        if (Number.isInteger(Number(target))) {
+            const numberToLookFor = parseInt(target);
+            const foundPlayerName = Object.keys(this.players).find(
+                (username) => this.players[username].number === numberToLookFor,
+            );
+            if (!foundPlayerName) {
+                return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
+                    player.socket,
+                    `Player number ${numberToLookFor} does not exist`,
+                );
+            }
+            targetPlayer = this.players[foundPlayerName];
+        } else {
+            targetPlayer = this.players[target];
+        }
+
+        if (!targetPlayer) {
+            return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
+                player.socket,
+                `Player '${presTarget}' does not exist`,
+            );
+        }
+
+        if (!targetPlayer.connected) {
+            return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
+                player.socket,
+                `${targetPlayer.username} is disconnected`,
+            );
+        }
+
+        if (targetPlayer.username === player.username) {
+            return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
+                player.socket,
+                `You cannot whisper to yourself`,
+            );
+        }
+
+        if (this.timePeriod === TimePeriods.night) {
+            return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
+                player.socket,
+                `You cannot whisper at night`,
+            );
+        }
+
+        const messageBody: ChatMessage = {
+            content: `${player.username} whispers to you: ${message}`,
+            author: player.username,
+            props: { hideAuthor: true, color: 'gold' },
+        };
+
+        EMITTED_PLAYER_EVENTS.PRIVATE_CHAT_MESSAGE(targetPlayer.socket, messageBody);
+
+        EMITTED_PLAYER_EVENTS.PRIVATE_CHAT_MESSAGE(player.socket, {
+            content: `You whisper to ${targetPlayer.username}: ${message}`,
+            author: 'Server',
+            props: { hideAuthor: true, color: 'gold' },
+        });
+
+        EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, {
+            content: `${player.username} is whispering to ${targetPlayer.username}`,
+            author: player.username,
+            props: { hideAuthor: true, color: 'gray' },
+        });
+
+        this.logger?.log(`${player.username} whispers to ${targetPlayer.username}: ${message}`);
     }
 }

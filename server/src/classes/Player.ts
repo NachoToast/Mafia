@@ -1,6 +1,10 @@
 import { Socket } from 'socket.io';
 import { PlayerStatuses } from '../constants/mafia';
-import { RECEIVED_PLAYER_EVENTS } from '../constants/socketEvent';
+import {
+    EMITTED_PLAYER_EVENTS,
+    EMITTED_SERVER_EVENTS,
+    RECEIVED_PLAYER_EVENTS,
+} from '../constants/socketEvent';
 import { ConnectionSystem } from './ConnectionSystem';
 import { Game } from './Game';
 
@@ -37,12 +41,34 @@ export default class Player {
         RECEIVED_PLAYER_EVENTS.CHAT_MESSAGE(socket, (message: string) => this.message(message));
     }
 
-    private message(message: string) {
+    private message(message: string): void {
         if (message.length < 1) return;
         if (message[0] === '/') {
-            // TODO: commands
-            return;
+            message = message.slice(1);
+            const messageLower = message.toLowerCase();
+            const [command, ...args] = messageLower.split(' ');
+            const [presCommand, ...presArgs] = message.split(' ');
+
+            switch (command) {
+                case 'w':
+                case 'whisper':
+                    this.parentGame.sendWhisper(
+                        this,
+                        args[0],
+                        presArgs?.slice(1)?.join(' '),
+                        presArgs[0],
+                    );
+                    break;
+                default:
+                    EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
+                        this.socket,
+                        `Command '${command}' does not exist`,
+                    );
+
+                    break;
+            }
+        } else {
+            this.parentGame.sendChatMessage(this, message);
         }
-        this.parentGame.sendChatMessage(this, message);
     }
 }

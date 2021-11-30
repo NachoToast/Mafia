@@ -48,7 +48,7 @@ export const EMITTED_SERVER_EVENTS = {
     ) => io.emit('playerUpdate', username, status, number, extra, connected, isOwner),
 };
 
-/** Events emitted by the player-specific socket instance - `socket.emit()` */
+/** Events emitted to the player-specific socket instance - `socket.emit()` */
 export const EMITTED_PLAYER_EVENTS = {
     UNREGISTERED: (socket: Socket) => {
         socket.emit('unregistered');
@@ -65,6 +65,17 @@ export const EMITTED_PLAYER_EVENTS = {
         extra: string,
         isOwner: boolean,
     ) => socket.emit('playerUpdate', username, status, number, extra, connected, isOwner),
+    PRIVATE_CHAT_MESSAGE: (socket: Socket, message: ChatMessage) => {
+        socket.emit('emittedChatMessage', message);
+    },
+    SERVER_PRIVATE_CHAT_MESSAGE: (socket: Socket, content: string) => {
+        const messageBody: ChatMessage = {
+            content,
+            author: 'Server',
+            props: { hideAuthor: true, color: '#FFFF00' },
+        };
+        socket.emit('emittedChatMessage', messageBody);
+    },
 };
 
 export enum ROOMS {

@@ -11,7 +11,9 @@ Make sure you have the **current** version of [Node](https://nodejs.org/en/) ins
 
 -   If you just installed `Node`, you'll need to restart your VS Code so it realised you have it installed, otherwise you'll have some issues with the `npm` and `yarn` commands later on.
 
-Note that the client will automatically connect to the ntgc.ddns.net server on startup, if you want to test out interactions with the `server` side of this repository, edit the `serverEndpoint` and port constants in the [endpoints](./src/constants/endpoints.ts) file.
+Note that the client will automatically connect to the ntgc.ddns.net server on startup, if you want to test out interactions with the `server` side of this repository, edit the `serverEndpoint` and port constants in the [endpoints](./src/config/endPointOverrides.jsonc) file. 
+
+To apply this, change the file extension to .json and remove comments from the endPointOverrides file.
 
 ### Cloning the Repository
 

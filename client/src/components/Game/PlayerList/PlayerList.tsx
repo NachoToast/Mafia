@@ -81,6 +81,7 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                 //                 ? PlayerStatuses.spectator
                 //                 : PlayerStatuses.dead,
                 //         connected: Math.random() < 0.5,
+                //         isOwner: false,
                 //     };
                 // });
                 // setPlayerList([...playerList, ...newPlayers]);

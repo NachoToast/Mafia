@@ -59,6 +59,9 @@ export default class Player {
                         presArgs[0],
                     );
                     break;
+                case 'start':
+                    this.parentGame.start(this);
+                    break;
                 default:
                     EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
                         this.socket,

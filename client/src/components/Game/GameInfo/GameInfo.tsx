@@ -1,16 +1,147 @@
-import React from 'react';
-import { Button, Divider, Paper, Stack, Tooltip, Typography } from '@mui/material';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Box, Button, Divider, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import InfoIcon from '@mui/icons-material/Info';
 import { Socket } from 'socket.io-client';
+import { LinearProgress } from '@mui/material';
+import colourGradient from '../../../helpers/colourGradient';
+
+interface TimePeriodAndDuration {
+    name: string;
+    toolTip: string;
+    maxDuration: number;
+}
+
+const UPDATE_INTERVAL = 300;
 
 const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Function }) => {
+    const [timePeriod, setTimePeriod]: [
+        TimePeriodAndDuration,
+        Dispatch<SetStateAction<TimePeriodAndDuration>>,
+    ] = useState({
+        name: 'Connecting',
+        toolTip: 'Connecting to the Mafia Servers',
+        maxDuration: -1,
+    } as TimePeriodAndDuration);
+    const [timeRemaining, setTimeRemaining] = useState(-1);
+
     const confirmLeaveGame = () => {
         const actuallyLeave = window.confirm('Do you really want to leave?');
         if (actuallyLeave) {
             socket.emit('intentionalDisconnect');
             exitCallback();
+        }
+    };
+
+    useEffect(() => {
+        socket.on('connect', () => {
+            setTimePeriod({
+                name: 'Loading',
+                toolTip: 'Getting Data From Server',
+                maxDuration: -1,
+            } as TimePeriodAndDuration);
+
+            // setTimeout(() => {
+            //     setTimePeriod({
+            //         name: 'Pre-Game',
+            //         toolTip: 'Waiting for host to start lobby',
+            //         maxDuration: 10,
+            //     });
+            //     setTimeRemaining(10);
+            // }, 1000);
+        });
+        socket.on(
+            'timePeriodUpdate',
+            (
+                {
+                    name,
+                    description,
+                    durationSeconds,
+                }: {
+                    name: string;
+                    description: string;
+                    durationSeconds: number;
+                },
+                timeLeft: number,
+            ) => {
+                setTimePeriod({
+                    name,
+                    toolTip: description,
+                    maxDuration: timeLeft,
+                });
+                setTimeRemaining(durationSeconds);
+            },
+        );
+        socket.on('disconnect', () => {
+            setTimePeriod({
+                name: `${timePeriod.name} (Disconnected)`,
+                toolTip: 'Disconnected From The Server',
+                maxDuration: -1,
+            } as TimePeriodAndDuration);
+        });
+        return () => {
+            socket.off('timePeriodUpdate');
+            // socket.off('connect');
+            // socket.off('disconnect');
+        };
+    }, [socket, timePeriod.name]);
+
+    // decrementing time
+    useEffect(() => {
+        const myInterval = setInterval(() => {
+            if (timeRemaining > 0) {
+                setTimeRemaining(timeRemaining - 1 * (UPDATE_INTERVAL / 1000));
+            }
+        }, UPDATE_INTERVAL);
+        return () => {
+            clearInterval(myInterval);
+        };
+    });
+
+    const calculateProgressBar = (): [number, string] => {
+        const percent = Math.ceil((100 * timeRemaining) / timePeriod.maxDuration);
+        const { red, green, blue } = colourGradient(
+            0,
+            timePeriod.maxDuration,
+            timePeriod.maxDuration - timeRemaining,
+            { red: 144, green: 238, blue: 144 },
+            { red: 255, green: 214, blue: 0 },
+            { red: 240, green: 128, blue: 128 },
+        );
+        return [Math.min(100 - percent, 100), `rgb(${red}, ${green}, ${blue})`];
+    };
+
+    const gamePeriodShower = (): JSX.Element => {
+        switch (timePeriod.name) {
+            case 'Connecting':
+                return <LinearProgress style={{ width: '100%' }} />;
+            case 'Loading':
+                return <LinearProgress style={{ width: '100%' }} />;
+            default:
+                const [value, color] = calculateProgressBar();
+                if (timePeriod.maxDuration > 0) {
+                    return (
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Box sx={{ width: '100%', mr: 1 }}>
+                                <LinearProgress variant="determinate" value={value} />
+                            </Box>
+                            <Box sx={{ minWidth: 35 }}>
+                                <Typography variant="body2" color={color}>
+                                    {Math.ceil(timeRemaining)}s
+                                </Typography>
+                            </Box>
+                        </Box>
+                    );
+                } else {
+                    return (
+                        <LinearProgress
+                            variant="determinate"
+                            value={100}
+                            style={{ width: '100%' }}
+                        />
+                    );
+                }
         }
     };
 
@@ -37,16 +168,20 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
                 square
                 elevation={4}
             >
-                <Typography
-                    variant="h5"
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                    }}
-                    gutterBottom
-                >
-                    Info
-                </Typography>
+                <Tooltip title={timePeriod.toolTip}>
+                    <Typography
+                        variant="h5"
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                        }}
+                        gutterBottom
+                    >
+                        {timePeriod.name}
+                    </Typography>
+                </Tooltip>
+                {gamePeriodShower()}
+                {/* {timePeriod === 'Loading' && <LinearProgress style={{ width: ' 100%' }} />} */}
                 <Divider flexItem />
                 <div style={{ flexGrow: 1 }}></div>
                 {/* <Typography

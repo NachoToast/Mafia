@@ -217,7 +217,7 @@ export class Game {
                 isOwner = true;
                 this.logger?.log(GAME_EXT.NEW_GAME_OWNER(player.username));
             } else if (
-                !!this.gameOwner &&
+                this.gameOwner &&
                 player.username === this.gameOwner.username &&
                 player.ip === this.gameOwner.ip
             ) {
@@ -248,7 +248,7 @@ export class Game {
                         this.temporaryGameOwner.status,
                         this.temporaryGameOwner.number,
                         '',
-                        this.temporaryGameOwner.connected,
+                        true,
                         false,
                     );
                     this.temporaryGameOwner.isOwner = false;
@@ -263,6 +263,8 @@ export class Game {
             this.timePeriods[this.timePeriod],
             this.timeRemaining,
         );
+
+        player.connected = true;
     }
 
     private onJoin(connection: StageThreeConnection): void {
@@ -527,7 +529,8 @@ export class Game {
         if (!targetPlayer) {
             return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
                 player.socket,
-                `Player '${presTarget}' does not exist`,
+                `Player '${presTarget}
+                ' does not exist`,
             );
         }
 

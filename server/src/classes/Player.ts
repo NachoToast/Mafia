@@ -37,7 +37,7 @@ export default class Player {
     public bindSocket(socket: Socket) {
         this.socket = socket;
         this.ip = ConnectionSystem.getIPFromSocket(socket);
-        this.connected = true;
+        // this.connected = true;
         RECEIVED_PLAYER_EVENTS.CHAT_MESSAGE(socket, (message: string) => this.message(message));
     }
 

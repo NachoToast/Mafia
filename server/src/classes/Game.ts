@@ -1,7 +1,12 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import { GAME_EXT, SERVER_GENERAL } from '../constants/logging';
-import { PlayerStatuses, TimePeriods } from '../constants/mafia';
+import {
+    defaultTimePeriods,
+    PlayerStatuses,
+    TimePeriodLibrary,
+    TimePeriodNames,
+} from '../constants/mafia';
 import {
     ChatMessage,
     EMITTED_PLAYER_EVENTS,
@@ -46,7 +51,10 @@ export class Game {
     public temporaryGameOwner?: Player;
     public maxPlayers: number = defaultMaxPlayers;
 
-    private timePeriod: TimePeriods = TimePeriods.pregame;
+    private timePeriod: TimePeriodNames = 'pregame';
+    private timeRemaining: number = -1;
+    private timePeriods: TimePeriodLibrary = JSON.parse(JSON.stringify(defaultTimePeriods));
+
     private dayNumber: number = 0;
     public inProgress: boolean = false;
 
@@ -179,6 +187,7 @@ export class Game {
     private joinRejoinHandlers(player: Player, socket: Socket): void {
         player.bindSocket(socket);
 
+        // emitting all current players
         const usernameLower = player.username.toLowerCase();
         for (const playerName of Object.keys(this.players)) {
             if (playerName === usernameLower) continue;
@@ -194,12 +203,14 @@ export class Game {
             );
         }
 
+        // socket room joining
         if (player.status === PlayerStatuses.alive) {
             socket.join(ROOMS.alive);
         } else {
             socket.join(ROOMS.notAlive);
         }
 
+        // game ownership
         if (!this.gameOwner?.connected) {
             let isOwner = false;
             if (this.getNumPlayers() === 1 && !this.gameOwner) {
@@ -245,6 +256,13 @@ export class Game {
                 }
             }
         }
+
+        // time period
+        EMITTED_PLAYER_EVENTS.TIMEPERIOD_INFO(
+            player.socket,
+            this.timePeriods[this.timePeriod],
+            this.timeRemaining,
+        );
     }
 
     private onJoin(connection: StageThreeConnection): void {
@@ -318,7 +336,6 @@ export class Game {
 
     /** Called if a player who is marked as a game owner leaves them game. */
     private manageGameOwnerLeave(player: Player): any {
-        console.log('manage game owner leave');
         if (player.username === this.gameOwner?.username && player.ip === this.gameOwner.ip) {
             // primary game owner left, make a temporary game owner
 
@@ -528,7 +545,7 @@ export class Game {
             );
         }
 
-        if (this.timePeriod === TimePeriods.night) {
+        if (this.timePeriod === 'night') {
             return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
                 player.socket,
                 `You cannot whisper at night`,
@@ -556,5 +573,24 @@ export class Game {
         });
 
         this.logger?.log(`${player.username} whispers to ${targetPlayer.username}: ${message}`);
+    }
+
+    public start(player: Player): void {
+        if (!player.isOwner) {
+            return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
+                player.socket,
+                `You aren't the host`,
+            );
+        }
+        this.timePeriod = 'gameStarting';
+        this.timeRemaining = this.timePeriods[this.timePeriod].durationSeconds;
+        this.inProgress = true;
+        EMITTED_SERVER_EVENTS.SERVER_CHAT_MESSAGE(this.io, `Game started by ${player.username}`);
+        EMITTED_SERVER_EVENTS.TIMEPERIOD_INFO(
+            this.io,
+            this.timePeriods[this.timePeriod],
+            this.timeRemaining,
+        );
+        this.logger?.log(`Game started by ${player.username}`);
     }
 }

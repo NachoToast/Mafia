@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { SocketTokenPayload } from '../classes/ConnectionSystem';
-import { PlayerStatuses } from './mafia';
+import { PlayerStatuses, TimePeriod } from './mafia';
 
 /** Events captured by the game's global io instance, `io.on()`  */
 export const RECEIVED_SERVER_EVENTS = {
@@ -46,6 +46,9 @@ export const EMITTED_SERVER_EVENTS = {
         connected: boolean,
         isOwner: boolean,
     ) => io.emit('playerUpdate', username, status, number, extra, connected, isOwner),
+    TIMEPERIOD_INFO: (io: Server, timePeriod: TimePeriod, timeLeft: number) => {
+        io.emit('timePeriodUpdate', timePeriod, timeLeft);
+    },
 };
 
 /** Events emitted to the player-specific socket instance - `socket.emit()` */
@@ -75,6 +78,9 @@ export const EMITTED_PLAYER_EVENTS = {
             props: { hideAuthor: true, color: '#FFFF00' },
         };
         socket.emit('emittedChatMessage', messageBody);
+    },
+    TIMEPERIOD_INFO: (socket: Socket, timePeriod: TimePeriod, timeLeft: number) => {
+        socket.emit('timePeriodUpdate', timePeriod, timeLeft);
     },
 };
 

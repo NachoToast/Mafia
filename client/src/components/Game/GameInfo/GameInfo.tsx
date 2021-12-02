@@ -89,6 +89,7 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
 
     // decrementing time
     useEffect(() => {
+        console.log('pog pog pogu');
         const myInterval = setInterval(() => {
             if (timeRemaining > 0) {
                 setTimeRemaining(timeRemaining - 1 * (UPDATE_INTERVAL / 1000));
@@ -97,7 +98,7 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
         return () => {
             clearInterval(myInterval);
         };
-    });
+    }, [timeRemaining]);
 
     const calculateProgressBar = (): [number, string] => {
         const percent = Math.ceil((100 * timeRemaining) / timePeriod.maxDuration);
@@ -181,26 +182,8 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
                     </Typography>
                 </Tooltip>
                 {gamePeriodShower()}
-                {/* {timePeriod === 'Loading' && <LinearProgress style={{ width: ' 100%' }} />} */}
                 <Divider flexItem />
                 <div style={{ flexGrow: 1 }}></div>
-                {/* <Typography
-                    variant="h5"
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                    }}
-                >
-                    Game info
-                </Typography>
-                <Divider flexItem style={{ margin: '10px 0 5px 0' }} />
-                <Stack
-                    spacing={0.75}
-                    divider={<Divider flexItem />}
-                    style={{ overflowY: 'auto', maxHeight: '80%' }}
-                >
-                    pog pog pogu
-                </Stack> */}
                 <Stack direction="row" style={{ width: '100%' }}>
                     <Tooltip arrow title="Leave Game">
                         <Button

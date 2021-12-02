@@ -24,7 +24,10 @@ const ChatComposer = (props: ChatComposerProps) => {
     }
 
     return (
-        <Paper elevation={4} style={{ padding: '10px 20px' }}>
+        <Paper
+            elevation={4}
+            style={{ padding: '10px 20px', marginBottom: '2px', boxShadow: 'none' }}
+        >
             <form
                 onSubmit={sendMessage}
                 style={{

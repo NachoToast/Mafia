@@ -32,6 +32,7 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
                 display: 'flex',
                 flexFlow: 'column-reverse',
                 boxShadow: 'none',
+                paddingTop: '3px',
             }}
             elevation={24}
             square
@@ -47,7 +48,7 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
                     </Fade>
                 }
             >
-                <Divider flexItem />
+                <Divider flexItem style={{ visibility: 'hidden' }} />
                 {messages.map((e) => (
                     <ChatMessage key={e.key} message={e} />
                 ))}

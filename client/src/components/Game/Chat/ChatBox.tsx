@@ -1,15 +1,13 @@
-import { Paper, Button, TextField, Stack, Divider, Fade } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
-import React, { useState, useEffect, Dispatch, SetStateAction, FormEvent } from 'react';
+import { Paper, Stack, Divider, Fade } from '@mui/material';
+import { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { Socket } from 'socket.io-client';
 import ChatMessage, { ChatMessageInterface, ExtendedChatmessage } from './ChatMessage';
 import { v4 as uuid } from 'uuid';
+import ChatComposer from './ChatComposer';
 
 const ChatBox = ({ socket }: { socket: Socket }) => {
     const [messages, setMessages]: [ExtendedChatmessage[], Dispatch<SetStateAction<any>>] =
         useState([]);
-    const [messageToSend, setMessageToSend]: [string, Dispatch<SetStateAction<string>>] =
-        useState('');
 
     useEffect(() => {
         socket.on('emittedChatMessage', (message: ChatMessageInterface) => {
@@ -27,19 +25,6 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
         };
     });
 
-    function updateMessageToSend(event: FormEvent<HTMLInputElement>) {
-        const target = event.target as HTMLInputElement;
-        setMessageToSend(target.value);
-    }
-
-    function sendMessage(e: FormEvent<HTMLButtonElement | HTMLFormElement>) {
-        e.preventDefault();
-        if (messageToSend.trim().length > 0) {
-            socket.emit('chatMessage', messageToSend.slice(0, 128));
-            setMessageToSend('');
-        }
-    }
-
     return (
         <Paper
             style={{
@@ -51,30 +36,7 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
             elevation={24}
             square
         >
-            <Paper elevation={4} style={{ padding: '10px 20px' }}>
-                <form
-                    onSubmit={sendMessage}
-                    style={{
-                        width: '100%',
-                        // padding: '20px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                    }}
-                >
-                    <TextField
-                        style={{ flexGrow: 1 }}
-                        autoFocus
-                        onInput={updateMessageToSend}
-                        value={messageToSend}
-                        placeholder="Message"
-                        variant="standard"
-                    />
-                    <Button onClick={sendMessage}>
-                        <SendIcon />
-                    </Button>
-                    {/* <Button variant="contained" endIcon={<SendIcon />} onClick={sendMessage} /> */}
-                </form>
-            </Paper>
+            <ChatComposer sendMessage={(content) => socket.emit('chatMessage', content)} />
             <Stack
                 style={{ overflowY: 'auto', padding: '10px 0 0px 0' }}
                 spacing={0.75}

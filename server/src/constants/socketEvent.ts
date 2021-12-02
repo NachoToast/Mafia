@@ -79,8 +79,8 @@ export const EMITTED_PLAYER_EVENTS = {
         };
         socket.emit('emittedChatMessage', messageBody);
     },
-    TIMEPERIOD_INFO: (socket: Socket, timePeriod: TimePeriod, timeLeft: number) => {
-        socket.emit('timePeriodUpdate', timePeriod, timeLeft);
+    TIMEPERIOD_INFO: (socket: Socket, timePeriod: TimePeriod, timeLeft: number, day: number) => {
+        socket.emit('timePeriodUpdate', timePeriod, timeLeft, day);
     },
 };
 

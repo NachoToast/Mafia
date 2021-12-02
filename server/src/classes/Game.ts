@@ -262,6 +262,7 @@ export class Game {
             player.socket,
             this.timePeriods[this.timePeriod],
             this.timeRemaining,
+            this.dayNumber,
         );
 
         player.connected = true;

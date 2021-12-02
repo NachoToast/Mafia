@@ -11,6 +11,7 @@ interface TimePeriodAndDuration {
     name: string;
     toolTip: string;
     maxDuration: number;
+    day: number;
 }
 
 const UPDATE_INTERVAL = 300;
@@ -40,6 +41,7 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
                 name: 'Loading',
                 toolTip: 'Getting Data From Server',
                 maxDuration: -1,
+                day: -1,
             } as TimePeriodAndDuration);
 
             // setTimeout(() => {
@@ -47,6 +49,7 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
             //         name: 'Pre-Game',
             //         toolTip: 'Waiting for host to start lobby',
             //         maxDuration: 10,
+            //         day: -1,
             //     });
             //     setTimeRemaining(10);
             // }, 1000);
@@ -64,11 +67,13 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
                     durationSeconds: number;
                 },
                 timeLeft: number,
+                day: number,
             ) => {
                 setTimePeriod({
                     name,
                     toolTip: description,
                     maxDuration: timeLeft,
+                    day,
                 });
                 setTimeRemaining(durationSeconds);
             },
@@ -89,7 +94,6 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
 
     // decrementing time
     useEffect(() => {
-        console.log('pog pog pogu');
         const myInterval = setInterval(() => {
             if (timeRemaining > 0) {
                 setTimeRemaining(timeRemaining - 1 * (UPDATE_INTERVAL / 1000));
@@ -178,6 +182,7 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
                         }}
                         gutterBottom
                     >
+                        {timePeriod.day > 0 && `Day ${timePeriod.day} - `}
                         {timePeriod.name}
                     </Typography>
                 </Tooltip>

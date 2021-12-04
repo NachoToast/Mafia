@@ -7,7 +7,7 @@ export async function findGame(username: string, gameCode: string) {
         return { data, status };
     } catch (error) {
         console.log(error);
-        return { data: 'Failed to Connect to the Mafia Servers', status: 200 };
+        return { data: 'Failed to Connect to the Mafia Servers', status: 404 };
     }
 }
 

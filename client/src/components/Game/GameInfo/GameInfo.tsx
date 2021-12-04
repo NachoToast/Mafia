@@ -87,8 +87,8 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
         });
         return () => {
             socket.off('timePeriodUpdate');
-            // socket.off('connect');
-            // socket.off('disconnect');
+            socket.off('connect');
+            socket.off('disconnect');
         };
     }, [socket, timePeriod.name]);
 

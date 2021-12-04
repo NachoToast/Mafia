@@ -5,7 +5,6 @@ import { serverName, serverPort, serverEndpoint } from '../config/endPoints.json
 export interface FindGameRequestBody {
     gameCode: string;
     username: string;
-    token?: string;
 }
 
 const baseURL = `${serverEndpoint}:${serverPort}/${serverName}`;

@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getGameCode, getToken, getUsername, setSubtitle } from '../../redux/slices/basicInfoSlice';
 import {
-    clearGameData,
     getConnected,
     getWantsToLeave,
     getWasConnected,

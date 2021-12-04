@@ -34,17 +34,14 @@ const MenuScreen = () => {
         dispatch(setLoading(true));
 
         const { status, data } = await findGame(username, gameCode);
-        let remainLoading = false;
         switch (status) {
             case 200:
                 dispatch(setSubtitle({ subtitle: 'Joining Game', subtitleColour: 'aquamarine' }));
                 dispatch(setToken(data));
-                remainLoading = true;
-                break;
+                return;
             case 400:
             case 404:
             case 500:
-                console.log(data);
                 dispatch(setSubtitle({ subtitle: data, subtitleColour: 'lightcoral' }));
                 break;
             default:
@@ -52,13 +49,14 @@ const MenuScreen = () => {
                 dispatch(setSubtitle({ subtitle: `Received Unknown Response Code: ${status}` }));
                 break;
         }
-        if (!remainLoading) dispatch(setLoading(false));
+        dispatch(setLoading(false));
     }
 
     // remove expired token (only local storage, not state) on page load
     useEffect(() => {
         if (tokenExpired) {
             localStorage.removeItem(STORAGE.hadExpiredTokenKeyName);
+            dispatch(setToken(''));
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

@@ -232,6 +232,8 @@ export class ConnectionSystem {
             this.toStageThree,
         );
 
+        // socket.on('disconnect', () => this.removeConnection(stageTwo));
+
         this.stageTwoConnections[associatedStageOneConnection.username.toLowerCase()] = stageTwo;
     }
 
@@ -425,8 +427,16 @@ export class ConnectionSystem {
 
             if (connection instanceof StageTwoConnection) {
                 if (!isUpgrade) {
-                    this.logger?.log(CONNECTION_SYSTEM.TIMEOUT_NO_CREDENTIALS(connection));
-                    connection.socket.disconnect();
+                    if (connection.socket.connected) {
+                        this.logger?.log(CONNECTION_SYSTEM.TIMEOUT_NO_CREDENTIALS(connection));
+                        connection.socket.disconnect();
+                    } else {
+                        this.logger?.log(
+                            `${connection.username} ${connection.ip} disconnected socket after ${
+                                Date.now() - connection.stageTwoAt
+                            } ms`,
+                        );
+                    }
                 }
                 delete this.stageTwoConnections[username];
             } else {

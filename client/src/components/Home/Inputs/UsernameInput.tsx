@@ -14,19 +14,19 @@ const UsernameInput = () => {
         (state: StoreState) => state.basicInfo.joinScreenData.usernameLabel,
     );
 
-    function getColour() {
+    function getColour(): 'primary' | 'error' | 'success' {
         if (!username.length) return 'primary';
         if (usernameLabel) return 'error';
         return 'success';
     }
 
-    function onInput(e: FormEvent<HTMLDivElement>) {
-        e.preventDefault();
-        const { value } = e.target as HTMLInputElement;
+    function onInput(event: FormEvent<HTMLDivElement>): void {
+        event.preventDefault();
+        const { value } = event.target as HTMLInputElement;
         validateUsername(value);
     }
 
-    function validateUsername(username: string) {
+    function validateUsername(username: string): void {
         if (!username) {
             dispatch(setUsernameLabel(undefined));
         } else if (!usernameValidator.test(username)) {

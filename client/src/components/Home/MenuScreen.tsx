@@ -29,27 +29,18 @@ const MenuScreen = () => {
     const usernameValid = !!username.length && !usernameLabel;
     const gameCodeValid = !!gameCode.length && !gameCodeLabel;
 
-    async function joinGame(e: MouseEvent<Element> | KeyboardEvent): Promise<void> {
-        e.preventDefault();
+    async function joinGame(event: MouseEvent<Element> | KeyboardEvent): Promise<void> {
+        event.preventDefault();
         dispatch(setLoading(true));
 
         const { status, data } = await findGame(username, gameCode);
-        switch (status) {
-            case 200:
-                dispatch(setSubtitle({ subtitle: 'Joining Game', subtitleColour: 'aquamarine' }));
-                dispatch(setToken(data));
-                return;
-            case 400:
-            case 404:
-            case 500:
-                dispatch(setSubtitle({ subtitle: data, subtitleColour: 'lightcoral' }));
-                break;
-            default:
-                console.log(data);
-                dispatch(setSubtitle({ subtitle: `Received Unknown Response Code: ${status}` }));
-                break;
-        }
         dispatch(setLoading(false));
+        if (status === 200) {
+            dispatch(setSubtitle({ subtitle: undefined, subtitleColour: undefined }));
+            dispatch(setToken(data));
+        } else {
+            dispatch(setSubtitle({ subtitle: data, subtitleColour: 'lightcoral' }));
+        }
     }
 
     // remove expired token (only local storage, not state) on page load
@@ -61,13 +52,13 @@ const MenuScreen = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    useEffect(() => {
-        function onEnter(e: KeyboardEvent) {
-            if (e.key === 'Enter' && usernameValid && gameCodeValid) {
-                joinGame(e);
-            }
+    function onEnter(e: KeyboardEvent): void {
+        if (e.key === 'Enter' && usernameValid && gameCodeValid) {
+            joinGame(e);
         }
+    }
 
+    useEffect(() => {
         window.addEventListener('keydown', onEnter);
 
         return () => {

@@ -1,110 +1,65 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Box, Button, Divider, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import InfoIcon from '@mui/icons-material/Info';
-import { Socket } from 'socket.io-client';
 import { LinearProgress } from '@mui/material';
-import colourGradient from '../../../helpers/colourGradient';
-
-interface TimePeriodAndDuration {
-    name: string;
-    toolTip: string;
-    maxDuration: number;
-    day: number;
-}
+import colourGradient from '../../../utils/colourGradient';
+import mafiaSocket from '../../../utils/socket';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    getTimePeriod,
+    getTimeRemaining,
+    setTimePeriod,
+    setTimeRemaining,
+    setWantsToLeave,
+} from '../../../redux/slices/gameSlice';
+import TimePeriod from '../../../types/TimePeriod';
 
 const UPDATE_INTERVAL = 300;
 
-const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Function }) => {
-    const [timePeriod, setTimePeriod]: [
-        TimePeriodAndDuration,
-        Dispatch<SetStateAction<TimePeriodAndDuration>>,
-    ] = useState({
-        name: 'Connecting',
-        toolTip: 'Connecting to the Mafia Servers',
-        maxDuration: -1,
-    } as TimePeriodAndDuration);
-    const [timeRemaining, setTimeRemaining] = useState(-1);
+const GameInfo = () => {
+    const dispatch = useDispatch();
 
-    const confirmLeaveGame = () => {
-        const actuallyLeave = window.confirm('Do you really want to leave?');
-        if (actuallyLeave) {
-            socket.emit('intentionalDisconnect');
-            exitCallback();
-        }
-    };
+    const timePeriod = useSelector(getTimePeriod);
+    const timeRemaining = useSelector(getTimeRemaining);
+
+    function confirmLeaveGame(): void {
+        dispatch(setWantsToLeave(true));
+    }
+
+    function timePeriodHandler(timePeriod: TimePeriod): void {
+        dispatch(setTimePeriod(timePeriod));
+    }
+
+    function timeRemainingHandler(time: number): void {
+        dispatch(setTimeRemaining(time));
+    }
 
     useEffect(() => {
-        socket.on('connect', () => {
-            setTimePeriod({
-                name: 'Loading',
-                toolTip: 'Getting Data From Server',
-                maxDuration: -1,
-                day: -1,
-            } as TimePeriodAndDuration);
+        mafiaSocket.on('timePeriodUpdate', timePeriodHandler);
+        mafiaSocket.on('timeRemainingUpdate', timeRemainingHandler);
 
-            // setTimeout(() => {
-            //     setTimePeriod({
-            //         name: 'Pre-Game',
-            //         toolTip: 'Waiting for host to start lobby',
-            //         maxDuration: 10,
-            //         day: -1,
-            //     });
-            //     setTimeRemaining(10);
-            // }, 1000);
-        });
-        socket.on(
-            'timePeriodUpdate',
-            (
-                {
-                    name,
-                    description,
-                    durationSeconds,
-                }: {
-                    name: string;
-                    description: string;
-                    durationSeconds: number;
-                },
-                timeLeft: number,
-                day: number,
-            ) => {
-                setTimePeriod({
-                    name,
-                    toolTip: description,
-                    maxDuration: timeLeft,
-                    day,
-                });
-                setTimeRemaining(durationSeconds);
-            },
-        );
-        socket.on('disconnect', () => {
-            setTimePeriod({
-                name: `${timePeriod.name} (Disconnected)`,
-                toolTip: 'Disconnected From The Server',
-                maxDuration: -1,
-            } as TimePeriodAndDuration);
-        });
         return () => {
-            socket.off('timePeriodUpdate');
-            socket.off('connect');
-            socket.off('disconnect');
+            mafiaSocket.off('timePeriodUpdate', timePeriodHandler);
+            mafiaSocket.off('timeRemainingUpdate', timeRemainingHandler);
         };
-    }, [socket, timePeriod.name]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // decrementing time
     useEffect(() => {
-        const myInterval = setInterval(() => {
+        const decrementTimeInterval = setInterval(() => {
             if (timeRemaining > 0) {
-                setTimeRemaining(timeRemaining - 1 * (UPDATE_INTERVAL / 1000));
+                dispatch(setTimeRemaining(timeRemaining - 1 * (UPDATE_INTERVAL / 1000)));
             }
         }, UPDATE_INTERVAL);
         return () => {
-            clearInterval(myInterval);
+            clearInterval(decrementTimeInterval);
         };
-    }, [timeRemaining]);
+    }, [dispatch, timeRemaining]);
 
-    const calculateProgressBar = (): [number, string] => {
+    function calculateProgressBar(): [number, string] {
         const percent = Math.ceil((100 * timeRemaining) / timePeriod.maxDuration);
         const { red, green, blue } = colourGradient(
             0,
@@ -115,9 +70,9 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
             { red: 240, green: 128, blue: 128 },
         );
         return [Math.min(100 - percent, 100), `rgb(${red}, ${green}, ${blue})`];
-    };
+    }
 
-    const gamePeriodShower = (): JSX.Element => {
+    function gamePeriodShower(): JSX.Element {
         switch (timePeriod.name) {
             case 'Connecting':
                 return <LinearProgress style={{ width: '100%' }} />;
@@ -148,7 +103,7 @@ const GameInfo = ({ socket, exitCallback }: { socket: Socket; exitCallback: Func
                     );
                 }
         }
-    };
+    }
 
     return (
         <Paper

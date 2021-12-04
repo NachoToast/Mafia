@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import * as api from '../api';
 
 export async function findGame(username: string, gameCode: string) {
@@ -6,8 +7,11 @@ export async function findGame(username: string, gameCode: string) {
         const { data, status } = await api.findGameByCode(payload);
         return { data, status };
     } catch (error) {
-        console.log(error);
-        return { data: 'Failed to Connect to the Mafia Servers', status: 404 };
+        const axiosError = error as AxiosError;
+        return {
+            data: axiosError.response?.data || 'Unknown Error Occured',
+            status: axiosError.response?.status || 444,
+        };
     }
 }
 
@@ -17,7 +21,10 @@ export async function countGames() {
         if (status !== 200) console.log(`Got status code ${status} when getting game count`);
         return data;
     } catch (error) {
-        console.log(error);
-        return -1;
+        const axiosError = error as AxiosError;
+        return {
+            data: axiosError.response?.data || 'Unknown Error Occured',
+            status: axiosError.response?.status || 444,
+        };
     }
 }

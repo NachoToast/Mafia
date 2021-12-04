@@ -1,5 +1,5 @@
 import React from 'react';
-import { Player } from './PlayerList';
+import Player from '../../../types/Player';
 
 const PlayerCard = ({ player }: { player: Player }) => {
     const { username, connected } = player;

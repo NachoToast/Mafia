@@ -1,102 +1,85 @@
 import { Grid, Stack } from '@mui/material';
-import React, { Component } from 'react';
-import io, { Socket } from 'socket.io-client';
-import { STORAGE } from '../../constants/localStorageVariables';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { getGameCode, getToken, getUsername, setSubtitle } from '../../redux/slices/basicInfoSlice';
+import {
+    clearGameData,
+    getConnected,
+    getWantsToLeave,
+    getWasConnected,
+    setConnected,
+} from '../../redux/slices/gameSlice';
+import mafiaSocket from '../../utils/socket';
 import ChatBox from './Chat/ChatBox';
-import DisconnectedModal from './Modals/DisconnectedModal';
 import GameInfo from './GameInfo/GameInfo';
-import PlayerList from './PlayerList/PlayerList';
+import DisconnectedModal from './Modals/DisconnectedModal';
 import RoleCard from './RoleCard/RoleCard';
 import RoleList from './RoleList/RoleList';
+import PlayerList from './PlayerList/PlayerList';
+import LeaveGameModal from './Modals/LeaveGameModal';
 
-import { serverEndpoint, serverPort } from '../../config/endPoints.json';
+const Game = () => {
+    const dispatch = useDispatch();
 
-interface GameState {
-    connected: boolean;
-    authenticated: boolean;
-}
+    const gameCode = useSelector(getGameCode);
+    const username = useSelector(getUsername);
+    const token = useSelector(getToken);
 
-interface GameProps {
-    gameCode: string;
-    username: string;
-    token: string;
-    returnCallback: Function;
-}
+    const connected = useSelector(getConnected);
+    const wasConnected = useSelector(getWasConnected);
 
-class Game extends Component<GameProps> {
-    private returnCallback: Function;
+    const wantsToLeave = useSelector(getWantsToLeave);
 
-    public state: GameState = {
-        connected: false,
-        authenticated: true,
-    };
-
-    private socket: Socket;
-    private gameCode: string;
-    private username: string;
-    private token: string;
-
-    public constructor(props: GameProps) {
-        super(props);
-        this.returnCallback = props.returnCallback;
-        this.gameCode = props.gameCode || localStorage.getItem(STORAGE.gameCodeKeyName) || '';
-        this.username = props.username || localStorage.getItem(STORAGE.usernameKeyName) || '';
-        this.token = props.token || localStorage.getItem(STORAGE.tokenKeyName) || '';
-
-        this.socket = io(`${serverEndpoint}:${serverPort}`, {
-            path: `/${this.gameCode}`,
-            autoConnect: false,
-        });
+    function unregisteredHandler(): void {
+        dispatch(setSubtitle({ subtitle: 'Unauthenticated', subtitleColour: 'lightcoral' }));
     }
 
-    public componentDidMount() {
-        this.socket.on('connect', () => this.setState({ connected: true } as GameState));
-        this.socket.on('disconnect', () => {
-            this.setState({ connected: false } as GameState);
-        });
-
-        this.socket.on('unregistered', () => {
-            this.setState({ authenticated: false } as GameState);
-        });
-        this.socket.on('giveToken', () => {
-            this.socket.emit('heresToken', {
-                token: this.token,
-                gameCode: this.gameCode,
-                username: this.username,
-            });
-        });
-
-        this.socket.connect();
+    function connectedHandler(): void {
+        dispatch(setConnected(true));
     }
 
-    public render() {
-        // if (!this.state.authenticated) return <div>Not authenticated :P</div>;
-        return (
-            <>
-                {!this.state.connected && (
-                    <DisconnectedModal rerender={() => this.returnCallback()} />
-                )}
-                <Grid container>
-                    <Grid item xs={3}>
-                        <Stack style={{ height: '100vh' }}>
-                            <RoleCard />
-                            <RoleList />
-                            <GameInfo
-                                exitCallback={() => this.returnCallback()}
-                                socket={this.socket}
-                            />
-                        </Stack>
-                    </Grid>
-                    <Grid item xs={6} style={{ height: '100vh' }}>
-                        <ChatBox socket={this.socket} />
-                    </Grid>
-                    <Grid item xs={3}>
-                        <PlayerList socket={this.socket} />
-                    </Grid>
+    function disconnectedHandler(): void {
+        dispatch(setConnected(false));
+    }
+
+    useEffect(() => {
+        if (!mafiaSocket.connected) {
+            mafiaSocket.connect(gameCode, token, username);
+            mafiaSocket.on('connected', connectedHandler);
+            mafiaSocket.on('unregistered', unregisteredHandler);
+            mafiaSocket.on('disconnected', disconnectedHandler);
+        }
+
+        return () => {
+            mafiaSocket.off('disconnected', disconnectedHandler);
+            mafiaSocket.off('unregistered', unregisteredHandler);
+            mafiaSocket.off('connected', connectedHandler);
+            mafiaSocket.disconnect();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dispatch, gameCode, token, username]);
+
+    return (
+        <>
+            {wantsToLeave && <LeaveGameModal />}
+            {!connected && wasConnected && <DisconnectedModal />}
+            <Grid container>
+                <Grid item xs={3}>
+                    <Stack style={{ height: '100vh' }}>
+                        <RoleCard />
+                        <RoleList />
+                        <GameInfo />
+                    </Stack>
                 </Grid>
-            </>
-        );
-    }
-}
+                <Grid item xs={6} style={{ height: '100vh' }}>
+                    <ChatBox />
+                </Grid>
+                <Grid item xs={3}>
+                    <PlayerList />
+                </Grid>
+            </Grid>
+        </>
+    );
+};
 
 export default Game;

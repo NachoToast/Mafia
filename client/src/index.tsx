@@ -10,6 +10,7 @@ import App from './App';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import basicInfoSlice from './redux/slices/basicInfoSlice';
+import gameSlice from './redux/slices/gameSlice';
 
 const theme = createTheme({
     palette: {
@@ -27,6 +28,7 @@ const theme = createTheme({
 const store = configureStore({
     reducer: {
         basicInfo: basicInfoSlice,
+        game: gameSlice,
     },
 });
 

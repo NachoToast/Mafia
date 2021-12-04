@@ -14,19 +14,19 @@ const GameCodeInput = () => {
         (state: StoreState) => state.basicInfo.joinScreenData.gameCodeLabel,
     );
 
-    function getColour() {
+    function getColour(): 'primary' | 'error' | 'success' {
         if (!gameCode.length) return 'primary';
         if (gameCodeLabel) return 'error';
         return 'success';
     }
 
-    function onInput(e: FormEvent<HTMLDivElement>) {
-        e.preventDefault();
-        const { value } = e.target as HTMLInputElement;
+    function onInput(event: FormEvent<HTMLDivElement>): void {
+        event.preventDefault();
+        const { value } = event.target as HTMLInputElement;
         validateGameCode(value);
     }
 
-    function validateGameCode(gameCode: string) {
+    function validateGameCode(gameCode: string): void {
         if (!gameCode) {
             dispatch(setGameCodeLabel(undefined));
         } else if (!gameCodeValidator.test(gameCode)) {

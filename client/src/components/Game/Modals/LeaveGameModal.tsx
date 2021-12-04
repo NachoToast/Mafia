@@ -1,8 +1,10 @@
 import { Fade, Typography, Modal, Button } from '@mui/material';
 import { Box } from '@mui/system';
-import { useState } from 'react';
+import React from 'react';
 import { useDispatch } from 'react-redux';
-import { setSubtitle, setToken } from '../../../redux/slices/basicInfoSlice';
+import { setToken } from '../../../redux/slices/basicInfoSlice';
+import { clearGameData, setWantsToLeave } from '../../../redux/slices/gameSlice';
+import mafiaSocket from '../../../utils/socket';
 
 const style = {
     position: 'absolute' as 'absolute',
@@ -14,33 +16,30 @@ const style = {
     p: 4,
 };
 
-const DisconnectedModal = () => {
+const LeaveGameModal = () => {
     const dispatch = useDispatch();
 
-    const [open, setOpen] = useState(true);
+    function cancelLeave(): void {
+        dispatch(setWantsToLeave(false));
+    }
 
-    function handleClose(
-        action: 'exitToLobby' | 'justClose',
-        closeType: 'backdropClick' | 'escapeKeyDown' | 'buttonPress',
-    ): void {
-        if (closeType === 'backdropClick') return;
-        setOpen(false);
-        if (action === 'exitToLobby') {
-            dispatch(setSubtitle({ subtitle: undefined, subtitleColour: undefined }));
-            dispatch(setToken(''));
-        }
+    function confirmLeave(): void {
+        dispatch(setWantsToLeave(false));
+        dispatch(clearGameData(undefined));
+        mafiaSocket.disconnect(true);
+        dispatch(setToken(''));
     }
 
     return (
         <div>
             <Modal
-                open={open}
-                onClose={(_, type) => handleClose('justClose', type)}
+                open={true}
+                onClose={cancelLeave}
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
                 closeAfterTransition
             >
-                <Fade in={open}>
+                <Fade in>
                     <Box sx={style}>
                         <Typography
                             id="modal-modal-title"
@@ -48,10 +47,10 @@ const DisconnectedModal = () => {
                             component="h2"
                             textAlign="center"
                         >
-                            Disconnected
+                            Leaving Game
                         </Typography>
                         <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                            Lost Connection to the Mafia Servers
+                            Are you sure you want to leave?
                         </Typography>
                         <Box
                             sx={{ mt: 2, mb: -2 }}
@@ -62,20 +61,22 @@ const DisconnectedModal = () => {
                             }}
                         >
                             <Button
+                                color="error"
                                 onClick={(event) => {
                                     event.preventDefault();
-                                    handleClose('exitToLobby', 'buttonPress');
+                                    confirmLeave();
                                 }}
                             >
-                                Exit To Lobby
+                                Confirm
                             </Button>
                             <Button
                                 onClick={(event) => {
                                     event.preventDefault();
-                                    handleClose('justClose', 'buttonPress');
+                                    cancelLeave();
                                 }}
+                                color="success"
                             >
-                                Close
+                                Cancel
                             </Button>
                         </Box>
                     </Box>
@@ -85,4 +86,4 @@ const DisconnectedModal = () => {
     );
 };
 
-export default DisconnectedModal;
+export default LeaveGameModal;

@@ -527,10 +527,11 @@ export class Game {
     }
 
     public sendWhisper(player: Player, target: string, message: string, presTarget: string): void {
+        // so much middleware...
         if (player.status !== PlayerStatuses.alive) {
             return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
                 player.socket,
-                `You can only whisper to alive players`,
+                `Only alive players can whisper`,
             );
         }
 
@@ -541,6 +542,13 @@ export class Game {
                 player.socket,
                 `Player '${presTarget}
                 ' does not exist`,
+            );
+        }
+
+        if (targetPlayer.status !== PlayerStatuses.alive) {
+            return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
+                player.socket,
+                `You can only whisper to alive players`,
             );
         }
 

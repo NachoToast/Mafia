@@ -53,7 +53,7 @@ export class Game {
     public maxPlayers: number = defaultMaxPlayers;
 
     private timePeriod: TimePeriodNames = 'pregame';
-    private timeRemaining: number = -1;
+    private lastTimePeriodChange: number = Date.now();
     private timePeriods: TimePeriodLibrary = JSON.parse(JSON.stringify(defaultTimePeriods));
 
     private dayNumber: number = 0;
@@ -267,6 +267,12 @@ export class Game {
         );
 
         player.connected = true;
+    }
+
+    get timeRemaining() {
+        const totalDuration = this.timePeriods[this.timePeriod].durationSeconds * 1000;
+        const timeSinceStart = Date.now() - this.lastTimePeriodChange;
+        return Math.floor((totalDuration - timeSinceStart) / 1000);
     }
 
     private onJoin(connection: StageThreeConnection): void {
@@ -595,13 +601,13 @@ export class Game {
             );
         }
         this.timePeriod = 'gameStarting';
-        this.timeRemaining = this.timePeriods[this.timePeriod].durationSeconds;
+        this.lastTimePeriodChange = Date.now();
         this.inProgress = true;
         EMITTED_SERVER_EVENTS.SERVER_CHAT_MESSAGE(this.io, `Game started by ${player.username}`);
         EMITTED_SERVER_EVENTS.TIMEPERIOD_INFO(
             this.io,
             this.timePeriods[this.timePeriod],
-            this.timeRemaining,
+            this.timePeriods[this.timePeriod].durationSeconds,
         );
         this.logger?.log(`Game started by ${player.username}`);
     }

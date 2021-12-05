@@ -22,7 +22,7 @@ const API = axios.create({ baseURL });
 
 export const findGameByCode = async (
     payload: FindGameRequestBody,
-): Promise<{ data: string; status: Number }> => API.post('/gameFinder', payload);
+): Promise<{ data: string; status: number }> => API.post('/gameFinder', payload);
 
-export const countGames = async (): Promise<{ data: number; status: Number }> =>
+export const countGames = async (): Promise<{ data: number; status: number }> =>
     API.get('/gameCounter');

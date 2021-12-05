@@ -1,5 +1,12 @@
 import { MouseEvent, useEffect } from 'react';
-import { Fade, Container, Stack, Typography, LinearProgress } from '@mui/material';
+import {
+    Fade,
+    Container,
+    Stack,
+    Typography,
+    LinearProgress,
+    CircularProgress,
+} from '@mui/material';
 import { STORAGE } from '../../constants/localStorageVariables';
 import GameCodeInput from './Inputs/GameCodeInput';
 import CreateGameButton from './Buttons/CreateGameButton';
@@ -13,15 +20,23 @@ import {
     setLoading,
     setSubtitle,
     setToken,
+    getNumGames,
+    getConnectedToServers,
+    setConnectedToServers,
+    setNumGames,
 } from '../../redux/slices/basicInfoSlice';
-import CustomButtonBase from './Buttons/CustomButtonBase';
-import { findGame } from '../../actions';
+import JoinGameButton from './Buttons/CustomButtonBase';
+import { countGames, findGame } from '../../actions';
+
+const COUNT_INTERVAL = 1000;
 
 const MenuScreen = () => {
     const dispatch = useDispatch();
     const username = useSelector(getUsername);
     const tokenExpired = useSelector(getTokenExpired);
     const gameCode = useSelector(getGameCode);
+    const numGames = useSelector(getNumGames);
+    const connectedToServers = useSelector(getConnectedToServers);
 
     const { subtitle, subtitleColour, usernameLabel, gameCodeLabel, loading } =
         useSelector(getJoinScreenData);
@@ -34,12 +49,22 @@ const MenuScreen = () => {
         dispatch(setLoading(true));
 
         const { status, data } = await findGame(username, gameCode);
+
         dispatch(setLoading(false));
-        if (status === 200) {
-            dispatch(setSubtitle({ subtitle: undefined, subtitleColour: undefined }));
-            dispatch(setToken(data));
-        } else {
-            dispatch(setSubtitle({ subtitle: data, subtitleColour: 'lightcoral' }));
+
+        switch (status) {
+            case 200:
+                if (!connectedToServers) dispatch(setConnectedToServers(true));
+                dispatch(setSubtitle({ subtitle: undefined, subtitleColour: undefined }));
+                dispatch(setToken(data));
+                break;
+            case 404:
+                dispatch(setConnectedToServers(false));
+                break; // this can fall through but I can't seem to suppress the TS warning
+            default:
+                console.log(status, data);
+                dispatch(setSubtitle({ subtitle: data, subtitleColour: 'lightcoral' }));
+                break;
         }
     }
 
@@ -67,6 +92,40 @@ const MenuScreen = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [usernameValid, gameCodeValid]);
 
+    // game count getting
+    useEffect(() => {
+        const updateGameInterval = setInterval(async () => {
+            const { status, data } = await countGames();
+
+            switch (status) {
+                case 200:
+                    if (!connectedToServers) {
+                        dispatch(setConnectedToServers(true));
+                        if (subtitle === 'Failed to Connect to the Mafia Servers') {
+                            dispatch(
+                                setSubtitle({ subtitle: undefined, subtitleColour: undefined }),
+                            );
+                        }
+                    }
+                    dispatch(setNumGames(data as number));
+                    break;
+                case 404:
+                    dispatch(setConnectedToServers(false));
+                    break; // this can fall through but I can't seem to suppress the TS warning
+                default:
+                    console.log(status, data);
+                    dispatch(setNumGames(-1));
+                    dispatch(
+                        setSubtitle({ subtitle: data as string, subtitleColour: 'lightcoral' }),
+                    );
+                    break;
+            }
+        }, COUNT_INTERVAL);
+        return () => {
+            clearInterval(updateGameInterval);
+        };
+    }, [dispatch, connectedToServers, subtitle]);
+
     return (
         <Container>
             <Stack spacing={3} marginTop={5}>
@@ -86,10 +145,15 @@ const MenuScreen = () => {
                         <GameCodeInput />
                     </span>
                 </Fade>
-                <Fade in={usernameValid && gameCodeValid}>
+                <Fade in={usernameValid && gameCodeValid && connectedToServers}>
                     <Stack>
                         <Stack direction="row" justifyContent="space-between">
-                            <CustomButtonBase content={'Join Game'} onClick={joinGame} />
+                            <JoinGameButton content={'Join Game'} onClick={joinGame} />
+                            {numGames >= 0 && (
+                                <Typography alignSelf="center">
+                                    {numGames || 'No'} Active Game{numGames > 1 ? 's' : ''}
+                                </Typography>
+                            )}
                             <CreateGameButton />
                         </Stack>
                         <Fade in={loading}>

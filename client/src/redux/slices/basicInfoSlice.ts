@@ -13,12 +13,13 @@ export interface State {
     };
     joinScreenData: {
         subtitle?: string;
-        subtitleColour?: string;
+        subtitleColour?: SubTitleColour;
         loading: boolean;
         usernameLabel?: string;
         gameCodeLabel?: string;
     };
-    numGames?: number;
+    numGames: number;
+    connectedToServers: boolean;
 }
 
 export const initialState: State = {
@@ -29,6 +30,8 @@ export const initialState: State = {
         tokenExpired: !!localStorage.getItem(STORAGE.hadExpiredTokenKeyName),
     },
     joinScreenData: { loading: false },
+    numGames: -1,
+    connectedToServers: true,
 };
 
 const basicInfoSlice = createSlice({
@@ -66,6 +69,16 @@ const basicInfoSlice = createSlice({
             state.joinScreenData.subtitle = action.payload.subtitle;
             state.joinScreenData.subtitleColour = action.payload.subtitleColour;
         },
+        setNumGames(state, action: { type: string; payload: number }) {
+            state.numGames = action.payload;
+        },
+        setConnectedToServers(state, action: { type: string; payload: boolean }) {
+            state.connectedToServers = action.payload;
+            if (action.payload === false) {
+                state.joinScreenData.subtitle = `Failed to Connect to the Mafia Servers`;
+                state.joinScreenData.subtitleColour = 'lightcoral';
+            }
+        },
     },
 });
 
@@ -77,6 +90,8 @@ export const {
     setGameCodeLabel,
     setLoading,
     setSubtitle,
+    setNumGames,
+    setConnectedToServers,
 } = basicInfoSlice.actions;
 
 export default basicInfoSlice.reducer;
@@ -95,3 +110,8 @@ export const getTokenExpired = (state: StoreState): boolean =>
 
 export const getJoinScreenData = (state: StoreState): State['joinScreenData'] =>
     state.basicInfo.joinScreenData;
+
+export const getNumGames = (state: StoreState): number => state.basicInfo.numGames;
+
+export const getConnectedToServers = (state: StoreState): boolean =>
+    state.basicInfo.connectedToServers;

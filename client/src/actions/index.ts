@@ -1,7 +1,10 @@
 import { AxiosError } from 'axios';
 import * as api from '../api';
 
-export async function findGame(username: string, gameCode: string) {
+export async function findGame(
+    username: string,
+    gameCode: string,
+): Promise<{ data: string; status: number }> {
     try {
         const payload: api.FindGameRequestBody = { username, gameCode };
         const { data, status } = await api.findGameByCode(payload);
@@ -10,21 +13,19 @@ export async function findGame(username: string, gameCode: string) {
         const axiosError = error as AxiosError;
         return {
             data: axiosError.response?.data || 'Unknown Error Occured',
-            status: axiosError.response?.status || 444,
+            status: axiosError.response?.status || 404,
         };
     }
 }
 
-export async function countGames() {
+export async function countGames(): Promise<{ data: number | string; status: number }> {
     try {
-        const { data, status } = await api.countGames();
-        if (status !== 200) console.log(`Got status code ${status} when getting game count`);
-        return data;
+        return await api.countGames();
     } catch (error) {
         const axiosError = error as AxiosError;
         return {
             data: axiosError.response?.data || 'Unknown Error Occured',
-            status: axiosError.response?.status || 444,
+            status: axiosError.response?.status || 404,
         };
     }
 }

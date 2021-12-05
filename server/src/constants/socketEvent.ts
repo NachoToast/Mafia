@@ -57,6 +57,10 @@ export const EMITTED_PLAYER_EVENTS = {
         socket.emit('unregistered');
         socket.disconnect();
     },
+    REMOVED: (socket: Socket, reason?: string) => {
+        socket.emit('removed', reason);
+        socket.disconnect();
+    },
     GIVE_TOKEN: (socket: Socket) => socket.emit('giveToken'),
     // TODO: make PLAYER_HERE use playerUpdate instead of playerJoined
     PLAYER_HERE: (

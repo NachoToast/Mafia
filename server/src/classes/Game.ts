@@ -138,7 +138,8 @@ export class Game {
         this.connectionSystem = new ConnectionSystem(
             gameCode,
             (connection) => this.onJoin(connection),
-            (connection, intentional) => this.onLeave(connection, intentional),
+            (connection, intentional, doneByGame) =>
+                this.onLeave(connection, intentional, doneByGame),
             (connection) => this.onReconnect(connection),
             null,
             null,
@@ -384,6 +385,7 @@ export class Game {
     private onLeave(
         connection: StageThreeConnection,
         intentional: boolean,
+        doneByGame: boolean = false,
     ): {
         shouldRemove: boolean;
         removalReason?: string;
@@ -401,13 +403,16 @@ export class Game {
 
         const { number, status, username } = leavingPlayer;
 
-        EMITTED_SERVER_EVENTS.SERVER_CHAT_MESSAGE(
-            this.io,
-            GAME_EXT.LEFT_GAME(username),
-            this.inProgress && status === PlayerStatuses.spectator ? ROOMS.notAlive : undefined,
-        );
+        // if done by game we will only update the player list
+        if (!doneByGame) {
+            EMITTED_SERVER_EVENTS.SERVER_CHAT_MESSAGE(
+                this.io,
+                GAME_EXT.LEFT_GAME(username),
+                this.inProgress && status === PlayerStatuses.spectator ? ROOMS.notAlive : undefined,
+            );
+        }
 
-        if (this.inProgress && status !== PlayerStatuses.spectator) {
+        if (this.inProgress && status !== PlayerStatuses.spectator && !doneByGame) {
             this.logger?.log(GAME_EXT.LEFT_GAME(username));
         }
 
@@ -424,7 +429,8 @@ export class Game {
             removeBecauseNoReconnects ||
             removeBecauseSpectator ||
             removeBecauseNotStarted ||
-            intentional
+            intentional ||
+            doneByGame
         ) {
             EMITTED_SERVER_EVENTS.PLAYER_LEFT(this.io, username);
             this.takenNumbers.splice(this.takenNumbers.indexOf(number), 1);
@@ -619,5 +625,44 @@ export class Game {
             this.timePeriods[this.timePeriod].durationSeconds,
         );
         this.logger?.log(`Game started by ${player.username}`);
+        this.removeDisconnectedPlayers();
+    }
+
+    private removeDisconnectedPlayers(): void {
+        let disconnectedNumbers: number[] = [];
+        const usernames = Object.keys(this.players);
+        for (const name of usernames) {
+            if (!this.players[name].connected) {
+                disconnectedNumbers.push(this.players[name].number);
+                this.connectionSystem.disconnectPlayer(name, 'disconnected on game start');
+            }
+        }
+
+        disconnectedNumbers = disconnectedNumbers.sort((a, b) => a - b);
+
+        // make sure all the connected players have the lowest possible number
+        const remainingUsernames = Object.keys(this.players);
+        for (const name of remainingUsernames) {
+            const player = this.players[name];
+            if (player.number > disconnectedNumbers[0]) {
+                this.logger?.log(
+                    `Changing ${player.username}'s number from ${player.number} to ${disconnectedNumbers[0]}`,
+                );
+                disconnectedNumbers.push(player.number);
+                player.number = disconnectedNumbers[0];
+                disconnectedNumbers.splice(0, 1);
+                disconnectedNumbers.sort((a, b) => a - b);
+                const { username, status, number, isOwner } = player;
+                EMITTED_SERVER_EVENTS.PLAYER_UPDATE(
+                    this.io,
+                    username,
+                    status,
+                    number,
+                    '',
+                    true,
+                    isOwner,
+                );
+            }
+        }
     }
 }

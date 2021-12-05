@@ -16,6 +16,7 @@ type ConnectionFunction = (payload: StageThreeConnection) => any;
 export type LeaveFunction = (
     connection: StageThreeConnection,
     intentional: boolean,
+    doneByGame: boolean,
 ) => {
     shouldRemove: boolean;
     removalReason?: string;
@@ -257,7 +258,27 @@ export class ConnectionSystem {
         );
     }
 
-    public handleDisconnect(
+    /** Removes a player from the game, optionally with a reason specified.
+     * @returns Whether or not the removal was successful
+     */
+    public disconnectPlayer(username: string, reason?: string): boolean {
+        const connection: StageThreeConnection | undefined = this.stageThreeConnections[username];
+        if (!connection) {
+            this.logger?.log(`Failed to find player '${username}' to remove`);
+            return false;
+        }
+        EMITTED_PLAYER_EVENTS.REMOVED(connection.socket, reason);
+        this.logger?.log(
+            `Removed ${connection.username} (${connection.ip}) ${
+                reason ? `with reason: ${reason}` : `with no reason specified`
+            }`,
+        );
+        this.removeConnection(connection);
+        this.onLeave(connection, true, true);
+        return true;
+    }
+
+    private handleDisconnect(
         connection: StageThreeConnection,
         reason: string,
         intentional: boolean = false,
@@ -266,7 +287,7 @@ export class ConnectionSystem {
         connection.connected = false;
         this.logger?.log(CONNECTION_SYSTEM.DISCONNECTED(connection, reason));
         const { shouldRemove, removalReason }: { shouldRemove: boolean; removalReason?: string } =
-            this.onLeave(connection, intentional);
+            this.onLeave(connection, intentional, false);
         if (shouldRemove) {
             this.logger?.log(
                 CONNECTION_SYSTEM.HARD_DISCONNECT(

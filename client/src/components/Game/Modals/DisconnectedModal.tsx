@@ -3,6 +3,7 @@ import { Box } from '@mui/system';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setSubtitle, setToken } from '../../../redux/slices/basicInfoSlice';
+import { clearGameData } from '../../../redux/slices/gameSlice';
 
 const style = {
     position: 'absolute' as 'absolute',
@@ -27,6 +28,7 @@ const DisconnectedModal = () => {
         setOpen(false);
         if (action === 'exitToLobby') {
             dispatch(setSubtitle({ subtitle: undefined, subtitleColour: undefined }));
+            dispatch(clearGameData(undefined));
             dispatch(setToken(''));
         }
     }

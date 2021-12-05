@@ -511,6 +511,21 @@ export class Game {
         EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, constructedMessage);
     }
 
+    /** Figures out whether a command is referencing a player by number or by username. */
+    private decipherTarget(target: string): Player | null {
+        if (Number.isInteger(Number(target))) {
+            const numberToLookFor = parseInt(target);
+            const foundPlayerName = Object.keys(this.players).find(
+                (username) => this.players[username].number === numberToLookFor,
+            );
+            if (!foundPlayerName) return null;
+            return this.players[foundPlayerName];
+        }
+        const foundPlayer: Player | undefined = this.players[target];
+        if (!foundPlayer) return null;
+        return foundPlayer;
+    }
+
     public sendWhisper(player: Player, target: string, message: string, presTarget: string): void {
         if (player.status !== PlayerStatuses.alive) {
             return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
@@ -518,22 +533,8 @@ export class Game {
                 `You can only whisper to alive players`,
             );
         }
-        let targetPlayer: Player | undefined;
-        if (Number.isInteger(Number(target))) {
-            const numberToLookFor = parseInt(target);
-            const foundPlayerName = Object.keys(this.players).find(
-                (username) => this.players[username].number === numberToLookFor,
-            );
-            if (!foundPlayerName) {
-                return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
-                    player.socket,
-                    `Player number ${numberToLookFor} does not exist`,
-                );
-            }
-            targetPlayer = this.players[foundPlayerName];
-        } else {
-            targetPlayer = this.players[target];
-        }
+
+        const targetPlayer = this.decipherTarget(target);
 
         if (!targetPlayer) {
             return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(

@@ -1,12 +1,5 @@
 import { MouseEvent, useEffect } from 'react';
-import {
-    Fade,
-    Container,
-    Stack,
-    Typography,
-    LinearProgress,
-    CircularProgress,
-} from '@mui/material';
+import { Fade, Container, Stack, Typography, LinearProgress } from '@mui/material';
 import { STORAGE } from '../../constants/localStorageVariables';
 import GameCodeInput from './Inputs/GameCodeInput';
 import CreateGameButton from './Buttons/CreateGameButton';

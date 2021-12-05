@@ -1,6 +1,5 @@
 import { Fade, Typography, Modal, Button } from '@mui/material';
 import { Box } from '@mui/system';
-import React from 'react';
 import { useDispatch } from 'react-redux';
 import { setToken } from '../../../redux/slices/basicInfoSlice';
 import { clearGameData, setWantsToLeave } from '../../../redux/slices/gameSlice';

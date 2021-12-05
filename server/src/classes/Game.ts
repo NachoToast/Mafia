@@ -11,6 +11,7 @@ import {
     ChatMessage,
     EMITTED_PLAYER_EVENTS,
     EMITTED_SERVER_EVENTS,
+    MessageProps,
     RECEIVED_SERVER_EVENTS,
     ROOMS,
 } from '../constants/socketEvent';
@@ -488,18 +489,19 @@ export class Game {
     }
 
     public sendChatMessage(player: Player, message: string) {
-        let room: ROOMS | undefined;
-        if (this.inProgress) {
-            room = player.status === PlayerStatuses.alive ? ROOMS.alive : ROOMS.notAlive;
-
-            this.logger?.log(`<${player.username}> (to ${room}) ${message}`);
-        }
-
-        const constructedMessage: ChatMessage = {
+        let constructedMessage: ChatMessage = {
             author: player.username,
             content: message,
-            to: room,
         };
+        if (this.inProgress && player.status !== PlayerStatuses.alive) {
+            constructedMessage.props = { color: 'gray' };
+            constructedMessage.to = ROOMS.notAlive;
+        }
+
+        this.logger?.log(
+            `<${player.username}> (to ${constructedMessage?.to || 'everyone'}) ${message}`,
+        );
+
         EMITTED_SERVER_EVENTS.CHAT_MESSAGE(this.io, constructedMessage);
     }
 
@@ -584,6 +586,12 @@ export class Game {
             return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
                 player.socket,
                 `You aren't the host`,
+            );
+        }
+        if (this.inProgress) {
+            return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
+                player.socket,
+                `Game is already starting`,
             );
         }
         this.timePeriod = 'gameStarting';

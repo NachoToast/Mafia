@@ -8,12 +8,12 @@ export enum PlayerStatuses {
 export type TimePeriodNames =
     | 'pregame'
     | 'gameStarting'
+    | 'dayEnd'
     | 'night'
     | 'morningReport'
     | 'discussion'
     | 'voting'
-    | 'trial'
-    | 'dayEnd';
+    | 'trial';
 
 export type TimePeriod = {
     name: string;

@@ -1,23 +1,25 @@
 import React, { useMemo } from 'react';
-import { Player } from './PlayerList';
 import { Fade, Tooltip } from '@mui/material';
 
 import DisconnectedIcon from '@mui/icons-material/SignalCellularConnectedNoInternet1Bar';
 import OwnerIcon from '@mui/icons-material/Create';
+import Player from '../../../types/Player';
 
 const PlayerLine = ({ player }: { player: Player }) => {
+    const { connected, isOwner, number, extra, username } = player;
+
     const tooltipText = useMemo(() => {
         switch (true) {
-            case player.connected && player.isOwner:
+            case connected && isOwner:
                 return `Owner`;
-            case !player.connected && !player.isOwner:
+            case !connected && !isOwner:
                 return `Disconnected`;
-            case !player.connected && player.isOwner:
+            case !connected && isOwner:
                 return `Owner (Disconnected)`;
             default:
                 return ``;
         }
-    }, [player.connected, player.isOwner]);
+    }, [connected, isOwner]);
 
     return (
         <Fade in>
@@ -28,8 +30,8 @@ const PlayerLine = ({ player }: { player: Player }) => {
                         display: 'flex',
                     }}
                 >
-                    {player.number}.&nbsp;
-                    {!player.connected ? (
+                    {number}.&nbsp;
+                    {!connected ? (
                         <DisconnectedIcon
                             style={{
                                 paddingRight: '3px',
@@ -37,13 +39,13 @@ const PlayerLine = ({ player }: { player: Player }) => {
                             }}
                         />
                     ) : (
-                        player.isOwner && (
+                        isOwner && (
                             <OwnerIcon style={{ paddingRight: '3px', paddingBottom: '5px' }} />
                         )
                     )}
-                    {player.username}
-                    {player.extra && ` (${player.extra})`}
-                    {/* {player.connected && DisconnectedExtraText} */}
+                    {username}
+                    {extra && ` (${extra})`}
+                    {/* {connected && DisconnectedExtraText} */}
                 </div>
             </Tooltip>
         </Fade>

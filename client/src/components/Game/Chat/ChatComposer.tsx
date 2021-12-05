@@ -1,24 +1,21 @@
 import { Paper, TextField, Button } from '@mui/material';
-import React, { Dispatch, FormEvent, SetStateAction, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import SendIcon from '@mui/icons-material/Send';
+import mafiaSocket from '../../../utils/socket';
 
-export interface ChatComposerProps {
-    sendMessage: (content: string) => void;
-}
+const ChatComposer = () => {
+    const [messageToSend, setMessageToSend] = useState('');
 
-const ChatComposer = (props: ChatComposerProps) => {
-    const [messageToSend, setMessageToSend]: [string, Dispatch<SetStateAction<string>>] =
-        useState('');
-
-    function updateMessageToSend(event: FormEvent<HTMLInputElement>) {
+    function updateMessageToSend(event: FormEvent<HTMLInputElement>): void {
+        event.preventDefault();
         const target = event.target as HTMLInputElement;
         setMessageToSend(target.value);
     }
 
-    function sendMessage(event: FormEvent<HTMLButtonElement | HTMLFormElement>) {
+    function sendMessage(event: FormEvent<HTMLButtonElement | HTMLFormElement>): void {
         event.preventDefault();
         if (messageToSend.trim().length > 0) {
-            props.sendMessage(messageToSend.slice(0, 128));
+            mafiaSocket.sendChatMessage(messageToSend.slice(0, 128));
             setMessageToSend('');
         }
     }

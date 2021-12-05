@@ -1,29 +1,28 @@
 import { Paper, Stack, Divider, Fade } from '@mui/material';
-import { useState, useEffect, Dispatch, SetStateAction } from 'react';
-import { Socket } from 'socket.io-client';
-import ChatMessage, { ChatMessageInterface, ExtendedChatmessage } from './ChatMessage';
-import { v4 as uuid } from 'uuid';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { addChatMessage, getChatMessages } from '../../../redux/slices/gameSlice';
+import ChatMessageInterface from '../../../types/ChatMessage';
+import mafiaSocket from '../../../utils/socket';
 import ChatComposer from './ChatComposer';
+import ChatMessage from './ChatMessage';
 
-const ChatBox = ({ socket }: { socket: Socket }) => {
-    const [messages, setMessages]: [ExtendedChatmessage[], Dispatch<SetStateAction<any>>] =
-        useState([]);
+const ChatBox = () => {
+    const dispatch = useDispatch();
+    const messages = useSelector(getChatMessages);
+
+    function newMessageHandler(message: ChatMessageInterface): void {
+        dispatch(addChatMessage(message));
+    }
 
     useEffect(() => {
-        socket.on('emittedChatMessage', (message: ChatMessageInterface) => {
-            const newMessage: ExtendedChatmessage = {
-                author: message.author,
-                content: message.content,
-                props: message.props,
-                key: uuid(),
-            };
+        mafiaSocket.on('chatMessage', newMessageHandler);
 
-            setMessages([newMessage, ...messages.slice(0, 99)]);
-        });
         return () => {
-            socket.off('emittedChatMessage');
+            mafiaSocket.off('chatMessage', newMessageHandler);
         };
-    });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <Paper
@@ -37,7 +36,7 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
             elevation={24}
             square
         >
-            <ChatComposer sendMessage={(content) => socket.emit('chatMessage', content)} />
+            <ChatComposer />
             <Stack
                 style={{ overflowY: 'auto', padding: '10px 0 0px 0' }}
                 spacing={0.75}
@@ -50,7 +49,7 @@ const ChatBox = ({ socket }: { socket: Socket }) => {
             >
                 <Divider flexItem style={{ visibility: 'hidden' }} />
                 {messages.map((e) => (
-                    <ChatMessage key={e.key} message={e} />
+                    <ChatMessage key={e.id} message={e} />
                 ))}
             </Stack>
         </Paper>

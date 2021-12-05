@@ -1,27 +1,13 @@
 import React from 'react';
 import { Fade, Typography } from '@mui/material';
+import ChatMessageInterface from '../../../types/ChatMessage';
 
-export interface MessageProps {
-    color?: string;
-    hideAuthor?: boolean;
-}
-
-export interface ChatMessageInterface {
-    author: string; // player username or 'Server'
-    content: string;
-    props?: MessageProps;
-}
-
-export interface ExtendedChatmessage extends ChatMessageInterface {
-    key: string;
-}
-
-const ChatMessage = ({ message }: { message: ExtendedChatmessage }) => {
+const ChatMessage = ({ message }: { message: ChatMessageInterface }) => {
     return (
-        <Fade in={true} style={{ alignSelf: 'center' }}>
+        <Fade in style={{ alignSelf: 'center' }}>
             <Typography
                 variant="body1"
-                color={message.props?.color || 'white'}
+                color={message.props?.color}
                 style={{ wordWrap: 'break-word' }}
                 width="95%"
             >

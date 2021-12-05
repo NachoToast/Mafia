@@ -1,108 +1,59 @@
 import { Stack, Paper, Divider, Typography } from '@mui/material';
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { Socket } from 'socket.io-client';
+import { useEffect } from 'react';
 import PlayerLine from './PlayerLine';
 
 import AliveIcon from '@mui/icons-material/Person';
 import DeadIcon from '@mui/icons-material/AirlineSeatFlat';
 import SpectatorIcon from '@mui/icons-material/RemoveRedEye';
-import { STORAGE } from '../../../constants/localStorageVariables';
 import PlayerCard from './PlayerCard';
-// import DisconnectedIcon from '@mui/icons-material/DeviceUnknown';
+import { useDispatch, useSelector } from 'react-redux';
+import { addOrUpdatePlayer, getPlayers, removePlayer } from '../../../redux/slices/gameSlice';
+import { getUsername } from '../../../redux/slices/basicInfoSlice';
+import mafiaSocket from '../../../utils/socket';
+import Player, { PlayerStatuses } from '../../../types/Player';
 
-export enum PlayerStatuses {
-    spectator,
-    alive,
-    dead,
-}
-export interface Player {
-    username: string;
-    number: number;
-    status: PlayerStatuses;
-    extra?: string;
-    connected: boolean;
-    isOwner: boolean;
-}
+const PlayerList = () => {
+    const dispatch = useDispatch();
 
-const PlayerList = ({ socket }: { socket: Socket }) => {
-    const [playerList, setPlayerList]: [Player[], Dispatch<SetStateAction<any>>] = useState([]);
+    const playerList = useSelector(getPlayers);
+    const myUsername = useSelector(getUsername);
 
-    const myUsername = localStorage.getItem(STORAGE.usernameKeyName) as string;
+    function playerUpdateHandler(player: Player): void {
+        if (player.username === myUsername) {
+            player.extra = 'You';
+        }
+        dispatch(addOrUpdatePlayer(player));
+    }
+
+    function playerLeftHandler(username: string): void {
+        dispatch(removePlayer(username));
+    }
 
     useEffect(() => {
-        socket.on('playerLeft', (username: string) => {
-            const foundPlayer = playerList.find((player) => player.username === username);
-            if (!!foundPlayer) {
-                playerList.splice(playerList.indexOf(foundPlayer), 1);
-                setPlayerList([...playerList]);
-            }
-        });
+        mafiaSocket.on('playerUpdate', playerUpdateHandler);
 
-        socket.on(
-            'playerUpdate',
-            (
-                username: string,
-                status: PlayerStatuses,
-                number: number,
-                extra: string,
-                connected,
-                isOwner,
-            ) => {
-                const existingPlayer = playerList.find((player) => player.username === username);
-
-                if (!!existingPlayer) {
-                    existingPlayer.status = status;
-                    existingPlayer.extra = extra || existingPlayer.extra;
-                    existingPlayer.connected = connected;
-                    existingPlayer.isOwner = isOwner;
-                    setPlayerList([...playerList]);
-                } else {
-                    const newPlayer: Player = {
-                        username,
-                        status,
-                        extra,
-                        connected,
-                        number,
-                        isOwner,
-                    };
-                    if (username === myUsername) newPlayer.extra = 'You';
-                    setPlayerList([...playerList, newPlayer]);
-                }
-
-                // fake player population for testing purposes
-                // const newPlayers: Player[] = new Array(99).fill(0).map((e, i) => {
-                //     return {
-                //         username: `player ${++i}`,
-                //         number: ++i,
-                //         status:
-                //             i < 20
-                //                 ? PlayerStatuses.alive
-                //                 : i > 40
-                //                 ? PlayerStatuses.spectator
-                //                 : PlayerStatuses.dead,
-                //         connected: Math.random() < 0.5,
-                //         isOwner: false,
-                //     };
-                // });
-                // setPlayerList([...playerList, ...newPlayers]);
-            },
-        );
+        mafiaSocket.on('playerLeft', playerLeftHandler);
 
         return () => {
-            socket.off('playerLeft');
-            socket.off('playerUpdate');
+            mafiaSocket.off('playerUpdate', playerUpdateHandler);
+            mafiaSocket.off('playerLeft', playerLeftHandler);
         };
-    });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-    const alivePlayers = playerList
-        .filter(({ status }) => status === PlayerStatuses.alive)
-        .sort((a, b) => a.number - b.number);
+    function sortByPlayerNumber(username1: string, username2: string) {
+        return playerList[username1].number - playerList[username2].number;
+    }
 
-    const deadPlayers = playerList
-        .filter(({ status }) => status === PlayerStatuses.dead)
-        .sort((a, b) => (a.number = b.number));
-
-    const spectators = playerList.filter(({ status }) => status === PlayerStatuses.spectator);
+    const alivePlayers = Object.keys(playerList)
+        .filter((username) => playerList[username].status === PlayerStatuses.alive)
+        .sort(sortByPlayerNumber);
+    const deadPlayers = Object.keys(playerList)
+        .filter((username) => playerList[username].status === PlayerStatuses.dead)
+        .sort(sortByPlayerNumber);
+    const spectators = Object.keys(playerList)
+        .filter((username) => playerList[username].status === PlayerStatuses.spectator)
+        .sort(sortByPlayerNumber);
 
     return (
         <Paper elevation={24} square style={{ boxShadow: 'none' }}>
@@ -140,8 +91,8 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                         divider={<Divider flexItem />}
                         style={{ overflowY: 'auto', maxHeight: '80%' }}
                     >
-                        {alivePlayers.map((e) => (
-                            <PlayerLine key={e.username} player={e} />
+                        {alivePlayers.map((username) => (
+                            <PlayerLine key={username} player={playerList[username]} />
                         ))}
                     </Stack>
                 </Paper>
@@ -164,8 +115,8 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                         divider={<Divider flexItem />}
                         style={{ overflowY: 'auto', maxHeight: '80%' }}
                     >
-                        {deadPlayers.map((e) => (
-                            <PlayerLine key={e.username} player={e} />
+                        {deadPlayers.map((username) => (
+                            <PlayerLine key={username} player={playerList[username]} />
                         ))}
                     </Stack>
                 </Paper>
@@ -191,8 +142,8 @@ const PlayerList = ({ socket }: { socket: Socket }) => {
                             maxHeight: '80%',
                         }}
                     >
-                        {spectators.map((e, i) => (
-                            <PlayerCard player={e} key={e.username} />
+                        {spectators.map((username) => (
+                            <PlayerCard key={username} player={playerList[username]} />
                         ))}
                     </div>
                 </Paper>

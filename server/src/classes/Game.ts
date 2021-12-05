@@ -273,7 +273,7 @@ export class Game {
     get timeRemaining() {
         const totalDuration = this.timePeriods[this.timePeriod].durationSeconds * 1000;
         const timeSinceStart = Date.now() - this.lastTimePeriodChange;
-        return Math.floor((totalDuration - timeSinceStart) / 1000);
+        return Math.max(Math.floor((totalDuration - timeSinceStart) / 1000), 0);
     }
 
     private onJoin(connection: StageThreeConnection): void {
@@ -546,8 +546,7 @@ export class Game {
         if (!targetPlayer) {
             return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
                 player.socket,
-                `Player '${presTarget}
-                ' does not exist`,
+                `That player does not exist`,
             );
         }
 

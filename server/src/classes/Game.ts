@@ -25,7 +25,7 @@ import {
 } from '../config/defaultConfig';
 import { connectionOverrides, loggingOverrides, maxPlayerOverride } from '../config/overrideConfig';
 import { ConnectionSettings, LoggingSettings } from '../types/settings';
-import { StringIndexed } from '../types/miscTypes';
+import { StringIndexed } from '../types/Misc';
 
 export interface GameCreator {
     ip: string;

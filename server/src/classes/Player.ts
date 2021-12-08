@@ -5,9 +5,11 @@ import {
     EMITTED_SERVER_EVENTS,
     RECEIVED_PLAYER_EVENTS,
 } from '../constants/socketEvent';
+import { DayActionObject, NightActionObject } from '../types/ActionTypes';
+import PlayerState from '../types/PlayerState';
+import BaseRole from '../types/RoleTypes';
 import { ConnectionSystem } from './ConnectionSystem';
 import { Game } from './Game';
-
 export default class Player {
     private readonly parentGame: Game;
     public socket: Socket;
@@ -17,7 +19,14 @@ export default class Player {
     public connected: boolean = true;
     public status: PlayerStatuses;
 
+    public state: PlayerState = {};
+
     public isOwner: boolean = false;
+
+    public dayActionQueue: DayActionObject[] = [];
+    public nightActionQueue: NightActionObject[] = [];
+
+    public role: BaseRole;
 
     public constructor(
         game: Game,

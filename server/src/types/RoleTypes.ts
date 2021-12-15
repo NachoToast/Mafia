@@ -1,7 +1,6 @@
 // not sure if we want to do ToS alignments or make our own up
 
 import Player from '../classes/Player';
-import { DayAction, NightAction } from './ActionTypes';
 
 // export type TownAlignment = 'investigative' | 'protective' | 'killing' | 'support'
 // export type MafiaAlignment = 'deception' | 'killing' | 'support'
@@ -48,17 +47,12 @@ export enum AttackPowerLevels {
 export default interface BaseRole {
     name: string;
     description: string;
-    primaryAlignment: PrimaryAlignments | null;
-
+    primaryAlignment: PrimaryAlignments;
     defencePower: DefencePowerLevels;
     attackPower: AttackPowerLevels;
-
-    nightActionType?: NightAction;
-    dayActionType?: DayAction;
-
     priority: RolePriorities;
 
-    /** @default string colour associated with primary alignment */
+    /** @default string `Primary Alignment Colour` */
     color?: string;
 
     /** @default number 1 */
@@ -72,11 +66,14 @@ export default interface BaseRole {
 
     /** @default boolean false */
     immuneToRoleblocks?: boolean;
+
+    nightAction?: (playerA: Player, playerB: Player) => void;
+    dayAction?: (playerA: Player, playerB: Player) => void;
 }
 
 export enum RolePriorities {
-    jail,
-    pool,
+    /** e.g. Jail, pool; actions that keep a player there for the whole night. */
+    abduct,
     transport,
     roleblock,
     other,
@@ -84,22 +81,3 @@ export enum RolePriorities {
     doctor,
     armoured,
 }
-
-/* 
-action precedence
-
-
-jailed
-pooled
-
-transported
-roleblocked
-
-
-anything
-
-bodyguards
-doctor
-armourer
-
-*/

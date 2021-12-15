@@ -26,7 +26,7 @@ import {
 import { connectionOverrides, loggingOverrides, maxPlayerOverride } from '../config/overrideConfig';
 import { ConnectionSettings, LoggingSettings } from '../types/settings';
 import { StringIndexed } from '../types/Misc';
-import { DayActionObject } from '../types/ActionTypes';
+import { ActionObject } from '../types/ActionTypes';
 
 export interface GameCreator {
     ip: string;
@@ -72,13 +72,8 @@ export class Game {
     /** For filling-in skipped player number slots. Ordered by when the player joined. */
     private takenNumbers: number[] = [];
 
-    /** Day action result messages, e.g. "you've hauled your target off to jail", shown at start of night */
-    private dayEndMessageQueue: { message: ChatMessage; target: Player }[] = [];
-
-    /** Night action result messages, e.g. "your target was attacked last night", shown at end of night */
-    private nightEndMessageQueue: { message: ChatMessage; target: Player }[] = [];
-
-    private queuedDayActions: { [username: string]: DayActionObject } = {};
+    private queuedDayActions: { [username: string]: ActionObject } = {};
+    private queuedNightActions: { [username: string]: ActionObject } = {};
 
     public readonly connectionSettings: ConnectionSettings = JSON.parse(
         JSON.stringify(defaultConnectionSettings),
@@ -674,9 +669,14 @@ export class Game {
             }
         }
     }
+
     private processDayEvents() {
-        const orderedEvents = Object.keys(this.players).sort((a, b) => this.players[a]);
+        // const orderedEvents = Object.keys(this.players).sort((a, b) => this.players[a]);
 
         this.queuedDayActions = {};
+    }
+
+    private processNightEvents() {
+        this.queuedNightActions = {};
     }
 }

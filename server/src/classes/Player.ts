@@ -1,11 +1,6 @@
 import { Socket } from 'socket.io';
 import { PlayerStatuses } from '../constants/mafia';
-import {
-    EMITTED_PLAYER_EVENTS,
-    EMITTED_SERVER_EVENTS,
-    RECEIVED_PLAYER_EVENTS,
-} from '../constants/socketEvent';
-import { DayActionObject, NightActionObject } from '../types/ActionTypes';
+import { EMITTED_PLAYER_EVENTS, RECEIVED_PLAYER_EVENTS } from '../constants/socketEvent';
 import PlayerState from '../types/PlayerState';
 import BaseRole from '../types/RoleTypes';
 import { ConnectionSystem } from './ConnectionSystem';
@@ -23,10 +18,7 @@ export default class Player {
 
     public isOwner: boolean = false;
 
-    public dayActionQueue: DayActionObject[] = [];
-    public nightActionQueue: NightActionObject[] = [];
-
-    public role: BaseRole;
+    public role: BaseRole | null = null;
 
     public constructor(
         game: Game,

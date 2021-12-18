@@ -60,6 +60,7 @@ const gameSlice = createSlice({
         clearGameData(state, action) {
             state.playerList = {};
             state.messages = [];
+            state.timeRemaining = -1;
         },
         setWantsToLeave(state, action: { type: string; payload: boolean }) {
             state.wantsToLeave = action.payload;

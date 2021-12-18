@@ -4,6 +4,7 @@ import { GAME_EXT, SERVER_GENERAL } from '../constants/logging';
 import {
     defaultTimePeriods,
     PlayerStatuses,
+    TimePeriod,
     TimePeriodLibrary,
     TimePeriodNames,
 } from '../constants/mafia';
@@ -53,7 +54,7 @@ export class Game {
     public temporaryGameOwner?: Player;
     public maxPlayers: number = defaultMaxPlayers;
 
-    private timePeriod: TimePeriodNames = 'pregame';
+    private _timePeriod: TimePeriodNames = 'pregame';
     private lastTimePeriodChange: number = Date.now();
     private timePeriods: TimePeriodLibrary = JSON.parse(JSON.stringify(defaultTimePeriods));
 
@@ -187,9 +188,9 @@ export class Game {
     }
 
     /** Stuff that happens on both join and rejoin, such as
-     * socket binding,
-     * emitting existing players to the newly (re)joined one,
-     * and joining rooms
+     * - socket binding
+     * - emitting existing players to the newly (re)joined one
+     * - joining rooms
      */
     private joinRejoinHandlers(player: Player, socket: Socket): void {
         player.bindSocket(socket);
@@ -275,10 +276,25 @@ export class Game {
         player.connected = true;
     }
 
-    get timeRemaining() {
+    private get timeRemaining() {
         const totalDuration = this.timePeriods[this.timePeriod].durationSeconds * 1000;
         const timeSinceStart = Date.now() - this.lastTimePeriodChange;
         return Math.max(Math.floor((totalDuration - timeSinceStart) / 1000), 0);
+    }
+
+    private set timePeriod(newTimePeriod: TimePeriodNames) {
+        this.logger?.log(`Time is now: ${newTimePeriod}`);
+        this.lastTimePeriodChange = Date.now();
+        this._timePeriod = newTimePeriod;
+        EMITTED_SERVER_EVENTS.TIMEPERIOD_INFO(
+            this.io,
+            this.timePeriods[newTimePeriod],
+            this.timePeriods[newTimePeriod].durationSeconds,
+        );
+    }
+
+    private get timePeriod() {
+        return this._timePeriod;
     }
 
     private onJoin(connection: StageThreeConnection): void {
@@ -616,20 +632,25 @@ export class Game {
         if (this.inProgress) {
             return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
                 player.socket,
+                `Game is already in progress`,
+            );
+        }
+        if (this.timePeriod === 'gameStarting') {
+            return void EMITTED_PLAYER_EVENTS.SERVER_PRIVATE_CHAT_MESSAGE(
+                player.socket,
                 `Game is already starting`,
             );
         }
         this.timePeriod = 'gameStarting';
-        this.lastTimePeriodChange = Date.now();
         this.inProgress = true;
         EMITTED_SERVER_EVENTS.SERVER_CHAT_MESSAGE(this.io, `Game started by ${player.username}`);
-        EMITTED_SERVER_EVENTS.TIMEPERIOD_INFO(
-            this.io,
-            this.timePeriods[this.timePeriod],
-            this.timePeriods[this.timePeriod].durationSeconds,
-        );
         this.logger?.log(`Game started by ${player.username}`);
-        this.removeDisconnectedPlayers();
+
+        setTimeout(() => {
+            this.logger?.log(`Starting game`);
+            this.timePeriod = 'night';
+            this.removeDisconnectedPlayers();
+        }, this.timePeriods[this.timePeriod].durationSeconds * 1000);
     }
 
     private removeDisconnectedPlayers(): void {

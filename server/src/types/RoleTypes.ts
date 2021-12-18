@@ -80,6 +80,17 @@ export default interface BaseRole {
 
     nightAction?(playerA: Player, playerB: Player): void;
     dayAction?(playerA: Player, playerB: Player): void;
+
+    /** For generating description and other fields for this role to give to the player. */
+    roleCardGenerator(): RoleCardInfo;
+}
+
+export interface RoleCardInfo {
+    name: string;
+    description: string;
+    alignmentPrimary?: string;
+    attackPower?: string;
+    defencePower?: string;
 }
 
 export enum RolePriorities {

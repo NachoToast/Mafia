@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import ChatMessage from '../../types/ChatMessage';
-import Player from '../../types/Player';
+import Player, { RoleCardInfo, SpectatorRole } from '../../types/Player';
 import TimePeriod from '../../types/TimePeriod';
 import StoreState from '../state';
 
@@ -12,6 +12,7 @@ export interface State {
     messages: ChatMessage[];
     playerList: { [username: string]: Player };
     wantsToLeave: boolean;
+    roleInfo: RoleCardInfo;
 }
 
 export const initialState: State = {
@@ -27,6 +28,7 @@ export const initialState: State = {
     messages: [],
     playerList: {},
     wantsToLeave: false,
+    roleInfo: SpectatorRole,
 };
 
 const gameSlice = createSlice({
@@ -57,13 +59,17 @@ const gameSlice = createSlice({
         removePlayer(state, action: { type: string; payload: string }) {
             delete state.playerList[action.payload];
         },
-        clearGameData(state, action) {
+        clearGameData(state, _) {
             state.playerList = {};
             state.messages = [];
             state.timeRemaining = -1;
+            state.roleInfo = SpectatorRole;
         },
         setWantsToLeave(state, action: { type: string; payload: boolean }) {
             state.wantsToLeave = action.payload;
+        },
+        setRoleInfo(state, action: { type: string; payload: RoleCardInfo }) {
+            state.roleInfo = action.payload;
         },
     },
 });
@@ -78,6 +84,7 @@ export const {
     removePlayer,
     clearGameData,
     setWantsToLeave,
+    setRoleInfo,
 } = gameSlice.actions;
 
 export default gameSlice.reducer;
@@ -90,3 +97,4 @@ export const getChatMessages = (state: StoreState): ChatMessage[] => state.game.
 export const getPlayers = (state: StoreState): { [username: string]: Player } =>
     state.game.playerList;
 export const getWantsToLeave = (state: StoreState): boolean => state.game.wantsToLeave;
+export const getRoleInfo = (state: StoreState): RoleCardInfo => state.game.roleInfo;

@@ -20,3 +20,16 @@ export default interface Player {
     connected: boolean;
     isOwner: boolean;
 }
+
+export interface RoleCardInfo {
+    name: string;
+    description: string;
+    alignmentPrimary?: string;
+    attackPower?: string;
+    defencePower?: string;
+}
+
+export const SpectatorRole: RoleCardInfo = {
+    name: 'Spectator',
+    description: 'You are a spectator.',
+};

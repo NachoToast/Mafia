@@ -4,7 +4,7 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 import TimePeriod, { STP } from '../types/TimePeriod';
 import ChatMessage, { SCM } from '../types/ChatMessage';
 import { v4 as uuid } from 'uuid';
-import Player, { PlayerStatuses } from '../types/Player';
+import Player, { PlayerStatuses, RoleCardInfo } from '../types/Player';
 
 interface MafiaEvents {
     connected: () => void;
@@ -15,6 +15,7 @@ interface MafiaEvents {
     chatMessage: (message: ChatMessage) => void;
     playerUpdate: (player: Player) => void;
     playerLeft: (username: string) => void;
+    roleInfo: (roleInfo: RoleCardInfo) => void;
 }
 
 class MafiaSocket extends TypedEmitter<MafiaEvents> {
@@ -54,6 +55,7 @@ class MafiaSocket extends TypedEmitter<MafiaEvents> {
         this.timePeriodListeners(this.socket);
         this.chatMessageListeners(this.socket);
         this.playerListListeners(this.socket);
+        this.roleInfoAndListListeners(this.socket);
     }
 
     private timePeriodListeners(socket: Socket) {
@@ -124,6 +126,12 @@ class MafiaSocket extends TypedEmitter<MafiaEvents> {
 
         socket.on('playerLeft', (username: string) => {
             this.emit('playerLeft', username);
+        });
+    }
+
+    public roleInfoAndListListeners(socket: Socket) {
+        socket.on('roleInfo', (roleInfo: RoleCardInfo) => {
+            this.emit('roleInfo', roleInfo);
         });
     }
 

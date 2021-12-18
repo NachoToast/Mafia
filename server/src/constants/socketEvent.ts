@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { SocketTokenPayload } from '../classes/ConnectionSystem';
+import BaseRole from '../types/RoleTypes';
 import { PlayerStatuses, TimePeriod } from './mafia';
 
 /** Events captured by the game's global io instance, `io.on()`  */
@@ -85,6 +86,9 @@ export const EMITTED_PLAYER_EVENTS = {
     },
     TIMEPERIOD_INFO: (socket: Socket, timePeriod: TimePeriod, timeLeft: number, day: number) => {
         socket.emit('timePeriodUpdate', timePeriod, timeLeft, day);
+    },
+    ROLE_INFO: (socket: Socket, role: BaseRole) => {
+        socket.emit('roleInfo', role.roleCardGenerator());
     },
 };
 

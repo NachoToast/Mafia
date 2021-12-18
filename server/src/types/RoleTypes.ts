@@ -48,9 +48,20 @@ export default interface BaseRole {
     name: string;
     description: string;
     primaryAlignment: PrimaryAlignments;
-    defencePower: DefencePowerLevels;
-    attackPower: AttackPowerLevels;
-    priority: RolePriorities;
+
+    /** Default is none */
+    defencePower?: DefencePowerLevels;
+
+    /** Default is none */
+    attackPower?: AttackPowerLevels;
+
+    /** Default is other */
+    primaryPriority?: RolePriorities;
+
+    /** Determines order for roles of same primary priority, lower = higher priority
+     * @default number 1
+     */
+    secondaryPriority?: number;
 
     /** @default string `Primary Alignment Colour` */
     color?: string;
@@ -67,8 +78,8 @@ export default interface BaseRole {
     /** @default boolean false */
     immuneToRoleblocks?: boolean;
 
-    nightAction?: (playerA: Player, playerB: Player) => void;
-    dayAction?: (playerA: Player, playerB: Player) => void;
+    nightAction?(playerA: Player, playerB: Player): void;
+    dayAction?(playerA: Player, playerB: Player): void;
 }
 
 export enum RolePriorities {

@@ -96,7 +96,7 @@ export const {
 
 export default basicInfoSlice.reducer;
 
-// reducers
+// selectors
 // https://redux.js.org/tutorials/fundamentals/part-2-concepts-data-flow#selectors
 
 export const getUsername = (state: StoreState): string => state.basicInfo.userInfo.username;

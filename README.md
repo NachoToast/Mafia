@@ -1,11 +1,8 @@
 # NachoToast / Mafia <!-- omit in toc -->
 
 [![CI (client)](https://github.com/NachoToast/Mafia/actions/workflows/node.js.ci.client.yml/badge.svg)](https://github.com/NachoToast/Mafia/actions/workflows/node.js.ci.client.yml)
-
 [![CI (server)](https://github.com/NachoToast/Mafia/actions/workflows/node.js.ci.server.yml/badge.svg)](https://github.com/NachoToast/Mafia/actions/workflows/node.js.ci.server.yml)
-
 [![Deploy (client)](https://github.com/NachoToast/Mafia/actions/workflows/deploy.client.yml/badge.svg)](https://github.com/NachoToast/Mafia/actions/workflows/deploy.client.yml)
-
 [![Deploy (Server)](https://github.com/NachoToast/Mafia/actions/workflows/deploy.server.yml/badge.svg)](https://github.com/NachoToast/Mafia/actions/workflows/deploy.server.yml)
 
 ## Table of Contents <!-- omit in toc -->

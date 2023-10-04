@@ -1,4 +1,4 @@
-name: Deploy (client)
+name: Deploy (Client)
 
 on:
   workflow_run:

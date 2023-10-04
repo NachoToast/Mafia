@@ -1,0 +1,14 @@
+{
+    "name": "mafia",
+    "version": "0.0.0",
+    "private": true,
+    "license": "MIT",
+    "author": {
+        "name": "NachoToast",
+        "url": "https://github.com/NachoToast"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/NachoToast/Mafia"
+    }
+}

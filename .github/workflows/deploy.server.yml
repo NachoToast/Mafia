@@ -1,0 +1,26 @@
+name: Deploy (Server)
+
+on:
+    workflow_run:
+        workflows: ['CI (client)']
+        types: [completed]
+        branches: [main]
+
+jobs:
+    production-deploy:
+        name: Deploy to Production
+        if: github.event.workflow_run.conclusion == 'success'
+        runs-on: ubuntu-latest
+        concurrency: production_environment
+        steps:
+            - name: Execute remote build process
+              uses: appleboy/ssh-action@v1.0.0
+              with:
+                  host: ${{ secrets.HOST }}
+                  username: ${{ secrets.USERNAME }}
+                  password: ${{ secrets.PASSWORD }}
+                  port: ${{ secrets.PORT }}
+                  script: |
+                      cd services_v2/Mafia/server
+                      chmod +x scripts/deploy.sh
+                      ./scripts/deploy.sh

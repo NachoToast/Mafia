@@ -1,17 +1,39 @@
-# Mafia
+# NachoToast / Mafia <!-- omit in toc -->
 
-# Changing Endpoints
+## Table of Contents <!-- omit in toc -->
 
-![image](https://user-images.githubusercontent.com/32235595/143984774-d2526a22-9956-4813-b0c9-f1b49abb26b3.png)
+- [Technologies](#technologies)
+- [Contributing](#contributing)
+- [Installation Guide](#installation-guide)
+- [License](#license)
 
-**Client** endpoints are located in the [endpoints](./client/src/config/endpoints.jsonc) file, make sure they're the same as the ones for the server (see below).
+## Technologies
 
-> If you want to have a local client _and_ server set up, just edit the client's `serverEndpoint` to point to `http://localhost`!
+<div style="display: flex">
 
-**Server** endpoints are declared when the [ServerHub](./server/src/classes/ServerHub.ts) starts, you can configure this in the [index](./server/src/index.ts#L3) file.
+  <a href="https://nodejs.org/">
+    <img alt="Node.js" src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" />
+  </a>
 
-For instance, the default options here are port `3001`, and server name 'mafia' (Note that the endpoint is always `localhost`).
+  <a href="https://www.typescriptlang.org/">
+    <img alt="Typescript" src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+  </a>
 
-```ts
-export const serverHub = new ServerHub(3001, 'mafia');
-```
+  <a href="https://expressjs.com/">
+    <img alt="Express.js" src="https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB" />
+  </a>
+
+</div>
+
+## Contributing
+
+See [contributing](.github/CONTRIBUTING.md).
+
+
+## Installation Guide
+
+See [installation guide](.github/INSTALLATION.md).
+
+## License
+
+This code is licensed under the [MIT License](LICENSE).

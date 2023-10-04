@@ -1,0 +1,36 @@
+footer {
+    padding: 0.5em 1em;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    gap: 2rem;
+}
+
+footer > :hover {
+    transform: scale(125%);
+}
+
+footer svg {
+    fill: #666;
+}
+
+footer a,
+footer svg {
+    color: inherit;
+    text-decoration: none;
+    transition: 200ms;
+    cursor: pointer;
+}
+
+footer svg {
+    font-size: 20px;
+}
+
+footer a:hover {
+    text-decoration: underline;
+    color: red;
+}
+
+footer a:hover svg {
+    fill: red;
+}

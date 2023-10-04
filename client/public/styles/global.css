@@ -1,0 +1,59 @@
+@font-face {
+    font-family: 'MonoRegular';
+    src: url('../fonts/MonoRegular.ttf');
+}
+
+@font-face {
+    font-family: 'MonoBold';
+    src: url('../fonts/MonoBold.ttf');
+}
+
+@font-face {
+    font-family: 'MonoLight';
+    src: url('../fonts/MonoLight.ttf');
+}
+
+body {
+    color: #aaa;
+
+    font-family: -apple-system, 'MonoBold', BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+        Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+
+    display: flex;
+    flex-flow: column nowrap;
+
+    margin: 0;
+    padding: 0;
+
+    width: 100dvw;
+    height: 100dvh;
+}
+
+main {
+    flex-grow: 1;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.coming-soon-parent {
+    position: relative;
+    cursor: not-allowed;
+}
+
+.coming-soon {
+    fill: #feae00;
+    position: absolute;
+    right: 0;
+    top: 0;
+    opacity: 0.5;
+    transform: translateX(50%) translateY(-50%) rotate(-20deg);
+    transition: 200ms;
+}
+
+.coming-soon-parent:hover .coming-soon {
+    fill: #fe6e00;
+    opacity: 1;
+}

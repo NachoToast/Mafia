@@ -1,0 +1,48 @@
+#main-menu div {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+}
+
+#main-menu h1 {
+    text-align: center;
+    font-size: 120px;
+    color: #ff5d5d;
+    text-shadow:
+        1px 0 4px #ff5d5d,
+        2px 0 4px #ff5d5d,
+        3px 0 4px #ff5d5d,
+        2px 0 3px #d61616,
+        2px 3px 15px #d61616,
+        2px 0 15px,
+        5px 0 125px,
+        20px 0 200px #d61616,
+        40px 0 200px #d61616;
+}
+
+#main-menu button {
+    background-color: #0000000f;
+    font: inherit;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 1em;
+    color: inherit;
+    border: solid 3px #910000;
+    transition: 100ms;
+    box-shadow:
+        1px 0 4px #d61616,
+        3px 3px 9px transparent;
+    width: 100%;
+}
+
+#main-menu button:hover {
+    background-color: #000000;
+    box-shadow:
+        1px 0 4px #d61616,
+        3px 3px 9px #ff0505;
+
+    color: white;
+    transform: scale(105%);
+}

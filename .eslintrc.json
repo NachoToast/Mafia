@@ -20,6 +20,7 @@
         "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
         "camelcase": "off",
         "require-await": "error",
+        "eol-last": ["error", "always"],
         "@typescript-eslint/no-dupe-class-members": ["error"],
         "@typescript-eslint/explicit-member-accessibility": [
             "error",

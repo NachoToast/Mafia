@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "useDefineForClassFields": true,
+        "resolveJsonModule": true,
+        "sourceMap": true,
+        "removeComments": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "useUnknownInCatchVariables": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true,
+        "skipLibCheck": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
+    },
+    "include": ["shared"]
+}

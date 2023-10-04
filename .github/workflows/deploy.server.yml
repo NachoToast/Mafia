@@ -2,7 +2,7 @@ name: Deploy (Server)
 
 on:
     workflow_run:
-        workflows: ['CI (client)']
+        workflows: ['CI (server)']
         types: [completed]
         branches: [main]
 
@@ -11,9 +11,9 @@ jobs:
         name: Deploy to Production
         if: github.event.workflow_run.conclusion == 'success'
         runs-on: ubuntu-latest
-        concurrency: production_environment
+        concurrency: production_deploy_server
         steps:
-            - name: Execute remote build process
+            - name: Execute remote script
               uses: appleboy/ssh-action@v1.0.0
               with:
                   host: ${{ secrets.HOST }}

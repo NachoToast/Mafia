@@ -1,23 +1,20 @@
-# This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
 name: Deploy (client)
 
 on:
-    push:
-        paths-ignore:
-            - 'server/**'
+  workflow_run:
+    workflows: ['CI (client)']
+    types: [completed]
 
 defaults:
     run:
         working-directory: client
 
 jobs:
-    build:
-        name: Node
+    production-deploy:
+        name: Deploy to Production
+        if: github.ref == 'refs/heads/main' && github.event.workflow_run.conclusion == 'success'
         runs-on: ubuntu-latest
-        timeout-minutes: 5
-
+        concurrency: production_deploy_client
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -36,7 +33,7 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            - name: Build
+            - name: Build static files
               run: pnpm build
 
             - name: Publish to Cloudflare Pages
@@ -47,5 +44,4 @@ jobs:
                   projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
                   directory: build
                   gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-                  branch: main
                   workingDirectory: client

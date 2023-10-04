@@ -37,7 +37,7 @@ See [contributing](.github/CONTRIBUTING.md).
 
 ## Installation Guide
 
-See [installation guide](.github/INSTALLATION.md).
+See [installation guide](.github/INSTALL_GUIDE.md).
 
 ## License
 

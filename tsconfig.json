@@ -13,6 +13,5 @@
         "skipLibCheck": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true
-    },
-    "include": ["shared"]
+    }
 }

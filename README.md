@@ -28,6 +28,10 @@
     <img alt="Express.js" src="https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB" />
   </a>
 
+  <a href="https://vitest.dev/">
+    <img alt="Vitest" src="https://img.shields.io/static/v1?style=for-the-badge&message=Vitest&color=6E9F18&logo=Vitest&logoColor=FFFFFF&label=" />
+  </a>
+
 </div>
 
 ## Contributing

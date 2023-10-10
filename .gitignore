@@ -8,6 +8,7 @@ yarn.lock
 
 # user generated
 build/
+coverage/
 *.log
 .vscode/settings.json
 config.json

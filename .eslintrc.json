@@ -1,5 +1,20 @@
 {
     "root": true,
+    "env": {
+        "es2022": true
+    },
+    "extends": ["./.eslintrc.js"],
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module",
+        "project": ["./client/tsconfig.json", "./server/tsconfig.json"]
+    },
+    "settings": {
+        "import/resolver": {
+            "typescript": true
+        }
+    },
+    "ignorePatterns": ["build"],
     "rules": {
         "eqeqeq": ["error", "always"],
         "no-unused-vars": "warn",
@@ -8,25 +23,25 @@
         "semi": "off",
         "no-var": "error",
         "default-case-last": "error",
+        "camelcase": "off",
+        "require-await": "error",
+        "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
+        "eol-last": ["error", "always"],
         "max-len": [
             "error",
             {
-                "code": 100,
+                "code": 80,
                 "ignoreStrings": true,
                 "ignoreTemplateLiterals": true,
                 "ignoreUrls": true
             }
         ],
-        "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
-        "camelcase": "off",
-        "require-await": "error",
-        "eol-last": ["error", "always"],
+        "nonblock-statement-body-position": ["warn", "beside"] /* Warning because partially conflicts with max-len. */,
         "@typescript-eslint/no-dupe-class-members": ["error"],
-        "@typescript-eslint/explicit-member-accessibility": [
-            "error",
-            { "accessibility": "explicit" }
-        ],
+        "@typescript-eslint/explicit-member-accessibility": ["error", { "accessibility": "explicit" }],
         "@typescript-eslint/no-inferrable-types": ["error", { "ignoreParameters": true }],
+        "@typescript-eslint/explicit-function-return-type": ["error", { "allowExpressions": true }],
+        "@typescript-eslint/prefer-literal-enum-member": ["error", { "allowBitwiseExpressions": true }],
         "@typescript-eslint/naming-convention": [
             "error",
             {
@@ -54,19 +69,14 @@
                 "format": ["PascalCase"]
             }
         ],
-        "@typescript-eslint/no-non-null-assertion": "off",
         "import/order": [
-            "warn",
+            "error",
             {
                 "alphabetize": {
                     "order": "asc"
                 },
                 "newlines-between": "never"
             }
-        ],
-        "import/no-unresolved": "warn",
-        "import/namespace": "warn",
-        "import/export": "warn",
-        "import/default": "warn"
+        ]
     }
 }

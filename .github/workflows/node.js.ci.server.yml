@@ -47,3 +47,12 @@ jobs:
 
             - name: Lint
               run: pnpm lint
+
+            - name: Test
+              run: pnpm coverage
+
+            - name: Upload Coverage
+              uses: codecov/codecov-action@v3.1.2
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  files: ./coverage/coverage-final.json

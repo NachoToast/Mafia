@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Server Pinging</title>
+    </head>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        td,
+        th {
+            border: solid 1px black;
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+    <body>
+        <p id="count">Sent: 0, Received: 0, Errored: 0</p>
+        <table>
+            <tr>
+                <th>Metric</th>
+                <th>Min (ms)</th>
+                <th>Mean (ms)</th>
+                <th>Max (ms)</th>
+                <th title="5% of values are less than or equal to this">
+                    5th Percentile
+                </th>
+                <th title="95% of values are less than or equal to this">
+                    95th Percentile
+                </th>
+            </tr>
+            <tr id="rtt">
+                <td title="Client Out -> Server In -> Server Out -> Client In">
+                    RTT
+                </td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+            </tr>
+            <tr id="sending">
+                <td title="Client Out -> Server In">Sending</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+            </tr>
+            <tr id="processing">
+                <td title="Server In -> Server Out">Processing</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+            </tr>
+            <tr id="receiving">
+                <td title="Server Out -> Client In">Receiving</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+            </tr>
+        </table>
+        <br />
+        <button onclick="getPing()">Ping</button>
+        <ul id="errors"></ul>
+        <script>
+            const rttElement = document.querySelector('#rtt');
+            const sendingElement = document.querySelector('#sending');
+            const processingElement = document.querySelector('#processing');
+            const receivingElement = document.querySelector('#receiving');
+            const countElement = document.querySelector('#count');
+            const errorsElement = document.querySelector('#errors');
+
+            const rttData = [];
+            const sendingData = [];
+            const processingData = [];
+            const receivingData = [];
+
+            const newErrors = [];
+
+            let sent = 0;
+            let received = 0;
+            let errored = 0;
+
+            function updateStats() {
+                count.innerText = `Sent: ${sent}, Received: ${received}, Errored: ${errored}`;
+            }
+
+            function updateErrors() {
+                for (const error of newErrors) {
+                    const li = document.createElement('li');
+                    li.innerText = error;
+                    errorsElement.appendChild(li);
+                }
+                newErrors.length = 0;
+            }
+
+            const metrics = [
+                [rttData, rttElement],
+                [sendingData, sendingElement],
+                [processingData, processingElement],
+                [receivingData, receivingElement],
+            ];
+
+            function updateTable() {
+                for (const [data, element] of metrics) {
+                    data.sort((a, b) => a - b);
+
+                    const min = data[0];
+                    const mean = data.reduce((a, b) => a + b, 0) / data.length;
+                    const max = data.at(-1);
+
+                    const percentile95 = empiricalQuartile(data, 0.05);
+                    const ninetyNinthPercentile = empiricalQuartile(data, 0.95);
+
+                    element.children[1].innerText = min.toFixed(0);
+                    element.children[2].innerText = mean.toFixed(1);
+                    element.children[3].innerText = max.toFixed(0);
+                    element.children[4].innerText = percentile95.toFixed(1);
+                    element.children[5].innerText =
+                        ninetyNinthPercentile.toFixed(1);
+                }
+            }
+
+            function clamp(x, min, max) {
+                return Math.min(Math.max(x, min), max);
+            }
+
+            function empiricalQuartile(items, quartile) {
+                const rank = quartile * (items.length + 1);
+
+                const lowerIndex = clamp(Math.floor(rank), 1, items.length);
+                const upperIndex = clamp(Math.ceil(rank), 1, items.length);
+
+                if (lowerIndex === upperIndex) {
+                    return items[lowerIndex - 1];
+                }
+
+                const lowerValue = items[Math.max(lowerIndex - 1, 0)];
+                const upperValue = items[upperIndex - 1];
+
+                const interpolation = rank - lowerIndex;
+
+                return lowerValue + interpolation * (upperValue - lowerValue);
+            }
+
+            async function getPing() {
+                const sentAt = Date.now();
+                sent += 1;
+                updateStats();
+                try {
+                    let req = await fetch(window.location.origin, {
+                        method: 'POST',
+                    });
+
+                    const clientReceivedAt = Date.now();
+
+                    if (!req.ok) {
+                        throw new Error(`${req.status} - ${req.statusText}`);
+                    }
+                    req = await req.json();
+
+                    received += 1;
+
+                    const serverReceivedAt = new Date(
+                        req.receivedRequest,
+                    ).getTime();
+
+                    const serverRespondedAt = new Date(
+                        req.sentResponse,
+                    ).getTime();
+
+                    const rtt = clientReceivedAt - sentAt;
+                    const sending = serverReceivedAt - sentAt;
+                    const processing = serverRespondedAt - serverReceivedAt;
+                    const receiving = clientReceivedAt - serverRespondedAt;
+
+                    rttData.push(rtt);
+                    sendingData.push(sending);
+                    processingData.push(processing);
+                    receivingData.push(receiving);
+
+                    updateTable();
+                } catch (error) {
+                    if (error instanceof Error) {
+                        newErrors.push(error.message);
+                    } else {
+                        newErrors.push(new Error(error).message);
+                    }
+                    errored += 1;
+                    updateErrors();
+                } finally {
+                    updateStats();
+                }
+            }
+
+            const interval = setInterval(getPing, 2000);
+        </script>
+    </body>
+</html>

@@ -1,0 +1,56 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Mafia API",
+        "license": {
+            "name": "MIT",
+            "url": "https://github.com/NachoToast/Mafia/blob/main/LICENSE"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:{port}",
+            "description": "Local Server",
+            "variables": {
+                "port": {
+                    "default": "5000"
+                }
+            }
+        },
+        {
+            "url": "https://m.wintonoverwatch.com",
+            "description": "Production Server"
+        }
+    ],
+    "paths": {},
+    "components": {
+        "schemas": {},
+        "responses": {},
+        "parameters": {},
+        "securitySchemes": {
+            "siteToken": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "JWT signed by the server, contains Discord access token, refresh token, and user ID."
+            },
+            "rateLimitBypassToken": {
+                "type": "apiKey",
+                "description": "Token for bypassing rate limits.",
+                "name": "RateLimit-Bypass-Token",
+                "in": "header"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Miscellaneous",
+            "description": "Miscellaneous functionality."
+        },
+        {
+            "name": "Auth",
+            "description": "Logging in, logging out, and refreshing."
+        }
+    ]
+}

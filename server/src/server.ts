@@ -1,19 +1,17 @@
-import { existsSync } from 'fs';
-import express from 'express';
-import { Example } from '../../shared/Example';
-// import { Example } from '../../shared/Example';
+import { loadConfig, loadMongo, loadExpress } from './loaders';
 
-const p: Example = {};
-p;
+async function main(): Promise<void> {
+    const config = loadConfig();
 
-const config = existsSync('../config.json')
-    ? require('../../config.json')
-    : require('../../config.example.json');
+    const { userModel } = await loadMongo(config);
 
-const app = express();
+    const app = loadExpress(config, userModel);
 
-const port = config.port ?? 5000;
+    const port = config.port;
 
-app.get('/', (_req, res) => res.status(200).send('mafia'));
+    app.listen(port, () => {
+        console.log(`Server is listening on port ${port}`);
+    });
+}
 
-app.listen(port, () => console.log(`Server is listening on port ${port}`));
+void main();

@@ -7,6 +7,7 @@ on:
     push:
         paths-ignore:
             - 'server/**'
+            - '.github/workflows/*.server.yml'
             - '**/*.md'
 
 defaults:

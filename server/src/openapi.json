@@ -23,9 +23,118 @@
             "description": "Production Server"
         }
     ],
-    "paths": {},
+    "paths": {
+        "/": {
+            "get": {
+                "tags": ["Miscellaneous"],
+                "operationId": "getRoot",
+                "security": [{}, { "rateLimitBypassToken": [] }],
+                "description": "Returns static files (see `/static` for more info).\n\nIt is recommended to use `/static` instead of this endpoint, as the latter is rate limited and can give some non-200 responses.",
+                "responses": {
+                    "200": {
+                        "description": "Static files.",
+                        "content": {
+                            "text/html": {}
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["Miscellaneous"],
+                "operationId": "postRoot",
+                "security": [{}, { "rateLimitBypassToken": [] }],
+                "description": "Returns API statistics.",
+                "responses": {
+                    "200": {
+                        "description": "API statistics.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "commit",
+                                        "startedAt",
+                                        "receivedRequest",
+                                        "sentResponse",
+                                        "numUsersTotal",
+                                        "numUsersActive",
+                                        "numGames"
+                                    ],
+                                    "properties": {
+                                        "commit": {
+                                            "type": "string",
+                                            "description": "Commit hash of the current server version.",
+                                            "example": "c6c18d8e8b17ee6d9f4ac27d3c83eb72b2f580b8"
+                                        },
+                                        "startedAt": {
+                                            "$ref": "#/components/schemas/ISOString"
+                                        },
+                                        "receivedRequest": {
+                                            "$ref": "#/components/schemas/ISOString"
+                                        },
+                                        "sentResponse": {
+                                            "$ref": "#/components/schemas/ISOString"
+                                        },
+                                        "numUsersTotal": {
+                                            "type": "number"
+                                        },
+                                        "numUsersActive": {
+                                            "type": "number"
+                                        },
+                                        "numGames": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "externalDocs": {
+                                        "url": "https://github.com/NachoToast/Mafia/blob/main/shared/responseTypes/postRootResponse.d.ts",
+                                        "description": "shared/responseTypes/postRootResponse.d.ts"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/static": {
+            "get": {
+                "tags": ["Miscellaneous"],
+                "security": [{}],
+                "operationId": "getStatic",
+                "description": "Returns static HTML files which contain helpful examples for using the API.\n\nNone of the `/static` endpoints are rate limited.",
+                "responses": {
+                    "200": {
+                        "description": "Static HTML files.",
+                        "content": {
+                            "text/html": {}
+                        }
+                    }
+                }
+            }
+        }
+    },
     "components": {
-        "schemas": {},
+        "schemas": {
+            "DiscordIDString": {
+                "type": "string",
+                "description": "A Discord ID.",
+                "example": "909645967081476147",
+                "externalDocs": {
+                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/types/DiscordIDString.d.ts",
+                    "description": "shared/types/DiscordIDString.d.ts"
+                }
+            },
+            "ISOString": {
+                "type": "string",
+                "description": "A string in ISO format, used to store dates.",
+                "example": "2022-11-08T02:20:08.190Z",
+                "externalDocs": {
+                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/types/ISOString.d.ts",
+                    "description": "shared/types/ISOString.d.ts"
+                }
+            }
+        },
         "responses": {},
         "parameters": {},
         "securitySchemes": {

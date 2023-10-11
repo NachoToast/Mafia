@@ -1,4 +1,4 @@
-import { DiscordIDString, ISOString } from '../Utility';
+import { DiscordIDString, ISOString } from '../../../../shared/types';
 import { UserFlags } from './UserFlags';
 
 export interface User {

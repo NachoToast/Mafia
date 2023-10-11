@@ -1,4 +1,4 @@
-import { SiteErrorObject } from '../types/Errors';
+import { SiteErrorObject } from '../../../shared/responseTypes';
 
 /** Generic error class that can be caught by middleware. */
 export abstract class SiteError<T = undefined>

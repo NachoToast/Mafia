@@ -3,7 +3,7 @@ import {
     ValidationErrorItem,
     HttpError,
 } from 'express-openapi-validator/dist/framework/types';
-import { SiteErrorObject } from '../types/Errors';
+import { SiteErrorObject } from '../../../shared/responseTypes';
 import { MiddlewareProvider } from '../types/Express';
 
 /** Custom error messages for OpenAPI validation errors. */

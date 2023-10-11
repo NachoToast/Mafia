@@ -1,4 +1,4 @@
-import { DiscordIDString } from '../Utility';
+import { DiscordIDString } from '../../../../shared/types';
 
 /**
  * Shape of the payload that is stored in the body of a site token

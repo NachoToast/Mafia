@@ -1,4 +1,4 @@
-import { DiscordIDString } from '../types/Utility';
+import { DiscordIDString } from '../../../shared/types';
 import { SiteError } from './SiteError';
 
 /**

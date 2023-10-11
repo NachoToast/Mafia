@@ -1,4 +1,4 @@
-import { ISOString } from '../Utility';
+import { ISOString } from '../../../../shared/types';
 
 /**
  * These values should not be defined in `config.json`

@@ -1,6 +1,6 @@
+import { DiscordIDString } from '../../../../shared/types';
 import { NotFoundError } from '../../errors';
 import { UserModel, User } from '../../types/User';
-import { DiscordIDString } from '../../types/Utility';
 
 /**
  * Updates a user in the database.

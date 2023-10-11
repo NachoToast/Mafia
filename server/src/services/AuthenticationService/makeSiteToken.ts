@@ -1,8 +1,8 @@
 import { RESTPostOAuth2AccessTokenResult } from 'discord-api-types/v10';
 import { sign } from 'jsonwebtoken';
+import { DiscordIDString } from '../../../../shared/types';
 import { SiteTokenPayload } from '../../types/Auth';
 import { Config } from '../../types/Config';
-import { DiscordIDString } from '../../types/Utility';
 
 /** Creates a signed JWT that can be used in authorisation headers. */
 export function makeSiteToken(

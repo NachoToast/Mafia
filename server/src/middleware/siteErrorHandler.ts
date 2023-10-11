@@ -1,6 +1,6 @@
 import { Response } from 'express';
+import { SiteErrorObject } from '../../../shared/responseTypes';
 import { SiteError } from '../errors';
-import { SiteErrorObject } from '../types/Errors';
 import { MiddlewareProvider } from '../types/Express';
 
 export const siteErrorHandler: MiddlewareProvider = () => {

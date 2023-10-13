@@ -1,4 +1,5 @@
 import cors, { CorsOptions } from 'cors';
+import { CorsError } from '../errors';
 import { MiddlewareProvider } from '../types/Express';
 
 export const corsMiddleware: MiddlewareProvider = (config) => {
@@ -13,7 +14,7 @@ export const corsMiddleware: MiddlewareProvider = (config) => {
             if (origin === undefined || clientUrls.has(origin)) {
                 callback(null, true);
             } else {
-                callback(new Error('cors or something idk'));
+                callback(new CorsError());
             }
         };
     }

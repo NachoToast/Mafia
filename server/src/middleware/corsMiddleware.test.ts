@@ -70,7 +70,7 @@ describe.concurrent(corsMiddleware.name, () => {
         });
 
         test("doesn't allow non-whitelisted origins", () => {
-            expect(responseBadOrigin.status).toBe(500);
+            expect(responseBadOrigin.status).toBe(400);
         });
 
         test('has relevant Access-Control-Allow-Origin headers', () => {

@@ -1,6 +1,6 @@
 /** Generic error object returned by server. */
 export interface SiteErrorObject<T = undefined> {
-    title: string;
+    title: Capitalize<string>;
     description: string;
     additionalData: T;
 }

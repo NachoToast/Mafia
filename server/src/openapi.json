@@ -36,6 +36,12 @@
                         "content": {
                             "text/html": {}
                         }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequestError400"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited429"
                     }
                 }
             },
@@ -93,6 +99,12 @@
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequestError400"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited429"
                     }
                 }
             }
@@ -116,6 +128,23 @@
     },
     "components": {
         "schemas": {
+            "SiteErrorObject": {
+                "type": "object",
+                "description": "Generic error object returned by server.",
+                "required": ["title", "description"],
+                "properties": {
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    }
+                },
+                "externalDocs": {
+                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/responseTypes/SiteErrorObject.d.ts",
+                    "description": "shared/responseTypes/SiteErrorObject.d.ts"
+                }
+            },
             "DiscordIDString": {
                 "type": "string",
                 "description": "A Discord ID.",
@@ -135,7 +164,175 @@
                 }
             }
         },
-        "responses": {},
+        "responses": {
+            "BadRequestError400": {
+                "description": "Object returned when a request is malformed or otherwise an invalid shape. This can also be sent when a request's `origin` header is present and not in the allowed origins whitelist (also known as a CORS error).\n\n\nTo see how the API handles origin headers and CORS, see [server/src/middleware/corsMiddleware.ts](https://github.com/NachoToast/Mafia/blob/main/server/src/middleware/corsMiddleware.ts)",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/SiteErrorObject"
+                                }
+                            ],
+                            "required": ["additionalData"],
+                            "properties": {
+                                "additionalData": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": ["path", "message"],
+                                        "properties": {
+                                            "path": {
+                                                "type": "string",
+                                                "example": "/refresh"
+                                            },
+                                            "message": {
+                                                "type": "string",
+                                                "example": "Authorization header with scheme 'Bearer' required"
+                                            },
+                                            "error_code": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "externalDocs": {
+                                            "url": "https://github.com/cdimascio/express-openapi-validator/blob/bb8d6b80c4bc42be9213d03c46b5d3f0195d1040/src/framework/types.ts#L558-L562",
+                                            "description": "express-openapi-validator/src/framework/types.ts#L558-L562"
+                                        }
+                                    }
+                                }
+                            },
+                            "externalDocs": {
+                                "url": "https://github.com/NachoToast/Mafia/blob/main/server/src/middleware/validatorErrorHandler.ts",
+                                "description": "server/src/middleware/validatorErrorHandler.ts"
+                            }
+                        }
+                    }
+                }
+            },
+            "AuthError401": {
+                "description": "Object returned when a user's site token (JWT) is missing or invalid.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/SiteErrorObject"
+                                }
+                            ],
+                            "externalDocs": {
+                                "url": "https://github.com/NachoToast/Mafia/blob/main/server/src/errors/AuthError.ts",
+                                "description": "server/src/errors/AuthError.ts"
+                            }
+                        }
+                    }
+                }
+            },
+            "NotFoundError404": {
+                "description": "Object returned when the requested user does not exist in the database.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/SiteErrorObject"
+                                }
+                            ],
+                            "required": ["additionalData"],
+                            "properties": {
+                                "additionalData": {
+                                    "$ref": "#/components/schemas/DiscordIDString"
+                                }
+                            },
+                            "externalDocs": {
+                                "url": "https://github.com/NachoToast/Mafia/blob/main/server/src/errors/NotFoundError.ts",
+                                "description": "server/src/errors/NotFoundError.ts"
+                            }
+                        }
+                    }
+                }
+            },
+            "RateLimited429": {
+                "description": "Response sent when a user has sent too many requests to the server in a short period of time, exceeding the rate limit.",
+                "headers": {
+                    "RateLimit-Limit": {
+                        "required": true,
+                        "description": "Maximum number of requests per time window (default 30).",
+                        "schema": {
+                            "type": "number",
+                            "default": 30
+                        }
+                    },
+                    "RateLimit-Remaining": {
+                        "required": true,
+                        "description": "Number of requests remaining in this time window.",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    "RateLimit-Reset": {
+                        "required": true,
+                        "description": "Number of seconds until this time window ends.",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    "Retry-After": {
+                        "required": true,
+                        "description": "Length of time window in seconds (default 60).",
+                        "schema": {
+                            "type": "number",
+                            "default": 60
+                        }
+                    }
+                }
+            },
+            "SecondaryRequestError502": {
+                "description": "Object returned when an API call made by the server to another server fails.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/SiteErrorObject"
+                                }
+                            ],
+                            "required": ["additionalData"],
+                            "properties": {
+                                "additionalData": {
+                                    "type": "object",
+                                    "description": "Basic response information from an upstream server.",
+                                    "nullable": true,
+                                    "additionalProperties": false,
+                                    "required": ["statusCode", "statusText"],
+                                    "properties": {
+                                        "statusCode": {
+                                            "type": "number"
+                                        },
+                                        "statusText": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "externalDocs": {
+                                        "url": "https://github.com/NachoToast/Mafia/blob/main/shared/responseTypes/UpstreamResponse.d.ts",
+                                        "description": "shared/responseTypes/UpstreamResponse.d.ts"
+                                    }
+                                }
+                            },
+                            "externalDocs": {
+                                "url": "https://github.com/NachoToast/Mafia/blob/main/server/src/errors/SecondaryRequestError.ts",
+                                "description": "server/src/errors/SecondaryRequestError.ts"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "parameters": {},
         "securitySchemes": {
             "siteToken": {

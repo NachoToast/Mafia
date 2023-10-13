@@ -109,6 +109,30 @@
                 }
             }
         },
+        "/ip": {
+            "get": {
+                "tags": ["Miscellaneous"],
+                "operationId": "getIp",
+                "security": [{}, { "rateLimitBypassToken": [] }],
+                "description": "Returns the IP address of the requester, useful for [configuring proxies](https://www.npmjs.com/package/express-rate-limit#troubleshooting-proxy-issues)",
+                "responses": {
+                    "200": {
+                        "description": "The requester's IP address according to the server. May be `::1` if viewing from the same network.",
+                        "content": {
+                            "text/html": {
+                                "example": "123.123.123.123"
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequestError400"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited429"
+                    }
+                }
+            }
+        },
         "/static": {
             "get": {
                 "tags": ["Miscellaneous"],

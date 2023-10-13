@@ -1,10 +1,6 @@
 import { isAxiosError } from 'axios';
+import { UpstreamResponse } from '../../../shared/responseTypes';
 import { SiteError } from './SiteError';
-
-interface UpstreamResponse {
-    statusCode: number;
-    statusText: string;
-}
 
 /**
  * Error thrown when an API call made by the server to another server fails.

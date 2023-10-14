@@ -132,6 +132,32 @@
                 }
             }
         },
+        "/spec": {
+            "get": {
+                "tags": ["Miscellaneous"],
+                "responses": {
+                    "200": {
+                        "description": "The underlying OpenAPI specification for this API.",
+                        "content": {
+                            "application/json": {}
+                        }
+                    }
+                }
+            }
+        },
+        "/api-docs": {
+            "get": {
+                "tags": ["Miscellaneous"],
+                "responses": {
+                    "200": {
+                        "description": "This document!",
+                        "content": {
+                            "text/html": {}
+                        }
+                    }
+                }
+            }
+        },
         "/static": {
             "get": {
                 "tags": ["Miscellaneous"],

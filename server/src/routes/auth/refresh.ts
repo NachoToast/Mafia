@@ -6,7 +6,7 @@ import {
 } from '../../services';
 import { EndpointProvider, AuthScope } from '../../types/Express';
 
-export const Refresh: EndpointProvider<
+export const refresh: EndpointProvider<
     AuthScope.User,
     void,
     LoginOrSignupResponse

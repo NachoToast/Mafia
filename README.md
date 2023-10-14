@@ -6,6 +6,8 @@
 [![Deploy (Server)](https://github.com/NachoToast/Mafia/actions/workflows/deploy.server.yml/badge.svg)](https://github.com/NachoToast/Mafia/actions/workflows/deploy.server.yml)
 [![codecov](https://codecov.io/gh/NachoToast/Mafia/graph/badge.svg?token=VFKWCJXZNF)](https://codecov.io/gh/NachoToast/Mafia)
 
+![Mafia Logo](.github/Mafia.png)
+
 ## Table of Contents <!-- omit in toc -->
 
 - [Technologies](#technologies)

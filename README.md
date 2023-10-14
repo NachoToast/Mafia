@@ -4,6 +4,7 @@
 [![CI (server)](https://github.com/NachoToast/Mafia/actions/workflows/node.js.ci.server.yml/badge.svg)](https://github.com/NachoToast/Mafia/actions/workflows/node.js.ci.server.yml)
 [![Deploy (client)](https://github.com/NachoToast/Mafia/actions/workflows/deploy.client.yml/badge.svg)](https://github.com/NachoToast/Mafia/actions/workflows/deploy.client.yml)
 [![Deploy (Server)](https://github.com/NachoToast/Mafia/actions/workflows/deploy.server.yml/badge.svg)](https://github.com/NachoToast/Mafia/actions/workflows/deploy.server.yml)
+[![codecov](https://codecov.io/gh/NachoToast/Mafia/graph/badge.svg?token=VFKWCJXZNF)](https://codecov.io/gh/NachoToast/Mafia)
 
 ## Table of Contents <!-- omit in toc -->
 

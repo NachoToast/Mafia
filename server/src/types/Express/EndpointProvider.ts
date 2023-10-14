@@ -1,8 +1,9 @@
+import { User } from '@shared';
 import { NextFunction, Request, Response } from 'express';
-import { SiteTokenPayload } from '../Auth/SiteTokenPayload';
+import { SiteTokenPayload } from '../Auth';
 import { Config } from '../Config';
-import { User, UserModel } from '../User';
-import { AuthScope } from '.';
+import { UserModel } from '../Database';
+import { AuthScope } from './AuthScope';
 
 /**
  * Parameters that are present in the path of a request,

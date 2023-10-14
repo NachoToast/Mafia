@@ -1,18 +1,11 @@
+import { LoginOrSignupResponse, LoginRequest, User } from '@shared';
 import { NotFoundError } from '../../errors';
 import {
     DiscordService,
     UserService,
     AuthenticationService,
 } from '../../services';
-import { LoginOrSignupResponse } from '../../types/Auth';
-import { AuthScope, EndpointProvider } from '../../types/Express';
-import { User } from '../../types/User';
-
-interface LoginRequest {
-    code: string;
-
-    redirect_uri: string;
-}
+import { EndpointProvider, AuthScope } from '../../types/Express';
 
 export const login: EndpointProvider<
     AuthScope.None,

@@ -6,7 +6,11 @@
         "types": ["node"],
         "outDir": "build",
 
-        "esModuleInterop": true
+        "esModuleInterop": true,
+
+        "paths": {
+            "@shared": ["../shared/index.d.ts"]
+        }
     },
     "include": ["src"]
 }

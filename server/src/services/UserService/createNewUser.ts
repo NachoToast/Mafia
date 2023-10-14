@@ -1,5 +1,5 @@
-import { DiscordIDString } from '../../../../shared/types';
-import { User, UserModel } from '../../types/User';
+import { DiscordIDString, User } from '@shared';
+import { UserModel } from '../../types/Database';
 
 /** Creates a new user in the database. */
 export async function createNewUser(

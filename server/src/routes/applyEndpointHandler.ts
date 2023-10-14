@@ -1,9 +1,10 @@
+import { User } from '@shared';
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { AuthenticationService, UserService } from '../services';
 import { SiteTokenPayload } from '../types/Auth';
 import { Config } from '../types/Config';
-import { AuthScope, EndpointProvider } from '../types/Express';
-import { User, UserModel } from '../types/User';
+import { UserModel } from '../types/Database';
+import { EndpointProvider, AuthScope } from '../types/Express';
 
 function giveEndpointProviderContext<T extends EndpointProvider<AuthScope>>(
     endpointHandler: T,

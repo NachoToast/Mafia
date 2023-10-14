@@ -1,5 +1,5 @@
+import { SiteErrorObject } from '@shared';
 import { Response } from 'express';
-import { SiteErrorObject } from '../../../shared/responseTypes';
 import { SiteError } from '../errors';
 import { MiddlewareProvider } from '../types/Express';
 

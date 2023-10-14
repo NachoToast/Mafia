@@ -1,4 +1,4 @@
-import { AuthScope, EndpointProvider } from '../../types/Express';
+import { EndpointProvider, AuthScope } from '../../types/Express';
 
 export const getRoot: EndpointProvider = {
     authScope: AuthScope.None,

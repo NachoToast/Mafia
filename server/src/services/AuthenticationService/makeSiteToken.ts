@@ -1,6 +1,6 @@
+import { DiscordIDString } from '@shared';
 import { RESTPostOAuth2AccessTokenResult } from 'discord-api-types/v10';
 import { sign } from 'jsonwebtoken';
-import { DiscordIDString } from '../../../../shared/types';
 import { SiteTokenPayload } from '../../types/Auth';
 import { Config } from '../../types/Config';
 

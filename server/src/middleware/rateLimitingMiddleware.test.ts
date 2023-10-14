@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from 'vitest';
-import { ResponseData, getResponseData, stubApp } from '../tests';
+import { ResponseData, stubApp, getResponseData } from '../tests';
 import { rateLimitingMiddleware } from './rateLimitingMiddleware';
 
 const rateLimitHeader = 'ratelimit-bypassed';

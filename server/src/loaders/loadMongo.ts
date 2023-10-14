@@ -1,6 +1,7 @@
+import { User } from '@shared';
 import { MongoClient } from 'mongodb';
 import { Config } from '../types/Config';
-import { UserModel, User } from '../types/User';
+import { UserModel } from '../types/Database';
 
 /** Prepares a connection to a MongoDB database.*/
 export async function loadMongo(

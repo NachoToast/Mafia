@@ -1,5 +1,5 @@
 import { defaultConfig } from '../constants';
-import { Config, ImportedConfig } from '../types/Config';
+import { ImportedConfig, Config } from '../types/Config';
 import { Colour } from '../types/Utility';
 
 /**

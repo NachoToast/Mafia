@@ -1,10 +1,10 @@
+import { LoginOrSignupResponse } from '@shared';
 import {
-    AuthenticationService,
     DiscordService,
     UserService,
+    AuthenticationService,
 } from '../../services';
-import { LoginOrSignupResponse } from '../../types/Auth';
-import { AuthScope, EndpointProvider } from '../../types/Express';
+import { EndpointProvider, AuthScope } from '../../types/Express';
 
 export const Refresh: EndpointProvider<
     AuthScope.User,

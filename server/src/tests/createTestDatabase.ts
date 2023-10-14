@@ -1,6 +1,6 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { loadMongo } from '../loaders/loadMongo';
-import { UserModel } from '../types/User';
+import { UserModel } from '../types/Database';
 import { mockConfig } from './mocks';
 
 export interface TestDatabase {

@@ -1,7 +1,7 @@
+import { User, UserFlags } from '@shared';
 import { RESTPostOAuth2AccessTokenResult } from 'discord-api-types/v10';
 import { defaultConfig } from '../constants';
 import { Config } from '../types/Config';
-import { User, UserFlags } from '../types/User';
 
 export const mockConfig = (config?: Partial<Config>): Config => ({
     ...defaultConfig,

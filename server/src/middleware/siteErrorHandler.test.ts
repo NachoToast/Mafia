@@ -2,7 +2,7 @@ import express from 'express';
 import request from 'supertest';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { SiteError } from '../errors';
-import { ResponseData, getResponseData, mockConfig } from '../tests';
+import { mockConfig, ResponseData, getResponseData } from '../tests';
 import { siteErrorHandler } from './siteErrorHandler';
 
 const consoleMock = vi

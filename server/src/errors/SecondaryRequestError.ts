@@ -1,5 +1,5 @@
+import { UpstreamResponse } from '@shared';
 import { isAxiosError } from 'axios';
-import { UpstreamResponse } from '../../../shared/responseTypes';
 import { SiteError } from './SiteError';
 
 /**

@@ -1,6 +1,6 @@
 import { join } from 'path';
-import express, { Express } from 'express';
-import swaggerUi from 'swagger-ui-express';
+import express, { static as serveStatic, Express, json } from 'express';
+import { serve, setup } from 'swagger-ui-express';
 import {
     corsMiddleware,
     rateLimitingMiddleware,
@@ -11,7 +11,7 @@ import {
 import apiSpec from '../openapi.json';
 import { applyRoutes } from '../routes';
 import { Config } from '../types/Config';
-import { UserModel } from '../types/User';
+import { UserModel } from '../types/Database';
 
 /**
  * Sets up the {@link Express} app. Including static files, routes, and
@@ -22,20 +22,18 @@ export function loadExpress(config: Config, userModel: UserModel): Express {
 
     app.set('trust proxy', config.numProxies);
 
-    app.use('/static', express.static('static', { extensions: ['html'] }));
+    app.use('/static', serveStatic('static', { extensions: ['html'] }));
 
     app.use(
         '/api-docs',
-        swaggerUi.serve,
-        swaggerUi.setup(apiSpec, { customSiteTitle: 'Mafia API' }),
+        serve,
+        setup(apiSpec, { customSiteTitle: 'Mafia API' }),
     );
 
-    app.use('/spec', express.static(join(__dirname, '../', 'openapi.json')));
-
-    // app.use('/', express.static('static/index.html'));
+    app.use('/spec', serveStatic(join(__dirname, '../', 'openapi.json')));
 
     // Pre-route middleware, like input validation and user authentication.
-    app.use(express.json());
+    app.use(json());
     app.use(corsMiddleware(config));
     app.use(rateLimitingMiddleware(config));
     app.use(validatorMiddleware(config));

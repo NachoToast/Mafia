@@ -1,9 +1,9 @@
+import { SiteErrorObject } from '@shared';
 import { Response } from 'express';
 import {
     ValidationErrorItem,
     HttpError,
 } from 'express-openapi-validator/dist/framework/types';
-import { SiteErrorObject } from '../../../shared/responseTypes';
 import { MiddlewareProvider } from '../types/Express';
 
 /** Custom error messages for OpenAPI validation errors. */

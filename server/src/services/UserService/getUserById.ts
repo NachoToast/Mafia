@@ -1,6 +1,6 @@
-import { DiscordIDString } from '../../../../shared/types';
+import { DiscordIDString, User } from '@shared';
 import { NotFoundError } from '../../errors';
-import { UserModel, User } from '../../types/User';
+import { UserModel } from '../../types/Database';
 
 /**
  * Fetches a user by their Discord ID.

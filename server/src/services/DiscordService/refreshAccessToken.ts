@@ -5,7 +5,7 @@ import {
 } from 'discord-api-types/v10';
 import { SecondaryRequestError } from '../../errors';
 import { Config } from '../../types/Config';
-import { makeRequestBody } from './helpers';
+import { makeRequestBody } from './helpers/makeRequestBody';
 
 /**
  * Makes a POST request to the Discord token refresh URL,

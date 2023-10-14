@@ -1,5 +1,5 @@
 import { DiscordService, UserService } from '../../services';
-import { AuthScope, EndpointProvider } from '../../types/Express';
+import { EndpointProvider, AuthScope } from '../../types/Express';
 
 export const logout: EndpointProvider<AuthScope.User> = {
     authScope: AuthScope.User,

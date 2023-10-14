@@ -1,9 +1,5 @@
 import { beforeAll, describe, expect, test } from 'vitest';
-import {
-    TestDatabase,
-    createTestDatabase,
-} from '../../tests/createTestDatabase';
-import { mockUser } from '../../tests/mocks';
+import { TestDatabase, createTestDatabase, mockUser } from '../../tests';
 import { countUsers } from './countUsers';
 
 describe(countUsers.name, () => {

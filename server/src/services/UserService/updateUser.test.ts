@@ -1,11 +1,7 @@
+import { UserFlags } from '@shared';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { NotFoundError } from '../../errors';
-import {
-    TestDatabase,
-    createTestDatabase,
-} from '../../tests/createTestDatabase';
-import { mockUser } from '../../tests/mocks';
-import { UserFlags } from '../../types/User';
+import { TestDatabase, createTestDatabase, mockUser } from '../../tests';
 import { updateUser } from './updateUser';
 
 describe(updateUser.name, () => {

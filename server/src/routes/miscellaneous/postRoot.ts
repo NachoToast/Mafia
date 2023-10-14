@@ -1,6 +1,6 @@
-import { PostRootResponse } from '../../../../shared/responseTypes';
+import { PostRootResponse } from '@shared';
 import { UserService } from '../../services';
-import { AuthScope, EndpointProvider } from '../../types/Express';
+import { EndpointProvider, AuthScope } from '../../types/Express';
 
 export const postRoot: EndpointProvider<
     AuthScope.None,

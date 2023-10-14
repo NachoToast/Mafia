@@ -2,7 +2,7 @@ import express from 'express';
 import { HttpError } from 'express-openapi-validator/dist/framework/types';
 import request from 'supertest';
 import { beforeAll, describe, expect, test } from 'vitest';
-import { ResponseData, getResponseData, mockConfig } from '../tests';
+import { mockConfig, ResponseData, getResponseData } from '../tests';
 import { validatorErrorHandler } from './validatorErrorHandler';
 
 describe.concurrent(validatorErrorHandler.name, () => {

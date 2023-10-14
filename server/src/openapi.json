@@ -206,6 +206,39 @@
     },
     "components": {
         "schemas": {
+            "AccessTokenResponse": {
+                "type": "object",
+                "description": "Object returned by Discord OAuth token request and refresh endpoints.\n\nSee the [Discord OAuth2 documentation](https://discord.com/developers/docs/topics/oauth2#authorization-code-grant-access-token-response) for more information.",
+                "additionalProperties": false,
+                "required": [
+                    "access_token",
+                    "token_type",
+                    "expires_in",
+                    "refresh_token",
+                    "scope"
+                ],
+                "properties": {
+                    "access_token": {
+                        "type": "string"
+                    },
+                    "token_type": {
+                        "type": "string"
+                    },
+                    "expires_in": {
+                        "type": "integer"
+                    },
+                    "refresh_token": {
+                        "type": "string"
+                    },
+                    "scope": {
+                        "type": "string"
+                    }
+                },
+                "externalDocs": {
+                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/Responses/AccessTokenResponse.d.ts",
+                    "description": "shared/Responses/AccessTokenResponse.d.ts"
+                }
+            },
             "LoginOrSignupResponse": {
                 "type": "object",
                 "description": "An object that contains user data, Discord OAuth data, and a JWT that can be used in the authorisation header for making elevated requests to the API.",
@@ -216,37 +249,7 @@
                         "$ref": "#/components/schemas/User"
                     },
                     "discordAuth": {
-                        "type": "object",
-                        "description": "Discord OAuth data.",
-                        "additionalProperties": false,
-                        "required": [
-                            "access_token",
-                            "token_type",
-                            "expires_in",
-                            "refresh_token",
-                            "scope"
-                        ],
-                        "properties": {
-                            "access_token": {
-                                "type": "string"
-                            },
-                            "token_type": {
-                                "type": "string"
-                            },
-                            "expires_in": {
-                                "type": "integer"
-                            },
-                            "refresh_token": {
-                                "type": "string"
-                            },
-                            "scope": {
-                                "type": "string"
-                            }
-                        },
-                        "externalDocs": {
-                            "url": "https://discord.com/developers/docs/topics/oauth2#authorization-code-grant-access-token-response",
-                            "description": "Discord OAuth2 Documentation"
-                        }
+                        "$ref": "#/components/schemas/AccessTokenResponse"
                     },
                     "siteAuth": {
                         "type": "string",

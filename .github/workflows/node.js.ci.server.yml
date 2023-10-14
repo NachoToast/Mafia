@@ -49,10 +49,13 @@ jobs:
             - name: Lint
               run: pnpm lint
 
+            - name: Check API spec
+              run: pnpm check:apispec
+
             - name: Test
               run: pnpm coverage
 
-            - name: Upload Coverage
+            - name: Upload coverage
               uses: codecov/codecov-action@v3.1.4
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}

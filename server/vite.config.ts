@@ -3,12 +3,18 @@ import { join } from 'path';
 
 export default defineConfig({
     test: {
-        exclude: [...configDefaults.exclude, '**/build/**', '**/tests/**'],
+        exclude: [
+            ...configDefaults.exclude,
+            '**/build/**',
+            '**/tests/**',
+            '**/scripts/**',
+        ],
         coverage: {
             exclude: [
                 ...(configDefaults.coverage.exclude ?? []),
                 '**/build/**',
                 '**/tests/**',
+                '**/scripts/**',
             ],
         },
     },

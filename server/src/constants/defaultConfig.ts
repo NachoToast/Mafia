@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import { randomBytes } from 'crypto';
 import { Config } from '../types/Config';
 
-function getCommit(): Config['commit'] {
+export function getCommit(): Config['commit'] {
     try {
         return execSync('git rev-parse HEAD').toString().trim();
     } catch {

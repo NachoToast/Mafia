@@ -49,7 +49,6 @@
                 "tags": ["Miscellaneous"],
                 "operationId": "postRoot",
                 "security": [{}, { "rateLimitBypassToken": [] }],
-                "description": "Returns API statistics.",
                 "responses": {
                     "200": {
                         "description": "API statistics.",
@@ -112,7 +111,7 @@
         "/ip": {
             "get": {
                 "tags": ["Miscellaneous"],
-                "operationId": "getIp",
+                "operationId": "ip",
                 "security": [{}, { "rateLimitBypassToken": [] }],
                 "description": "Returns the IP address of the requester, useful for [configuring proxies](https://www.npmjs.com/package/express-rate-limit#troubleshooting-proxy-issues)",
                 "responses": {
@@ -137,7 +136,7 @@
             "get": {
                 "tags": ["Miscellaneous"],
                 "security": [{}],
-                "operationId": "getStatic",
+                "operationId": "static",
                 "description": "Returns static HTML files which contain helpful examples for using the API.\n\nNone of the `/static` endpoints are rate limited.",
                 "responses": {
                     "200": {
@@ -152,9 +151,8 @@
         "/login": {
             "post": {
                 "tags": ["Auth"],
-                "operationId": "getLogin",
+                "operationId": "login",
                 "security": [{}, { "rateLimitBypassToken": [] }],
-                "description": "Logs in a user given a Discord OAuth code and state, returning user data and a JWT which can be used in the authorisation header for making elevated requests.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -166,7 +164,8 @@
                                 "required": ["code", "redirect_uri"],
                                 "properties": {
                                     "code": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "description": "OAuth2 authorisation code given from Discord."
                                     },
                                     "redirect_uri": {
                                         "type": "string"
@@ -193,6 +192,73 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/BadRequestError400"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited429"
+                    },
+                    "502": {
+                        "$ref": "#/components/responses/SecondaryRequestError502"
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": ["Auth"],
+                "operationId": "logout",
+                "security": [
+                    { "siteToken": [] },
+                    { "siteToken": [], "rateLimitBypassToken": [] }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully logged out."
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequestError400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthError401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundError404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited429"
+                    },
+                    "502": {
+                        "$ref": "#/components/responses/SecondaryRequestError502"
+                    }
+                }
+            }
+        },
+        "/refresh": {
+            "post": {
+                "tags": ["Auth"],
+                "operationId": "refresh",
+                "security": [
+                    { "siteToken": [] },
+                    { "siteToken": [], "rateLimitBypassToken": [] }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User data, Discord OAuth data, and JWT.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginOrSignupResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequestError400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthError401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundError404"
                     },
                     "429": {
                         "$ref": "#/components/responses/RateLimited429"

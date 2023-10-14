@@ -1,6 +1,6 @@
 import { RouteProvider } from '../types/Express';
 import { applyEndpointHandler } from './applyEndpointHandler';
-import { login } from './auth';
+import { refresh, login, logout } from './auth';
 import { getIp, getRoot, postRoot } from './miscellaneous';
 
 export const applyRoutes: RouteProvider = (app, config, userModel) => {
@@ -11,6 +11,6 @@ export const applyRoutes: RouteProvider = (app, config, userModel) => {
 
     // Auth
     app.post('/login', applyEndpointHandler(login, config, userModel));
-    app.post('/logout', applyEndpointHandler(login, config, userModel));
-    app.post('/refresh', applyEndpointHandler(login, config, userModel));
+    app.post('/logout', applyEndpointHandler(logout, config, userModel));
+    app.post('/refresh', applyEndpointHandler(refresh, config, userModel));
 };

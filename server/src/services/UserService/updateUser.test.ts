@@ -4,7 +4,7 @@ import { NotFoundError } from '../../errors';
 import { TestDatabase, createTestDatabase, mockUser } from '../../tests';
 import { updateUser } from './updateUser';
 
-describe(updateUser.name, () => {
+describe.concurrent(updateUser.name, () => {
     let testDatabase: TestDatabase;
 
     beforeAll(async () => {

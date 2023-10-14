@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from 'vitest';
 import { TestDatabase, createTestDatabase, mockUser } from '../../tests';
 import { getUserById } from './getUserById';
 
-describe(getUserById.name, () => {
+describe.concurrent(getUserById.name, () => {
     let testDatabase: TestDatabase;
 
     beforeAll(async () => {

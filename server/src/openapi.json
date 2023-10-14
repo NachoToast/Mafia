@@ -93,8 +93,8 @@
                                         }
                                     },
                                     "externalDocs": {
-                                        "url": "https://github.com/NachoToast/Mafia/blob/main/shared/responseTypes/postRootResponse.d.ts",
-                                        "description": "shared/responseTypes/postRootResponse.d.ts"
+                                        "url": "https://github.com/NachoToast/Mafia/blob/main/shared/Responses/PostRootResponse.d.ts",
+                                        "description": "shared/Responses/PostRootResponse.d.ts"
                                     }
                                 }
                             }

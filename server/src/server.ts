@@ -10,7 +10,7 @@ async function main(): Promise<void> {
     const port = config.port;
 
     app.listen(port, () => {
-        console.log(`Server is listening on port ${port}`);
+        console.log(`Server is listening on port http://localhost:${port}`);
     });
 }
 

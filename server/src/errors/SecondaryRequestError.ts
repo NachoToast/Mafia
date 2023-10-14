@@ -1,5 +1,4 @@
 import { UpstreamResponse } from '@shared';
-import { isAxiosError } from 'axios';
 import { SiteError } from './SiteError';
 
 /**
@@ -14,24 +13,11 @@ export class SecondaryRequestError extends SiteError<UpstreamResponse | null> {
     public constructor(
         title: Capitalize<string>,
         description: string,
-        error: unknown,
+        error: Response,
     ) {
-        let upstreamResponse: UpstreamResponse | null = null;
-
-        if (isAxiosError(error)) {
-            if (error.response !== undefined) {
-                upstreamResponse = {
-                    statusCode: error.response.status,
-                    statusText: error.response.statusText,
-                };
-            } else if (error.status !== undefined) {
-                upstreamResponse = {
-                    statusCode: error.status,
-                    statusText: error.message,
-                };
-            }
-        }
-
-        super(title, description, upstreamResponse);
+        super(title, description, {
+            statusCode: error.status,
+            statusText: error.statusText,
+        });
     }
 }

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
     OAuth2Routes,
     RESTPostOAuth2AccessTokenResult,
@@ -6,6 +5,7 @@ import {
 import { SecondaryRequestError } from '../../errors';
 import { Config } from '../../types/Config';
 import { makeRequestBody } from './helpers/makeRequestBody';
+import { typedFetch } from './helpers/typedFetch';
 
 /**
  * Makes a POST request to the Discord token URL,
@@ -23,19 +23,25 @@ export async function requestAccessToken(
     body.set('redirect_uri', redirectUri);
     body.set('grant_type', 'authorization_code');
 
-    try {
-        const { data } = await axios.post<RESTPostOAuth2AccessTokenResult>(
+    const { success, data, error } =
+        await typedFetch<RESTPostOAuth2AccessTokenResult>(
             OAuth2Routes.tokenURL,
-            body,
-            { headers: { 'Accept-Encoding': 'application/json' } },
+            {
+                method: 'POST',
+                body,
+                headers: {
+                    'Accept-Encoding': 'application/json',
+                },
+            },
         );
 
-        return data;
-    } catch (error) {
+    if (!success) {
         throw new SecondaryRequestError(
             'Login Failure',
             'Supplied code or redirect URI may be invalid.',
             error,
         );
     }
+
+    return data;
 }

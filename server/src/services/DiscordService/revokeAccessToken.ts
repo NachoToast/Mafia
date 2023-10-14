@@ -1,8 +1,8 @@
-import axios from 'axios';
 import { OAuth2Routes } from 'discord-api-types/v10';
 import { SecondaryRequestError } from '../../errors';
 import { Config } from '../../types/Config';
 import { makeRequestBody } from './helpers/makeRequestBody';
+import { typedFetch } from './helpers/typedFetch';
 
 /**
  * Makes a POST request to the Discord token revocation URL,
@@ -17,9 +17,13 @@ export async function revokeAccessToken(
     const body = makeRequestBody(config);
     body.set('token', accessToken);
 
-    try {
-        await axios.post(OAuth2Routes.tokenRevocationURL, body);
-    } catch (error) {
+    const { success, error } = await typedFetch(
+        OAuth2Routes.tokenRevocationURL,
+        { method: 'POST', body },
+        false,
+    );
+
+    if (!success) {
         throw new SecondaryRequestError(
             'Logout Failure',
             'Supplied access token may be invalid, or you may already be logged out.',

@@ -1,10 +1,10 @@
-import axios from 'axios';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { SecondaryRequestError } from '../../errors';
 import { mockConfig } from '../../tests';
+import * as typedFetch from './helpers/typedFetch';
 import { requestAccessToken } from './requestAccessToken';
 
-describe(requestAccessToken.name, () => {
+describe.concurrent(requestAccessToken.name, () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
@@ -12,9 +12,11 @@ describe(requestAccessToken.name, () => {
     test('gets a Discord user', async () => {
         const mockResponse = 'some Discord user';
 
-        const spy = vi
-            .spyOn(axios, 'post')
-            .mockResolvedValueOnce({ data: mockResponse });
+        const spy = vi.spyOn(typedFetch, 'typedFetch').mockResolvedValueOnce({
+            success: true,
+            data: mockResponse,
+            error: undefined,
+        });
 
         const returnedResponse = await requestAccessToken(
             'code',
@@ -28,8 +30,10 @@ describe(requestAccessToken.name, () => {
     });
 
     test('throws a SecondaryRequestError if the code is invalid', async () => {
-        const spy = vi.spyOn(axios, 'post').mockImplementationOnce(() => {
-            throw new Error('some error');
+        const spy = vi.spyOn(typedFetch, 'typedFetch').mockResolvedValueOnce({
+            success: false,
+            data: undefined,
+            error: new Response(),
         });
 
         await expect(

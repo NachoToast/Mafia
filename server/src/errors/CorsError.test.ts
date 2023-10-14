@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { CorsError } from './CorsError';
 
-describe(CorsError.name, () => {
+describe.concurrent(CorsError.name, () => {
     test('has the correct status code', () => {
         const error = new CorsError();
 

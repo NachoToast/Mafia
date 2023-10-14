@@ -10,7 +10,7 @@ export const applyRoutes: RouteProvider = (app, config, userModel) => {
     app.get('/ip', applyEndpointHandler(getIp, config, userModel));
 
     // Auth
-    app.get('/login', applyEndpointHandler(login, config, userModel));
-    app.get('/logout', applyEndpointHandler(login, config, userModel));
-    app.get('/refresh', applyEndpointHandler(login, config, userModel));
+    app.post('/login', applyEndpointHandler(login, config, userModel));
+    app.post('/logout', applyEndpointHandler(login, config, userModel));
+    app.post('/refresh', applyEndpointHandler(login, config, userModel));
 };

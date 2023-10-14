@@ -13,10 +13,5 @@
     ],
     "parser": "@typescript-eslint/parser",
     "plugins": ["@typescript-eslint"],
-    "settings": {
-        "import/resolver": {
-            "node": true
-        }
-    },
-    "ignorePatterns": ["vite.config.ts", "build/"]
+    "ignorePatterns": ["vite.config.ts"]
 }

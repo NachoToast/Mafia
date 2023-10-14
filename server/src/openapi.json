@@ -194,7 +194,8 @@
                                         "description": "OAuth2 authorisation code given from Discord."
                                     },
                                     "redirect_uri": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "http://localhost:5000/static/discordOAuth"
                                     }
                                 },
                                 "externalDocs": {
@@ -273,6 +274,43 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/LoginOrSignupResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequestError400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthError401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundError404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited429"
+                    },
+                    "502": {
+                        "$ref": "#/components/responses/SecondaryRequestError502"
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "tags": ["Auth"],
+                "operationId": "me",
+                "security": [
+                    { "siteToken": [] },
+                    { "siteToken": [], "rateLimitBypassToken": [] }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User data.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
                                 }
                             }
                         }

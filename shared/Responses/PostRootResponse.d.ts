@@ -1,4 +1,4 @@
-import { ISOString } from '../types';
+import { ISOString } from '../Utility';
 
 export interface PostRootResponse {
     /** Commit hash of current server version. */

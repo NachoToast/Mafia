@@ -148,10 +148,116 @@
                     }
                 }
             }
+        },
+        "/login": {
+            "post": {
+                "tags": ["Auth"],
+                "operationId": "getLogin",
+                "security": [{}, { "rateLimitBypassToken": [] }],
+                "description": "Logs in a user given a Discord OAuth code and state, returning user data and a JWT which can be used in the authorisation header for making elevated requests.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "Request body for the login endpoint.",
+                                "additionalProperties": false,
+                                "required": ["code", "redirect_uri"],
+                                "properties": {
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "redirect_uri": {
+                                        "type": "string"
+                                    }
+                                },
+                                "externalDocs": {
+                                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/Requests/LoginRequest.d.ts",
+                                    "description": "shared/Requests/LoginRequest.d.ts"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User data, Discord OAuth data, and JWT.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginOrSignupResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequestError400"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited429"
+                    },
+                    "502": {
+                        "$ref": "#/components/responses/SecondaryRequestError502"
+                    }
+                }
+            }
         }
     },
     "components": {
         "schemas": {
+            "LoginOrSignupResponse": {
+                "type": "object",
+                "description": "An object that contains user data, Discord OAuth data, and a JWT that can be used in the authorisation header for making elevated requests to the API.",
+                "additionalProperties": false,
+                "required": ["user", "discordAuth", "siteAuth"],
+                "properties": {
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "discordAuth": {
+                        "type": "object",
+                        "description": "Discord OAuth data.",
+                        "additionalProperties": false,
+                        "required": [
+                            "access_token",
+                            "token_type",
+                            "expires_in",
+                            "refresh_token",
+                            "scope"
+                        ],
+                        "properties": {
+                            "access_token": {
+                                "type": "string"
+                            },
+                            "token_type": {
+                                "type": "string"
+                            },
+                            "expires_in": {
+                                "type": "integer"
+                            },
+                            "refresh_token": {
+                                "type": "string"
+                            },
+                            "scope": {
+                                "type": "string"
+                            }
+                        },
+                        "externalDocs": {
+                            "url": "https://discord.com/developers/docs/topics/oauth2#authorization-code-grant-access-token-response",
+                            "description": "Discord OAuth2 Documentation"
+                        }
+                    },
+                    "siteAuth": {
+                        "type": "string",
+                        "description": "Signed JWT to use in authorisation header when making elevated requests to the API."
+                    }
+                },
+                "externalDocs": {
+                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/Responses/LoginOrSignupResponse.d.ts",
+                    "description": "shared/Responses/LoginOrSignupResponse.d.ts"
+                }
+            },
             "SiteErrorObject": {
                 "type": "object",
                 "description": "Generic error object returned by server.",
@@ -165,8 +271,55 @@
                     }
                 },
                 "externalDocs": {
-                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/responseTypes/SiteErrorObject.d.ts",
-                    "description": "shared/responseTypes/SiteErrorObject.d.ts"
+                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/Responses/SiteErrorObject.d.ts",
+                    "description": "shared/Responses/SiteErrorObject.d.ts"
+                }
+            },
+            "User": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "_id",
+                    "username",
+                    "ip",
+                    "registeredAt",
+                    "lastActivity",
+                    "flags"
+                ],
+                "properties": {
+                    "_id": {
+                        "$ref": "#/components/schemas/DiscordIDString"
+                    },
+                    "username": {
+                        "type": "string",
+                        "description": "Username of the user, defaults to their Discord username."
+                    },
+                    "ip": {
+                        "type": "string"
+                    },
+                    "registeredAt": {
+                        "$ref": "#/components/schemas/ISOString"
+                    },
+                    "lastActivity": {
+                        "$ref": "#/components/schemas/ISOString"
+                    },
+                    "flags": {
+                        "$ref": "#/components/schemas/UserFlags"
+                    }
+                },
+                "externalDocs": {
+                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/User/User.d.ts",
+                    "description": "shared/User/User.d.ts"
+                }
+            },
+            "UserFlags": {
+                "type": "integer",
+                "description": "These flags indicate special attributes about a particular user.",
+                "minimum": 0,
+                "maximum": 3,
+                "externalDocs": {
+                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/User/UserFlags.d.ts",
+                    "description": "shared/User/UserFlags.d.ts"
                 }
             },
             "DiscordIDString": {
@@ -174,8 +327,8 @@
                 "description": "A Discord ID.",
                 "example": "909645967081476147",
                 "externalDocs": {
-                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/types/DiscordIDString.d.ts",
-                    "description": "shared/types/DiscordIDString.d.ts"
+                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/Utility/DiscordIDString.d.ts",
+                    "description": "shared/Utility/DiscordIDString.d.ts"
                 }
             },
             "ISOString": {
@@ -183,8 +336,8 @@
                 "description": "A string in ISO format, used to store dates.",
                 "example": "2022-11-08T02:20:08.190Z",
                 "externalDocs": {
-                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/types/ISOString.d.ts",
-                    "description": "shared/types/ISOString.d.ts"
+                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/Utility/ISOString.d.ts",
+                    "description": "shared/Utility/ISOString.d.ts"
                 }
             }
         },
@@ -237,7 +390,7 @@
                 }
             },
             "AuthError401": {
-                "description": "Object returned when a user's site token (JWT) is missing or invalid.",
+                "description": "Error thrown when a user's site token (JWT) is missing or invalid.",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -256,7 +409,7 @@
                 }
             },
             "NotFoundError404": {
-                "description": "Object returned when the requested user does not exist in the database.",
+                "description": "Error thrown when a user does not exist in the database.",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -343,8 +496,8 @@
                                         }
                                     },
                                     "externalDocs": {
-                                        "url": "https://github.com/NachoToast/Mafia/blob/main/shared/responseTypes/UpstreamResponse.d.ts",
-                                        "description": "shared/responseTypes/UpstreamResponse.d.ts"
+                                        "url": "https://github.com/NachoToast/Mafia/blob/main/shared/Responses/UpstreamResponse.d.ts",
+                                        "description": "shared/Responses/UpstreamResponse.d.ts"
                                     }
                                 }
                             },

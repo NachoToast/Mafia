@@ -2,6 +2,13 @@ import { PostRootResponse } from '@shared';
 import { UserService } from '../../services';
 import { EndpointProvider, AuthScope } from '../../types/Express';
 
+export const getRoot: EndpointProvider = {
+    authScope: AuthScope.None,
+    handler({ res }) {
+        res.status(200).sendFile('index.html', { root: 'static' });
+    },
+};
+
 export const postRoot: EndpointProvider<
     AuthScope.None,
     void,

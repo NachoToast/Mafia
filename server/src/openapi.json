@@ -135,6 +135,7 @@
         "/spec": {
             "get": {
                 "tags": ["Miscellaneous"],
+                "operationId": "spec",
                 "responses": {
                     "200": {
                         "description": "The underlying OpenAPI specification for this API.",
@@ -148,6 +149,7 @@
         "/api-docs": {
             "get": {
                 "tags": ["Miscellaneous"],
+                "operationId": "apiDocs",
                 "responses": {
                     "200": {
                         "description": "This document!",
@@ -161,7 +163,6 @@
         "/static": {
             "get": {
                 "tags": ["Miscellaneous"],
-                "security": [{}],
                 "operationId": "static",
                 "description": "Returns static HTML files which contain helpful examples for using the API.\n\nNone of the `/static` endpoints are rate limited.",
                 "responses": {
@@ -247,9 +248,6 @@
                     "401": {
                         "$ref": "#/components/responses/AuthError401"
                     },
-                    "404": {
-                        "$ref": "#/components/responses/NotFoundError404"
-                    },
                     "429": {
                         "$ref": "#/components/responses/RateLimited429"
                     },
@@ -299,7 +297,7 @@
         "/me": {
             "get": {
                 "tags": ["Auth"],
-                "operationId": "me",
+                "operationId": "getMe",
                 "security": [
                     { "siteToken": [] },
                     { "siteToken": [], "rateLimitBypassToken": [] }
@@ -307,6 +305,93 @@
                 "responses": {
                     "200": {
                         "description": "User data.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequestError400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthError401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundError404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited429"
+                    },
+                    "502": {
+                        "$ref": "#/components/responses/SecondaryRequestError502"
+                    }
+                }
+            },
+            "patch": {
+                "tags": ["Auth"],
+                "operationId": "patchMe",
+                "security": [
+                    { "siteToken": [] },
+                    { "siteToken": [], "rateLimitBypassToken": [] }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "username": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated user data.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "No content, likely didn't supply anything to update."
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequestError400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthError401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFoundError404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited429"
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["Auth"],
+                "operationId": "deleteMe",
+                "description": "This also revokes the users Discord OAuth access token.",
+                "security": [
+                    { "siteToken": [] },
+                    { "siteToken": [], "rateLimitBypassToken": [] }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted user data.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -666,7 +751,7 @@
         },
         {
             "name": "Auth",
-            "description": "Logging in, logging out, and refreshing."
+            "description": "Operations related to the currently logged in user."
         }
     ]
 }

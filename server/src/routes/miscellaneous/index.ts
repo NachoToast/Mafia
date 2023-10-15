@@ -1,3 +1,2 @@
-export * from './getIp';
-export * from './getRoot';
-export * from './postRoot';
+export * from './ip';
+export * from './root';

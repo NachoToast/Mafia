@@ -3,17 +3,17 @@ import { NotFoundError } from '../../errors';
 import { UserModel } from '../../types/Database';
 
 /**
- * Fetches a user by their Discord ID.
+ * Deletes a user in the database.
  *
  * @throws Throws a {@link NotFoundError} if the user does not exist.
  */
-export async function getUserById(
+export async function deleteUser(
     _id: DiscordIDString,
     userModel: UserModel,
 ): Promise<User> {
-    const user = await userModel.findOne({ _id });
+    const deletedUser = await userModel.findOneAndDelete({ _id });
 
-    if (user === null) throw new NotFoundError(_id);
+    if (deletedUser === null) throw new NotFoundError(_id);
 
-    return user;
+    return deletedUser;
 }

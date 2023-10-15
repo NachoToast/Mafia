@@ -32,10 +32,7 @@ export const login: EndpointProvider<
             user = await UserService.getUserById(discordUser.id, userModel);
 
             // User does exist, so update their information.
-            await UserService.updateUser(user._id, userModel, {
-                ip: req.ip,
-                lastActivity: new Date().toISOString(),
-            });
+            UserService.updateUserMeta(discordUser.id, userModel, req);
         } catch (error) {
             if (!(error instanceof NotFoundError)) {
                 throw error;

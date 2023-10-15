@@ -7,15 +7,15 @@ import {
 import { EndpointProvider, AuthScope } from '../../types/Express';
 
 export const refresh: EndpointProvider<
-    AuthScope.User,
+    AuthScope.TokenOnly,
     void,
     LoginOrSignupResponse
 > = {
-    authScope: AuthScope.User,
-    async handler({ config, userModel, req, res, auth, user }) {
+    authScope: AuthScope.TokenOnly,
+    async handler({ config, userModel, req, res, auth }) {
         const [discordAuth, updatedUser] = await Promise.all([
             DiscordService.refreshAccessToken(auth.refresh_token, config),
-            UserService.updateUser(user._id, userModel, {
+            UserService.updateUser(auth.id, userModel, {
                 ip: req.ip,
                 lastActivity: new Date().toISOString(),
             }),

@@ -348,6 +348,10 @@
                                     "username": {
                                         "type": "string"
                                     }
+                                },
+                                "externalDocs": {
+                                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/Requests/PatchMeRequest.d.ts",
+                                    "description": "shared/Requests/PatchMeRequest.d.ts"
                                 }
                             }
                         }

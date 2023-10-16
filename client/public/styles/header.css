@@ -1,5 +1,6 @@
+/* Styling for the <header> and it's children. */
+
 header {
-    padding: 0.5em 1em;
     display: flex;
     flex-flow: row wrap;
     justify-content: flex-end;
@@ -8,6 +9,7 @@ header {
 }
 
 header a {
+    padding: 0.25em;
     display: flex;
     flex-flow: row nowrap;
     align-items: center;

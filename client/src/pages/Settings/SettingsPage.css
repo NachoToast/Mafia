@@ -1,0 +1,95 @@
+#settings h1 {
+    text-align: center;
+    font-size: 96px;
+    color: #ff5d5d;
+    text-shadow:
+        1px 0 4px #ff5d5d,
+        2px 0 4px #ff5d5d,
+        3px 0 4px #ff5d5d,
+        2px 0 3px #d61616,
+        2px 3px 15px #d61616,
+        2px 0 15px,
+        5px 0 125px,
+        20px 0 200px #d61616,
+        40px 0 200px #d61616;
+    margin: 0;
+}
+
+#settings > a {
+    margin-top: 3rem;
+    margin-bottom: 2rem;
+}
+
+#settings-options {
+    display: grid;
+    width: 90%;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+#settings .settings-item {
+    display: flex;
+    flex-flow: column nowrap;
+    border: solid 1px transparent;
+    padding: 1em;
+    transition: 200ms;
+    border-radius: 0.25em;
+}
+
+#settings .settings-item:hover {
+    border: solid 1px darkred;
+    transform: scale(105%);
+}
+
+#settings .settings-item > input {
+    background-color: #171717;
+    border: none;
+    font: inherit;
+    color: inherit;
+    padding: 0.5em 1em;
+    border-radius: 0.25em;
+    outline: none;
+    height: fit-content;
+}
+
+#settings .settings-item > input:focus {
+    box-shadow: 2px 2px 10px #ff5d5d;
+}
+
+#settings .settings-item > span {
+    color: gray;
+    padding: 0.5em 1em;
+}
+
+#settings .settings-item > details {
+    padding: 0.5em 1em;
+    padding-right: 0;
+    cursor: pointer;
+}
+
+#settings .settings-item .button-area {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.25em;
+}
+
+#settings .settings-item button {
+    align-self: flex-end;
+    padding: 0.5em 1em;
+    margin-top: 0.5em;
+    transition: opacity 300ms;
+}
+
+#settings .settings-item button.save {
+    border-color: greenyellow;
+    box-shadow:
+        1px 0 4px rgb(184, 254, 79),
+        3px 3px 9px transparent;
+}
+
+#settings .settings-item .button-area button:disabled {
+    opacity: 0;
+}

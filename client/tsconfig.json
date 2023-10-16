@@ -6,11 +6,16 @@
         "lib": ["ES2020", "DOM", "DOM.Iterable"],
 
         /* Bundler Mode */
-        "moduleResolution": "bundler",
+        "moduleResolution": "Bundler",
         "allowImportingTsExtensions": true,
         "isolatedModules": true,
         "noEmit": true,
+        "jsx": "react-jsx",
 
+        "paths": {
+            "@shared": ["../shared/index.d.ts"]
+        }
     },
-    "include": ["src"]
+    "include": ["src"],
+    "references": [{ "path": "./tsconfig.node.json" }]
 }

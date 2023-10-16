@@ -1,3 +1,5 @@
+/* Styling of fonts, scollbar, pages, and other utility classes. */
+
 @font-face {
     font-family: 'MonoRegular';
     src: url('../fonts/MonoRegular.ttf');
@@ -16,8 +18,9 @@
 body {
     color: #aaa;
 
-    font-family: -apple-system, 'MonoBold', BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
-        Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    font-family: -apple-system, 'MonoBold', BlinkMacSystemFont, 'Segoe UI',
+        Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
     display: flex;
@@ -28,32 +31,45 @@ body {
 
     width: 100dvw;
     height: 100dvh;
+
+    overflow-x: hidden;
+}
+
+#root {
+    flex-grow: 1;
+    display: flex;
+    flex-flow: column nowrap;
 }
 
 main {
     flex-grow: 1;
+}
+
+::-webkit-scrollbar {
+    background-color: #171717;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #373737;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #ff5d5d;
+}
+
+.flex-centered {
     display: flex;
     flex-flow: column nowrap;
     align-items: center;
     justify-content: center;
 }
 
-.coming-soon-parent {
-    position: relative;
-    cursor: not-allowed;
-}
-
-.coming-soon {
-    fill: #feae00;
-    position: absolute;
-    right: 0;
-    top: 0;
-    opacity: 0.5;
-    transform: translateX(50%) translateY(-50%) rotate(-20deg);
-    transition: 200ms;
-}
-
-.coming-soon-parent:hover .coming-soon {
-    fill: #fe6e00;
-    opacity: 1;
+pre.error-data {
+    background-color: #000000f0;
+    padding: 1em;
+    border-radius: 0.5em;
+    border: solid 1px #310000;
+    max-width: max(300px, 60dvw);
+    overflow: auto;
+    white-space: pre-wrap;
 }

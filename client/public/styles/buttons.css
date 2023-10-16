@@ -1,0 +1,28 @@
+/* Styling for buttons. */
+
+button {
+    background-color: #0000000f;
+    font: inherit;
+    cursor: pointer;
+    padding: 1em;
+    color: inherit;
+    border: solid 3px #910000;
+    transition: 100ms;
+    box-shadow:
+        1px 0 4px #d61616,
+        3px 3px 9px transparent;
+}
+
+button:disabled {
+    pointer-events: none;
+}
+
+button:hover {
+    background-color: #000000;
+    box-shadow:
+        1px 0 4px #d61616,
+        3px 3px 9px #ff0505;
+
+    color: white;
+    transform: scale(105%);
+}

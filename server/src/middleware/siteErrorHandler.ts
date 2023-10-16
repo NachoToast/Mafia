@@ -4,7 +4,7 @@ import { SiteError } from '../errors';
 import { MiddlewareProvider } from '../types/Express';
 
 export const siteErrorHandler: MiddlewareProvider = () => {
-    return (err, req, res: Response<SiteErrorObject<unknown>>, next) => {
+    return (err, req, res: Response<SiteErrorObject>, next) => {
         if (err instanceof SiteError) {
             if (req.app.get('env') === 'development') {
                 console.log(`${req.method} ${req.url}`, err);

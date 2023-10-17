@@ -1,4 +1,5 @@
-import { FC, memo } from 'react';
+import { FC, memo, useContext } from 'react';
+import { SettingsContext } from '../contexts/Settings';
 import ExternalLink from './Links/ExternalLink';
 import InternalLink from './Links/InternalLink';
 
@@ -7,6 +8,8 @@ export interface FooterProps {
 }
 
 const Footer: FC<FooterProps> = ({ activePage }) => {
+    const { settings } = useContext(SettingsContext);
+
     return (
         <footer>
             <InternalLink href="/settings" title="Settings">
@@ -24,7 +27,7 @@ const Footer: FC<FooterProps> = ({ activePage }) => {
                 </svg>
             </InternalLink>
             <ExternalLink
-                href="https://maf.wintonoverwatch.com/api-docs"
+                href={`${settings.serverUrl}/api-docs`}
                 title="API Documentation"
                 target="_blank"
             >

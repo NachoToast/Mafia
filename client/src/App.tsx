@@ -11,7 +11,7 @@ const App: FC = () => {
 
     if (isMobile) {
         return (
-            <BrowserRouter>
+            <>
                 <main id="main-menu" className="flex-centered">
                     <Title />
                     <div className="flex-centered">
@@ -19,8 +19,8 @@ const App: FC = () => {
                         <p>Sorry, mobile devices aren't able to play mafia.</p>
                     </div>
                 </main>
-                <Footer />
-            </BrowserRouter>
+                <Footer isMobile />
+            </>
         );
     }
 

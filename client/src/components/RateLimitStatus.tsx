@@ -33,10 +33,7 @@ const RateLimitStatus: FC = () => {
         };
     }, [serverState.connectionStatus]);
 
-    if (
-        settings.rateLimitBypassToken === '' ||
-        serverState.rateLimitBypassed === null
-    ) {
+    if (settings.rateLimitBypassToken === '') {
         return (
             <span key={0} className="fade-in">
                 No token specified.

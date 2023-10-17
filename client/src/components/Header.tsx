@@ -1,8 +1,10 @@
 import { FC } from 'react';
+import Console from './Console';
 
 const Header: FC = () => {
     return (
         <header>
+            <Console />
             <a
                 target="_blank"
                 rel="noreferrer noopener"

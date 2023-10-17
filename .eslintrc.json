@@ -33,9 +33,10 @@
             "error",
             {
                 "code": 80,
+                "ignoreUrls": true,
                 "ignoreStrings": true,
                 "ignoreTemplateLiterals": true,
-                "ignoreUrls": true
+                "ignoreRegExpLiterals": true
             }
         ],
         "nonblock-statement-body-position": ["warn", "beside"] /* Warning because partially conflicts with max-len. */,

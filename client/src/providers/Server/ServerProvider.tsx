@@ -28,7 +28,9 @@ const ServerContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const [serverState, setServerState] = useState<ServerState>({
         connectionStatus: ServerConnectionStatus.Initial,
         data: null,
-        rateLimitBypassed: undefined,
+        rateLimitBypassed: null,
+        sentAt: null,
+        receivedAt: null,
     });
 
     const [lastController, setLastController] = useState<AbortController>();
@@ -36,12 +38,18 @@ const ServerContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const { settings } = useContext(SettingsContext);
 
     const connect = useCallback<ServerControllers['connect']>(
-        async (controller) => {
-            setServerState({
-                connectionStatus: ServerConnectionStatus.Connecting,
-                data: null,
-                rateLimitBypassed: undefined,
-            });
+        async (controller, assumeAlreadyConnected) => {
+            const sentAt = new Date().toISOString();
+
+            if (!assumeAlreadyConnected) {
+                setServerState({
+                    connectionStatus: ServerConnectionStatus.Connecting,
+                    data: null,
+                    rateLimitBypassed: null,
+                    sentAt,
+                    receivedAt: null,
+                });
+            }
 
             setLastController(controller);
             try {
@@ -60,6 +68,8 @@ const ServerContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
                     connectionStatus: ServerConnectionStatus.Connected,
                     data,
                     rateLimitBypassed: getRatelimitHeaders(response).bypassed,
+                    sentAt,
+                    receivedAt: new Date().toISOString(),
                 });
             } catch (error) {
                 if (isAbortError(error)) return;
@@ -67,7 +77,9 @@ const ServerContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
                 setServerState({
                     connectionStatus: ServerConnectionStatus.Errored,
                     data: await handleFetchError(error),
-                    rateLimitBypassed: undefined,
+                    rateLimitBypassed: null,
+                    sentAt: null,
+                    receivedAt: null,
                 });
             }
         },
@@ -79,7 +91,9 @@ const ServerContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
         setServerState({
             connectionStatus: ServerConnectionStatus.Initial,
             data: null,
-            rateLimitBypassed: undefined,
+            rateLimitBypassed: null,
+            sentAt: null,
+            receivedAt: null,
         });
     }, [lastController]);
 

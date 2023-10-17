@@ -1,4 +1,4 @@
-import { PostRootResponse, SiteErrorObject } from '@shared';
+import { ISOString, PostRootResponse, SiteErrorObject } from '@shared';
 
 export enum ServerConnectionStatus {
     /** Not yet tried to connect to the server. */
@@ -16,13 +16,17 @@ export enum ServerConnectionStatus {
 interface ServerStateInitial {
     connectionStatus: ServerConnectionStatus.Initial;
     data: null;
-    rateLimitBypassed: undefined;
+    rateLimitBypassed: null;
+    sentAt: null;
+    receivedAt: null;
 }
 
 interface ServerStateConnecting {
     connectionStatus: ServerConnectionStatus.Connecting;
     data: null;
-    rateLimitBypassed: undefined;
+    rateLimitBypassed: null;
+    sentAt: ISOString;
+    receivedAt: null;
 }
 
 interface ServerStateConnected {
@@ -30,12 +34,16 @@ interface ServerStateConnected {
     data: PostRootResponse;
 
     rateLimitBypassed: boolean | null;
+    sentAt: ISOString;
+    receivedAt: ISOString;
 }
 
 interface ServerStateErrored {
     connectionStatus: ServerConnectionStatus.Errored;
     data: SiteErrorObject;
-    rateLimitBypassed: undefined;
+    rateLimitBypassed: null;
+    sentAt: null;
+    receivedAt: null;
 }
 
 export type ServerState =
@@ -49,8 +57,14 @@ export interface ServerControllers {
      * Attempts to connect to the server using the configured server URL.
      * @param {AbortController} [controller] Controller that can be used to
      * abort the request later (e.g. in a useEffect cleanup).
+     * @param {boolean} [assumeAlreadyConnected] Whether to assume that a valid
+     * connection has already been made, telling the controller to not set the
+     * state to connecting when called.
      */
-    connect(controller?: AbortController): Promise<void>;
+    connect(
+        controller?: AbortController,
+        assumeAlreadyConnected?: boolean,
+    ): Promise<void>;
 
     /**
      * Aborts the outgoing request, if present. This is identical to calling

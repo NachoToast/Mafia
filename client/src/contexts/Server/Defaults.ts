@@ -8,7 +8,9 @@ import {
 export const defaultServerState: ServerState = {
     connectionStatus: ServerConnectionStatus.Initial,
     data: null,
-    rateLimitBypassed: undefined,
+    rateLimitBypassed: null,
+    sentAt: null,
+    receivedAt: null,
 };
 
 export const defaultServerControllers: ServerControllers = {

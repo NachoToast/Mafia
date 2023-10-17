@@ -1,0 +1,5 @@
+.internal-link,
+.external-link {
+    color: inherit;
+    text-decoration: inherit;
+}

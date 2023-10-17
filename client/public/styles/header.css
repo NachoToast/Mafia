@@ -26,11 +26,11 @@ header svg {
     fill: inherit;
 }
 
-header > :hover {
+header a:hover {
     color: red;
     fill: red;
 }
 
-header > :hover svg:nth-child(2) {
+header > :hover svg:nth-child(1) {
     transform: rotate(-25deg);
 }

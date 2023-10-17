@@ -1,5 +1,6 @@
 import { FC, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import './Links.css';
 
 export interface InternalLinkProps {
     children: ReactNode;
@@ -9,11 +10,7 @@ export interface InternalLinkProps {
 
 /** A link to somewhere else on the site. */
 const InternalLink: FC<InternalLinkProps> = ({ href, children, title }) => (
-    <Link
-        to={href}
-        title={title}
-        style={{ color: 'inherit', textDecoration: 'inherit' }}
-    >
+    <Link to={href} title={title} className="internal-link">
         {children}
     </Link>
 );

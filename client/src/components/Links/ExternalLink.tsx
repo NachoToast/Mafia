@@ -1,4 +1,5 @@
 import { FC, HTMLAttributeAnchorTarget, ReactNode } from 'react';
+import './Links.css';
 
 export interface ExternalLinkProps {
     children: ReactNode;
@@ -16,8 +17,8 @@ const ExternalLink: FC<ExternalLinkProps> = (props) => {
             href={href}
             rel="noreferrer noopener"
             target={target ?? '_self'}
-            style={{ color: 'inherit', textDecoration: 'inherit' }}
             title={title}
+            className="external-link"
         >
             {children}
         </a>

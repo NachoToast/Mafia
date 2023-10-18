@@ -40,6 +40,7 @@
             }
         ],
         "nonblock-statement-body-position": ["warn", "beside"] /* Warning because partially conflicts with max-len. */,
+        "@typescript-eslint/unbound-method": "off",
         "@typescript-eslint/no-dupe-class-members": ["error"],
         "@typescript-eslint/explicit-member-accessibility": ["error", { "accessibility": "explicit" }],
         "@typescript-eslint/no-inferrable-types": ["error", { "ignoreParameters": true }],

@@ -1,4 +1,4 @@
-import { PatchMeRequest, User } from '@shared';
+import { User } from '@shared';
 import { DiscordService, UserService } from '../../services';
 import { AuthScope, EndpointProvider } from '../../types/Express';
 
@@ -9,22 +9,13 @@ export const getMe: EndpointProvider<AuthScope.User, void, User> = {
     },
 };
 
-export const patchMe: EndpointProvider<
-    AuthScope.TokenOnly,
-    PatchMeRequest,
-    User
-> = {
+export const patchMe: EndpointProvider<AuthScope.TokenOnly, void, User> = {
     authScope: AuthScope.TokenOnly,
     async handler({ userModel, req, res, auth }) {
-        const { username } = req.body;
-
-        if (username === undefined) {
-            res.sendStatus(204);
-            return;
-        }
+        const user = await DiscordService.getDiscordUser(auth.access_token);
 
         const updatedUser = await UserService.updateUser(auth.id, userModel, {
-            username,
+            username: user.username,
             lastActivity: new Date().toISOString(),
             ip: req.ip,
         });

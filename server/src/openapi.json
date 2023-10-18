@@ -333,30 +333,11 @@
             "patch": {
                 "tags": ["Auth"],
                 "operationId": "patchMe",
+                "description": "Updates the requester's username to be in-sync with their Discord one.",
                 "security": [
                     { "siteToken": [] },
                     { "siteToken": [], "rateLimitBypassToken": [] }
                 ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "additionalProperties": false,
-                                "properties": {
-                                    "username": {
-                                        "type": "string"
-                                    }
-                                },
-                                "externalDocs": {
-                                    "url": "https://github.com/NachoToast/Mafia/blob/main/shared/Requests/PatchMeRequest.d.ts",
-                                    "description": "shared/Requests/PatchMeRequest.d.ts"
-                                }
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
                         "description": "Updated user data.",
@@ -367,9 +348,6 @@
                                 }
                             }
                         }
-                    },
-                    "204": {
-                        "description": "No content, likely didn't supply anything to update."
                     },
                     "400": {
                         "$ref": "#/components/responses/BadRequestError400"
@@ -382,6 +360,9 @@
                     },
                     "429": {
                         "$ref": "#/components/responses/RateLimited429"
+                    },
+                    "502": {
+                        "$ref": "#/components/responses/SecondaryRequestError502"
                     }
                 }
             },

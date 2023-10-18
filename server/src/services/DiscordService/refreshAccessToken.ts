@@ -4,8 +4,8 @@ import {
 } from 'discord-api-types/v10';
 import { SecondaryRequestError } from '../../errors';
 import { Config } from '../../types/Config';
+import { TypedFetchError, typedFetch } from '../../util/typedFetch';
 import { makeRequestBody } from './helpers/makeRequestBody';
-import { typedFetch } from './helpers/typedFetch';
 
 /**
  * Makes a POST request to the Discord token refresh URL,
@@ -21,8 +21,8 @@ export async function refreshAccessToken(
     body.set('refresh_token', refreshToken);
     body.set('grant_type', 'refresh_token');
 
-    const { success, data, error } =
-        await typedFetch<RESTPostOAuth2AccessTokenResult>(
+    try {
+        const { data } = await typedFetch<RESTPostOAuth2AccessTokenResult>(
             OAuth2Routes.tokenURL,
             {
                 method: 'POST',
@@ -32,14 +32,15 @@ export async function refreshAccessToken(
                 },
             },
         );
-
-    if (!success) {
-        throw new SecondaryRequestError(
-            'Refresh Failure',
-            'Supplied refresh token may be invalid.',
-            error,
-        );
+        return data;
+    } catch (error) {
+        if (error instanceof TypedFetchError) {
+            throw new SecondaryRequestError(
+                'Refresh Failure',
+                'Supplied refresh token may be invalid.',
+                error.response,
+            );
+        }
+        throw error;
     }
-
-    return data;
 }

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { SecondaryRequestError } from '../../errors';
 import { mockConfig } from '../../tests';
-import * as typedFetch from './helpers/typedFetch';
+import * as typedFetch from '../../util/typedFetch';
 import { requestAccessToken } from './requestAccessToken';
 
 describe.concurrent(requestAccessToken.name, () => {
@@ -13,9 +13,8 @@ describe.concurrent(requestAccessToken.name, () => {
         const mockResponse = 'some Discord user';
 
         const spy = vi.spyOn(typedFetch, 'typedFetch').mockResolvedValueOnce({
-            success: true,
             data: mockResponse,
-            error: undefined,
+            response: new Response(),
         });
 
         const returnedResponse = await requestAccessToken(
@@ -29,16 +28,30 @@ describe.concurrent(requestAccessToken.name, () => {
         expect(returnedResponse).toEqual(mockResponse);
     });
 
-    test('throws a SecondaryRequestError if the code is invalid', async () => {
-        const spy = vi.spyOn(typedFetch, 'typedFetch').mockResolvedValueOnce({
-            success: false,
-            data: undefined,
-            error: new Response(),
-        });
+    test('throws a SecondaryRequestError if a TypedFetchError is encountered', async () => {
+        const spy = vi
+            .spyOn(typedFetch, 'typedFetch')
+            .mockImplementationOnce(() => {
+                throw new typedFetch.TypedFetchError(new Response());
+            });
 
         await expect(
             requestAccessToken('code', 'redirect_uri', mockConfig()),
         ).rejects.toThrowError(SecondaryRequestError);
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not catch normal errors', async () => {
+        const spy = vi
+            .spyOn(typedFetch, 'typedFetch')
+            .mockImplementationOnce(() => {
+                throw new Error();
+            });
+
+        await expect(
+            requestAccessToken('code', 'redirect_uri', mockConfig()),
+        ).rejects.toThrowError();
 
         expect(spy).toHaveBeenCalledTimes(1);
     });

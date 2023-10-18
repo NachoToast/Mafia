@@ -4,8 +4,8 @@ import {
 } from 'discord-api-types/v10';
 import { SecondaryRequestError } from '../../errors';
 import { Config } from '../../types/Config';
+import { TypedFetchError, typedFetch } from '../../util/typedFetch';
 import { makeRequestBody } from './helpers/makeRequestBody';
-import { typedFetch } from './helpers/typedFetch';
 
 /**
  * Makes a POST request to the Discord token URL,
@@ -23,8 +23,8 @@ export async function requestAccessToken(
     body.set('redirect_uri', redirectUri);
     body.set('grant_type', 'authorization_code');
 
-    const { success, data, error } =
-        await typedFetch<RESTPostOAuth2AccessTokenResult>(
+    try {
+        const { data } = await typedFetch<RESTPostOAuth2AccessTokenResult>(
             OAuth2Routes.tokenURL,
             {
                 method: 'POST',
@@ -34,14 +34,15 @@ export async function requestAccessToken(
                 },
             },
         );
-
-    if (!success) {
-        throw new SecondaryRequestError(
-            'Login Failure',
-            'Supplied code or redirect URI may be invalid.',
-            error,
-        );
+        return data;
+    } catch (error) {
+        if (error instanceof TypedFetchError) {
+            throw new SecondaryRequestError(
+                'Login Failure',
+                'Supplied code or redirect URI may be invalid.',
+                error.response,
+            );
+        }
+        throw error;
     }
-
-    return data;
 }

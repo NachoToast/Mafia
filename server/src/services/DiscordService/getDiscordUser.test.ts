@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { SecondaryRequestError } from '../../errors';
+import * as typedFetch from '../../util/typedFetch';
 import { getDiscordUser } from './getDiscordUser';
-import * as typedFetch from './helpers/typedFetch';
 
 describe.concurrent(getDiscordUser.name, () => {
     afterEach(() => {
@@ -12,9 +12,8 @@ describe.concurrent(getDiscordUser.name, () => {
         const mockResponse = 'some Discord user';
 
         const spy = vi.spyOn(typedFetch, 'typedFetch').mockResolvedValueOnce({
-            success: true,
             data: mockResponse,
-            error: undefined,
+            response: new Response(),
         });
 
         const returnedResponse = await getDiscordUser('some access token');
@@ -24,16 +23,30 @@ describe.concurrent(getDiscordUser.name, () => {
         expect(returnedResponse).toEqual(mockResponse);
     });
 
-    test('throws a SecondaryRequestError if the token is invalid', async () => {
-        const spy = vi.spyOn(typedFetch, 'typedFetch').mockResolvedValueOnce({
-            success: false,
-            data: undefined,
-            error: new Response(),
-        });
+    test('throws a SecondaryRequestError if a TypedFetchError is encountered', async () => {
+        const spy = vi
+            .spyOn(typedFetch, 'typedFetch')
+            .mockImplementationOnce(() => {
+                throw new typedFetch.TypedFetchError(new Response());
+            });
 
         await expect(getDiscordUser('some access token')).rejects.toThrowError(
             SecondaryRequestError,
         );
+
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not catch normal errors', async () => {
+        const spy = vi
+            .spyOn(typedFetch, 'typedFetch')
+            .mockImplementationOnce(() => {
+                throw new Error();
+            });
+
+        await expect(
+            getDiscordUser('some access token'),
+        ).rejects.toThrowError();
 
         expect(spy).toHaveBeenCalledTimes(1);
     });

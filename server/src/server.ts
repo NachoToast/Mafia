@@ -1,3 +1,4 @@
+import { createServer } from 'http';
 import { loadConfig, loadMongo, loadExpress } from './loaders';
 
 async function main(): Promise<void> {
@@ -7,9 +8,11 @@ async function main(): Promise<void> {
 
     const app = loadExpress(config, userModel);
 
+    const httpServer = createServer(app);
+
     const port = config.port;
 
-    app.listen(port, () => {
+    httpServer.listen(port, () => {
         console.log(`Server is listening on port http://localhost:${port}`);
     });
 }

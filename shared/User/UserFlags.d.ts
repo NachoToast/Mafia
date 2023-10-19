@@ -4,7 +4,7 @@
  * Currently they cannot be assigned using the API, meaning you need to
  * edit the database directly if you want to use them.
  */
-export enum UserFlags {
+export const enum UserFlags {
     None = 0,
 
     SiteOwner = 1 << 0,

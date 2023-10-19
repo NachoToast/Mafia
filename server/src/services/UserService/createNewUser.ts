@@ -1,4 +1,4 @@
-import { DiscordIDString, User } from '@shared';
+import { DiscordIDString, User, UserFlags } from '@shared';
 import { UserModel } from '../../types/Database';
 
 /** Creates a new user in the database. */
@@ -16,7 +16,7 @@ export async function createNewUser(
         ip,
         registeredAt: now,
         lastActivity: now,
-        flags: 0,
+        flags: UserFlags.None,
     };
 
     await userModel.insertOne(newUser);
